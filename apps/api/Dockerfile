@@ -1,5 +1,5 @@
 # QANexus API - Production Dockerfile
-# Optimized for Railway, Render, and other container platforms
+# For Railway deployment from monorepo root context
 
 # ============================================
 # Stage 1: Dependencies
@@ -11,8 +11,8 @@ WORKDIR /app
 # Install dependencies needed for native modules
 RUN apk add --no-cache libc6-compat
 
-# Copy package files
-COPY package.json package-lock.json* ./
+# Copy package files from apps/api (context is repo root)
+COPY apps/api/package.json apps/api/package-lock.json* ./
 
 # Install all dependencies (including dev for building)
 RUN npm ci
@@ -26,7 +26,9 @@ WORKDIR /app
 
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+
+# Copy source code from apps/api
+COPY apps/api/ .
 
 # Build the application
 RUN npm run build
