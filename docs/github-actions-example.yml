@@ -1,0 +1,45 @@
+name: Release Quality Gate
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  quality-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Create Release in QANexus
+        id: create_release
+        run: |
+          # Create Release via API
+           RELEASE_ID=$(curl -s -X POST https://api.qanexus.com/releases \
+            -H "Authorization: Bearer ${{ secrets.QANEXUS_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"version": "'"${{ github.ref_name }}"'", "env": "prod"}' | jq -r '.id')
+          echo "release_id=$RELEASE_ID" >> $GITHUB_OUTPUT
+
+      - name: Run Tests
+        run: |
+          # Run your tests (Jest, Cypress, etc)
+          npm test
+
+      - name: Check Release Confidence Score
+        run: |
+          RELEASE_ID=${{ steps.create_release.outputs.release_id }}
+          
+          # Poll RCS API
+          RCS_RESPONSE=$(curl -s -X GET https://api.qanexus.com/releases/$RELEASE_ID/rcs \
+            -H "Authorization: Bearer ${{ secrets.QANEXUS_API_KEY }}")
+          
+          SCORE=$(echo $RCS_RESPONSE | jq -r '.score')
+          echo "Current Release Confidence Score: $SCORE"
+
+          # Fail pipeline if Quality Gate hasn't improved or is too low
+          if [ "$SCORE" -lt 80 ]; then
+            echo "::error::Release Confidence Score ($SCORE) is below threshold (80). Gate Failed."
+            exit 1
+          fi

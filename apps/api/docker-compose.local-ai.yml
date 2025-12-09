@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  # Using standard postgres with pgvector
+  db-vector:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: qanexus
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  # Local LLM Service (Ollama)
+  # Requires pulling models: docker exec -it ollama ollama pull llama3
+  # And embedding model: docker exec -it ollama ollama pull nomic-embed-text
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+
+  # Backend API
+  api:
+    build: .
+    environment:
+      - DB_HOST=db-vector
+      - DB_PORT=5432
+      - DB_USERNAME=user
+      - DB_PASSWORD=password
+      - DB_NAME=qanexus
+      - AI_PROVIDER=local
+      - LOCAL_LLM_BASE_URL=http://ollama:11434/v1
+      - LOCAL_EMBEDDING_BASE_URL=http://ollama:11434/v1
+      - LOCAL_VECTOR_STORE=pgvector
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db-vector
+      - ollama
+
+volumes:
+  pgdata:
+  ollama:

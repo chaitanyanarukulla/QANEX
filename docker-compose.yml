@@ -1,0 +1,50 @@
+version: '3.8'
+
+# QANexus Local Development Stack
+# Mirrors free production stack: Neon (PostgreSQL + pgvector)
+
+services:
+  # PostgreSQL with pgvector (mirrors Neon)
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: qanexus_db
+    environment:
+      POSTGRES_USER: ${DB_USER:-qanexus}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-qanexus_dev_password}
+      POSTGRES_DB: ${DB_NAME:-qanexus}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-qanexus} -d ${DB_NAME:-qanexus}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - qanexus-network
+
+  # Redis for caching and rate limiting (optional but recommended)
+  redis:
+    image: redis:7-alpine
+    container_name: qanexus_redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - qanexus-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  qanexus-network:
+    driver: bridge
