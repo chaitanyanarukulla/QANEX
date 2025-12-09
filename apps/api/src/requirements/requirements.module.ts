@@ -12,5 +12,6 @@ import { AiModule } from '../ai/ai.module';
     ],
     providers: [RequirementsService],
     controllers: [RequirementsController],
+    exports: [RequirementsService],
 })
 export class RequirementsModule { }

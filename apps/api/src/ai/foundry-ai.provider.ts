@@ -4,7 +4,6 @@ import { firstValueFrom } from 'rxjs';
 import { AiProvider } from './ai.interface';
 import { aiConfig } from '../config/ai.config';
 import { PROMPTS } from './prompts';
-import { AiMetricsService } from '../metrics/ai-metrics.service';
 
 @Injectable()
 export class FoundryAiProvider implements AiProvider {
@@ -13,10 +12,7 @@ export class FoundryAiProvider implements AiProvider {
     process.env.LLM_API_ENDPOINT || 'https://api.openai.com/v1/chat/completions';
   private readonly apiKey = process.env.LLM_API_KEY || '';
 
-  constructor(
-    private httpService: HttpService,
-    private aiMetrics: AiMetricsService,
-  ) {}
+  constructor(private httpService: HttpService) {}
 
   async analyzeRequirement(content: string): Promise<any> {
     const prompt = PROMPTS.ANALYZE_REQUIREMENT('Requirement', content, '');
@@ -105,9 +101,7 @@ export class FoundryAiProvider implements AiProvider {
       throw error;
     } finally {
       const duration = Date.now() - startTime;
-      this.aiMetrics
-        .logUsage('unknown', action, 'FOUNDRY', duration, success)
-        .catch((e) => console.error('Metrics log failed', e));
+      this.logger.debug(`LLM call ${action} completed in ${duration}ms, success=${success}`);
     }
   }
 }

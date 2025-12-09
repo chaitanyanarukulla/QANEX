@@ -12,14 +12,12 @@ import { PgVectorRagAdapter } from './pgvector-rag.adapter';
 import { RagController } from './rag.controller';
 
 import { HttpModule, HttpService } from '@nestjs/axios';
-import { MetricsModule } from '../metrics/metrics.module';
-import { AiMetricsService } from '../metrics/ai-metrics.service';
 
 const logger = new Logger('AiModule');
 
 @Global()
 @Module({
-  imports: [ConfigModule, HttpModule, TypeOrmModule, MetricsModule],
+  imports: [ConfigModule, HttpModule, TypeOrmModule],
   controllers: [RagController],
   providers: [
     LocalModelGateway,
@@ -59,7 +57,6 @@ const logger = new Logger('AiModule');
         httpService: HttpService,
         localAiProvider: LocalAiProvider,
         azureOpenAiProvider: AzureOpenAiProvider,
-        aiMetrics: AiMetricsService,
       ) => {
         const provider = configService.get('AI_PROVIDER', 'mock');
 
@@ -70,7 +67,7 @@ const logger = new Logger('AiModule');
 
           case 'foundry':
             logger.log('Using Foundry AI provider');
-            return new FoundryAiProvider(httpService, aiMetrics);
+            return new FoundryAiProvider(httpService);
 
           case 'local':
             logger.log('Using Local AI provider (Ollama)');
@@ -86,7 +83,6 @@ const logger = new Logger('AiModule');
         HttpService,
         LocalAiProvider,
         AzureOpenAiProvider,
-        AiMetricsService,
       ],
     },
     LocalAiProvider,

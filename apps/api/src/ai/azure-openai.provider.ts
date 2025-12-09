@@ -4,7 +4,6 @@ import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { AiProvider } from './ai.interface';
 import { PROMPTS } from './prompts';
-import { AiMetricsService } from '../metrics/ai-metrics.service';
 
 /**
  * Azure OpenAI Provider
@@ -30,7 +29,6 @@ export class AzureOpenAiProvider implements AiProvider {
   constructor(
     private httpService: HttpService,
     private configService: ConfigService,
-    private aiMetrics: AiMetricsService,
   ) {
     this.endpoint = this.configService.get('AZURE_OPENAI_ENDPOINT', '');
     this.apiKey = this.configService.get('AZURE_OPENAI_API_KEY', '');
@@ -207,9 +205,7 @@ export class AzureOpenAiProvider implements AiProvider {
       throw error;
     } finally {
       const duration = Date.now() - startTime;
-      this.aiMetrics
-        .logUsage('unknown', action, 'AZURE_OPENAI', duration, success)
-        .catch((e) => this.logger.error('Metrics log failed', e));
+      this.logger.debug(`Azure OpenAI call ${action} completed in ${duration}ms, success=${success}`);
     }
   }
 }

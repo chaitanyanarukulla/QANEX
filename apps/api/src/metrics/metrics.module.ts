@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AiLog } from './ai-log.entity';
 import { AiMetricsService } from './ai-metrics.service';
@@ -10,8 +10,8 @@ import { BugsModule } from '../bugs/bugs.module';
 @Module({
     imports: [
         TypeOrmModule.forFeature([AiLog]),
-        RequirementsModule,
-        BugsModule
+        forwardRef(() => RequirementsModule),
+        forwardRef(() => BugsModule),
     ],
     providers: [AiMetricsService, ProjectMetricsService],
     controllers: [MetricsController],
