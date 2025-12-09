@@ -4,7 +4,8 @@ import { RequirementsService } from '../requirements/requirements.service';
 import { TestKeysService } from '../test-keys/test-keys.service';
 import { BugsService } from '../bugs/bugs.service';
 
-import { AiProvider, AI_PROVIDER_TOKEN } from '../ai/ai.interface';
+import type { AiProvider } from '../ai/ai.interface';
+import { AI_PROVIDER_TOKEN } from '../ai/ai.interface';
 import { Inject } from '@nestjs/common';
 
 @Injectable()

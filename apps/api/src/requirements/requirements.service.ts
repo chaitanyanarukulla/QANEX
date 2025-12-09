@@ -2,7 +2,8 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Requirement, RequirementState } from './requirement.entity';
-import { AiProvider, AI_PROVIDER_TOKEN } from '../ai/ai.interface';
+import type { AiProvider } from '../ai/ai.interface';
+import { AI_PROVIDER_TOKEN } from '../ai/ai.interface';
 import { RagService } from '../ai/rag.service';
 import { Inject } from '@nestjs/common';
 

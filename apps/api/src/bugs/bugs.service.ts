@@ -2,7 +2,8 @@ import { Injectable, NotFoundException, Inject, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Bug, BugStatus, BugSeverity, BugPriority } from './bug.entity';
-import { AiProvider, AI_PROVIDER_TOKEN } from '../ai/ai.interface';
+import type { AiProvider } from '../ai/ai.interface';
+import { AI_PROVIDER_TOKEN } from '../ai/ai.interface';
 import { RagService } from '../ai/rag.service';
 
 @Injectable()

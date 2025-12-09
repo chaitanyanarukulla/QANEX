@@ -133,13 +133,14 @@ export class PgVectorRagAdapter implements RagBackend {
     await this.ensureTable();
 
     // Generate embedding if not provided
-    let embedding = item.embeddings;
+    let embedding: number[] | undefined = item.embeddings;
     if (!embedding) {
-      embedding = await this.generateEmbedding(item.content);
-      if (!embedding) {
+      const generated = await this.generateEmbedding(item.content);
+      if (!generated) {
         this.logger.warn(`No embedding generated for ${item.id}, skipping index`);
         return;
       }
+      embedding = generated;
     }
 
     const embeddingString = `[${embedding.join(',')}]`;

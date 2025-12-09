@@ -16,8 +16,10 @@ export class RagController {
     @Post('index/test')
     async testIndex(@Body() body: { content: string }, @Request() req: any) {
         // Manual trigger for testing
+        const tenantId = req.user.tenantId || 'mock-tenant-id';
         await this.ragService.indexItem({
             id: Date.now().toString(),
+            tenantId,
             type: 'REQUIREMENT',
             content: body.content,
             metadata: { title: 'Test Item' }
