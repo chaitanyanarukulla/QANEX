@@ -1,9 +1,19 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { validateEnv } from './config/env.validation';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
+
+  // Validate environment variables before starting
+  try {
+    validateEnv();
+  } catch (error) {
+    logger.error('Failed to start: Environment validation failed');
+    process.exit(1);
+  }
+
   const app = await NestFactory.create(AppModule);
 
   // Global validation pipe
