@@ -115,18 +115,27 @@ export default function AISettingsPage() {
           setSelectedProvider(config.provider || null);
 
           // Restore form state from existing config
-          if (config.provider && config.cloudConfig?.[config.provider as keyof typeof config.cloudConfig]) {
+          if (config.provider && config.provider !== 'foundry_local' && config.cloudConfig) {
             const providerConfig = config.cloudConfig[config.provider as keyof typeof config.cloudConfig];
             if (providerConfig) {
-              if ('apiKey' in providerConfig) setApiKey('********'); // Masked
-              if ('model' in providerConfig) setSelectedModel(providerConfig.model);
-              if ('embeddingModel' in providerConfig) setSelectedEmbeddingModel(providerConfig.embeddingModel);
+              if ('apiKey' in providerConfig && providerConfig.apiKey) setApiKey('********'); // Masked
+              if ('model' in providerConfig && providerConfig.model) setSelectedModel(providerConfig.model);
+              if ('embeddingModel' in providerConfig && providerConfig.embeddingModel) {
+                setSelectedEmbeddingModel(providerConfig.embeddingModel);
+              }
+              // Restore Anthropic embedding provider settings
+              if (config.provider === 'anthropic' && 'embeddingProvider' in providerConfig) {
+                setAnthropicEmbeddingProvider(providerConfig.embeddingProvider || 'foundry_local');
+                if (providerConfig.embeddingApiKey) {
+                  setAnthropicEmbeddingApiKey('********'); // Masked
+                }
+              }
             }
           }
 
           if (config.foundryLocalConfig) {
-            setFoundryEndpoint(config.foundryLocalConfig.endpoint);
-            setFoundryModel(config.foundryLocalConfig.model);
+            setFoundryEndpoint(config.foundryLocalConfig.endpoint || 'http://127.0.0.1:55588/v1');
+            setFoundryModel(config.foundryLocalConfig.model || 'phi-3.5-mini');
           }
         }
       } catch (err) {
@@ -148,12 +157,57 @@ export default function AISettingsPage() {
   // Get current provider info
   const selectedProviderInfo = providers.find((p) => p.type === selectedProvider);
 
+  // Set default models when provider changes (if no model is currently selected)
+  useEffect(() => {
+    if (!selectedProviderInfo || !selectedProvider) return;
+
+    // For cloud providers, set default chat and embedding models
+    if (selectedProviderInfo.category === 'cloud') {
+      const providerChatModels = selectedProviderInfo.models.filter(
+        (m: any) => m.category !== 'embedding'
+      );
+      const providerEmbeddingModels = selectedProviderInfo.models.filter(
+        (m: any) => m.category === 'embedding'
+      );
+
+      // Set recommended or first chat model if not already set
+      if (!selectedModel) {
+        const recommendedChat = providerChatModels.find((m: any) => m.recommended);
+        const defaultChat = recommendedChat || providerChatModels[0];
+        if (defaultChat) {
+          // Cloud models use 'id', cast to any to access it safely
+          setSelectedModel((defaultChat as any).id || (defaultChat as any).alias);
+        }
+      }
+
+      // Set recommended or first embedding model if not already set
+      if (!selectedEmbeddingModel && selectedProvider !== 'anthropic') {
+        const recommendedEmbed = providerEmbeddingModels.find((m: any) => m.recommended);
+        const defaultEmbed = recommendedEmbed || providerEmbeddingModels[0];
+        if (defaultEmbed) {
+          setSelectedEmbeddingModel((defaultEmbed as any).id || (defaultEmbed as any).alias);
+        }
+      }
+    }
+    // For Foundry Local, set default model
+    else if (selectedProvider === 'foundry_local') {
+      const foundryModels = selectedProviderInfo.models.filter(
+        (m: any) => m.task === 'chat-completions'
+      );
+      if (!foundryModel && foundryModels.length > 0) {
+        // Foundry models use 'alias'
+        setFoundryModel((foundryModels[0] as any).alias || (foundryModels[0] as any).id);
+      }
+    }
+  }, [selectedProviderInfo, selectedProvider]);
+
   // Get models for selected provider
+  // Cloud providers use 'category', Foundry Local uses 'task'
   const chatModels = selectedProviderInfo?.models.filter(
-    (m) => m.category !== 'embedding'
+    (m: any) => m.category !== 'embedding' && m.task !== 'embeddings'
   ) || [];
   const embeddingModels = selectedProviderInfo?.models.filter(
-    (m) => m.category === 'embedding'
+    (m: any) => m.category === 'embedding' || m.task === 'embeddings'
   ) || [];
 
   // Test connection
@@ -307,8 +361,14 @@ export default function AISettingsPage() {
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                   onClick={() => {
-                    setSelectedProvider(provider.type);
-                    setTestResult(null);
+                    if (selectedProvider !== provider.type) {
+                      setSelectedProvider(provider.type);
+                      setTestResult(null);
+                      // Clear model selections when switching providers
+                      setSelectedModel('');
+                      setSelectedEmbeddingModel('');
+                      setApiKey('');
+                    }
                   }}
                 >
                   <div className="flex items-center justify-between mb-2">
@@ -338,8 +398,16 @@ export default function AISettingsPage() {
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                   onClick={() => {
-                    setSelectedProvider(provider.type);
-                    setTestResult(null);
+                    if (selectedProvider !== provider.type) {
+                      setSelectedProvider(provider.type);
+                      setTestResult(null);
+                      // Clear cloud model selections when switching to local
+                      setSelectedModel('');
+                      setSelectedEmbeddingModel('');
+                      setApiKey('');
+                      // Reset Foundry model to default
+                      setFoundryModel('phi-3.5-mini');
+                    }
                   }}
                 >
                   <div className="flex items-center justify-between mb-2">
@@ -405,11 +473,14 @@ export default function AISettingsPage() {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Select a model</option>
-                  {chatModels.map((model) => (
-                    <option key={model.id} value={model.id}>
-                      {model.name} {model.recommended ? '(Recommended)' : ''} - {model.description}
-                    </option>
-                  ))}
+                  {chatModels.map((model: any) => {
+                    const modelId = model.id || model.alias;
+                    return (
+                      <option key={modelId} value={modelId}>
+                        {model.name} {model.recommended ? '(Recommended)' : ''} - {model.description}
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
 
@@ -424,11 +495,14 @@ export default function AISettingsPage() {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Select an embedding model</option>
-                    {embeddingModels.map((model) => (
-                      <option key={model.id} value={model.id}>
-                        {model.name} {model.recommended ? '(Recommended)' : ''}
-                      </option>
-                    ))}
+                    {embeddingModels.map((model: any) => {
+                      const modelId = model.id || model.alias;
+                      return (
+                        <option key={modelId} value={modelId}>
+                          {model.name} {model.recommended ? '(Recommended)' : ''}
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
               )}
