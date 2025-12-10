@@ -5,7 +5,9 @@ export class GitIntegrationService {
   // Mock Git operations
 
   async createBranch(repoOwner: string, repoName: string, branchName: string) {
-    console.log(`[MockGit] Created branch ${branchName} on ${repoOwner}/${repoName}`);
+    console.log(
+      `[MockGit] Created branch ${branchName} on ${repoOwner}/${repoName}`,
+    );
     return { success: true };
   }
 

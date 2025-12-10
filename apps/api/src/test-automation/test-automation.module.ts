@@ -13,17 +13,23 @@ import { AiModule } from '../ai/ai.module';
 import { TestAutomationController } from './test-automation.controller';
 
 @Module({
-    imports: [
-        TypeOrmModule.forFeature([TestAutomationSettings, AutomationCandidate, AutomationRun, TestCase, TestResult]),
-        AiModule
-    ],
-    controllers: [TestAutomationController],
-    providers: [
-        TestAutomationSettingsService,
-        AutomationCandidateService,
-        TestAutomationService,
-        GitIntegrationService
-    ],
-    exports: [TestAutomationService]
+  imports: [
+    TypeOrmModule.forFeature([
+      TestAutomationSettings,
+      AutomationCandidate,
+      AutomationRun,
+      TestCase,
+      TestResult,
+    ]),
+    AiModule,
+  ],
+  controllers: [TestAutomationController],
+  providers: [
+    TestAutomationSettingsService,
+    AutomationCandidateService,
+    TestAutomationService,
+    GitIntegrationService,
+  ],
+  exports: [TestAutomationService],
 })
-export class TestAutomationModule { }
+export class TestAutomationModule {}

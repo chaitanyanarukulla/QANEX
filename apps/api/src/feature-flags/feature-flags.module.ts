@@ -5,9 +5,9 @@ import { FeatureFlagsController } from './feature-flags.controller';
 import { FeatureFlag } from './feature-flag.entity';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([FeatureFlag])],
-    controllers: [FeatureFlagsController],
-    providers: [FeatureFlagsService],
-    exports: [FeatureFlagsService],
+  imports: [TypeOrmModule.forFeature([FeatureFlag])],
+  controllers: [FeatureFlagsController],
+  providers: [FeatureFlagsService],
+  exports: [FeatureFlagsService],
 })
-export class FeatureFlagsModule { }
+export class FeatureFlagsModule {}

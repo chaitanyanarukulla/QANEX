@@ -1,43 +1,72 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-import { firstValueFrom } from 'rxjs';
+import { lastValueFrom } from 'rxjs';
 import { AiProvider } from './ai.interface';
 import { aiConfig } from '../config/ai.config';
 import { PROMPTS } from './prompts';
+import { PiiRedactionService } from './pii-redaction.service';
 
 @Injectable()
 export class FoundryAiProvider implements AiProvider {
   private readonly logger = new Logger(FoundryAiProvider.name);
   private readonly apiUrl =
-    process.env.LLM_API_ENDPOINT || 'https://api.openai.com/v1/chat/completions';
+    process.env.LLM_API_ENDPOINT ||
+    'https://api.openai.com/v1/chat/completions';
   private readonly apiKey = process.env.LLM_API_KEY || '';
 
-  constructor(private httpService: HttpService) {}
+  constructor(
+    private httpService: HttpService,
+    private readonly piiService: PiiRedactionService,
+  ) { }
 
-  async analyzeRequirement(content: string): Promise<any> {
+  async analyzeRequirement(content: string, tenantId: string, apiKey?: string): Promise<any> {
     const prompt = PROMPTS.ANALYZE_REQUIREMENT('Requirement', content, '');
-    return this.callLlm(prompt, aiConfig.tasks.requirementAnalysis, 'ANALYZE_REQUIREMENT');
+    return this.callLlmRaw(prompt, aiConfig.tasks.requirementAnalysis, 'ANALYZE_REQUIREMENT', tenantId, apiKey);
   }
 
-  async triageBug(bugValues: { title: string; description: string }): Promise<any> {
-    const prompt = PROMPTS.TRIAGE_BUG(bugValues.title, bugValues.description, '');
-    return this.callLlm(prompt, aiConfig.tasks.bugTriage, 'TRIAGE_BUG');
+  async triageBug(
+    bugValues: {
+      title: string;
+      description: string;
+    },
+    tenantId: string,
+    apiKey?: string,
+  ): Promise<any> {
+    const prompt = PROMPTS.TRIAGE_BUG(
+      bugValues.title,
+      bugValues.description,
+      '',
+    );
+    return this.callLlm(prompt, aiConfig.tasks.bugTriage, 'TRIAGE_BUG', tenantId, apiKey);
   }
 
   async generateTestCode(
     testCase: { title: string; steps: any[] },
     framework: string,
+    tenantId: string,
+    apiKey?: string,
   ): Promise<string> {
     const stepsStr = testCase.steps
       .map((s) => `- ${s.step} (Expect: ${s.expected})`)
       .join('\n');
-    const prompt = PROMPTS.GENERATE_TEST_CODE(testCase.title, stepsStr, framework);
+    const prompt = PROMPTS.GENERATE_TEST_CODE(
+      testCase.title,
+      stepsStr,
+      framework,
+    );
 
     // Return raw text, logged as CODE_GEN
-    return this.callLlmRaw(prompt, aiConfig.tasks.codeGeneration, 'CODE_GEN');
+    return this.callLlmRaw(prompt, aiConfig.tasks.codeGeneration, 'CODE_GEN', tenantId, apiKey);
   }
 
-  async explainRcs(releaseInfo: { score: number; breakdown: any }): Promise<any> {
+  async callChat(prompt: string, tenantId: string, apiKey?: string): Promise<string> {
+    return this.callLlmRaw(prompt, { model: 'gpt-4', temperature: 0.7, maxTokens: 1000 }, 'CHAT', tenantId, apiKey);
+  }
+
+  async explainRcs(releaseInfo: {
+    score: number;
+    breakdown: any;
+  }): Promise<any> {
     const prompt = PROMPTS.EXPLAIN_RCS(
       releaseInfo.score,
       JSON.stringify(releaseInfo.breakdown, null, 2),
@@ -45,9 +74,14 @@ export class FoundryAiProvider implements AiProvider {
     return this.callLlm(prompt, aiConfig.tasks.rcsExplanation, 'EXPLAIN_RCS');
   }
 
-  private async callLlm(prompt: string, config: any, action: string): Promise<any> {
+  private async callLlm(
+    prompt: string,
+    config: any,
+    action: string,
+    apiKey?: string,
+  ): Promise<any> {
     try {
-      const result = await this.callLlmRaw(prompt, config, action);
+      const result = await this.callLlmRaw(prompt, config, action, apiKey);
       // Attempt to parse JSON
       const jsonStart = result.indexOf('{');
       const jsonEnd = result.lastIndexOf('}');
@@ -65,43 +99,82 @@ export class FoundryAiProvider implements AiProvider {
     prompt: string,
     config: any,
     action: string,
+    apiKey?: string,
   ): Promise<string> {
-    const startTime = Date.now();
-    let success = true;
+    // Prioritize Tenant Key (BYOK), then fallback to System Key
+    const activeApiKey = apiKey || this.apiKey;
 
-    if (!this.apiKey) {
-      this.logger.warn('No API Key set for FoundryAiProvider. Returning Mock.');
-      return 'Mock Response (No API Key)';
+    if (!activeApiKey) {
+      if (process.env.NODE_ENV !== 'production') {
+        const duration = Date.now() - Date.now(); // Mock 0ms
+        this.logger.log({
+          action,
+          duration,
+          model: 'mock-model',
+          mock: true,
+          success: true,
+        });
+        return 'Mock Response (No API Key)';
+      }
+      throw new Error('LLM API Key is missing');
     }
 
+    // Use passed config or fallback (though config should be mandatory really)
+    // const config = aiConfig.tasks.requirementAnalysis; // REMOVED hardcoded value
+    let success = true;
+    const startTime = Date.now();
+
     try {
+      const sanitizedPrompt = this.piiService.redact(prompt);
       const payload = {
         model: config.model,
-        messages: [{ role: 'user', content: prompt }],
+        messages: [{ role: 'user', content: sanitizedPrompt }],
         temperature: config.temperature,
         max_tokens: config.maxTokens,
       };
 
-      const response = await firstValueFrom(
+      const response = await lastValueFrom(
         this.httpService.post(this.apiUrl, payload, {
           headers: {
-            Authorization: `Bearer ${this.apiKey}`,
             'Content-Type': 'application/json',
+            'api-key': activeApiKey,
           },
+          timeout: 30000,
         }),
       );
 
       const content = response.data?.choices?.[0]?.message?.content;
+      const usage = response.data?.usage;
+
       if (!content) throw new Error('Empty response from LLM');
+
+      const duration = Date.now() - startTime;
+      this.logger.log({
+        action,
+        duration,
+        model: config.model,
+        tokens: usage
+          ? {
+            prompt: usage.prompt_tokens,
+            completion: usage.completion_tokens,
+            total: usage.total_tokens,
+          }
+          : 'unknown',
+        success: true,
+      });
 
       return content;
     } catch (error) {
       success = false;
-      this.logger.error('LLM API Call failed', error);
-      throw error;
-    } finally {
       const duration = Date.now() - startTime;
-      this.logger.debug(`LLM call ${action} completed in ${duration}ms, success=${success}`);
+      this.logger.error({
+        action,
+        duration,
+        model: config.model,
+        success: false,
+        error: (error as Error).message,
+      });
+      throw error;
     }
   }
 }

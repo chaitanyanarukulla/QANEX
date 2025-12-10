@@ -26,21 +26,9 @@ export function useOnboarding() {
 
     const fetchChecklist = async () => {
         try {
-            // Assuming API is proxied at /api or running on same domain
-            // Adjust authentication headers based on your auth implementation
-            const token = localStorage.getItem('accessToken'); // Try standard storage
-            const headers: HeadersInit = {
-                'Content-Type': 'application/json'
-            };
-            if (token) {
-                headers['Authorization'] = `Bearer ${token}`;
-            }
+            const { onboardingApi } = await import('@/lib/api');
+            const data = await onboardingApi.checklist();
 
-            const res = await fetch('/api/onboarding/checklist', { headers });
-
-            if (!res.ok) throw new Error('Failed to fetch onboarding status');
-
-            const data = await res.json();
             setState({
                 items: data.items,
                 progress: data.progress,
@@ -49,8 +37,6 @@ export function useOnboarding() {
             });
         } catch (err) {
             console.error(err);
-            // Verify if we can return a mock for demo purposes if API fails?
-            // For now, just set error
             setState(prev => ({ ...prev, isLoading: false, error: 'Could not load onboarding' }));
         }
     };

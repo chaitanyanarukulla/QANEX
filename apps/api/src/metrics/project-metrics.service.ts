@@ -4,30 +4,37 @@ import { BugsService } from '../bugs/bugs.service';
 
 @Injectable()
 export class ProjectMetricsService {
-    constructor(
-        private requirementsService: RequirementsService,
-        private bugsService: BugsService,
-    ) { }
+  constructor(
+    private requirementsService: RequirementsService,
+    private bugsService: BugsService,
+  ) {}
 
-    async getProjectStats(tenantId: string) {
-        const reqs = await this.requirementsService.findAll(tenantId);
-        const bugs = await this.bugsService.findAll(tenantId);
+  async getProjectStats(tenantId: string) {
+    const reqs = await this.requirementsService.findAll(tenantId);
+    const bugs = await this.bugsService.findAll(tenantId);
 
-        // Avg RQS
-        const scoredReqs = reqs.filter(r => r.rqs !== null && r.rqs !== undefined);
-        const avgRqs = scoredReqs.length > 0
-            ? scoredReqs.reduce((sum, r) => sum + (r.rqs?.score || 0), 0) / scoredReqs.length
-            : 0;
+    // Avg RQS
+    const scoredReqs = reqs.filter(
+      (r) => r.rqs !== null && r.rqs !== undefined,
+    );
+    const avgRqs =
+      scoredReqs.length > 0
+        ? scoredReqs.reduce((sum, r) => sum + (r.rqs?.score || 0), 0) /
+          scoredReqs.length
+        : 0;
 
-        // Bug Density (Mock: Bugs per Requirement)
-        const bugDensity = reqs.length > 0 ? (bugs.length / reqs.length).toFixed(2) : 0;
+    // Bug Density (Mock: Bugs per Requirement)
+    const bugDensity =
+      reqs.length > 0 ? (bugs.length / reqs.length).toFixed(2) : 0;
 
-        return {
-            totalRequirements: reqs.length,
-            avgRqs: Math.round(avgRqs),
-            totalBugs: bugs.length,
-            bugDensity,
-            openBugs: bugs.filter(b => b.status !== 'RESOLVED' && b.status !== 'CLOSED').length
-        };
-    }
+    return {
+      totalRequirements: reqs.length,
+      avgRqs: Math.round(avgRqs),
+      totalBugs: bugs.length,
+      bugDensity,
+      openBugs: bugs.filter(
+        (b) => b.status !== 'RESOLVED' && b.status !== 'CLOSED',
+      ).length,
+    };
+  }
 }

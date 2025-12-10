@@ -10,21 +10,21 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 
 @Module({
-    imports: [
-        UsersModule,
-        TenantsModule, // Needed for auto-provisioning
-        PassportModule,
-        JwtModule.registerAsync({
-            imports: [ConfigModule],
-            useFactory: async (configService: ConfigService) => ({
-                secret: 'MOCK_SECRET', // Temporary
-                signOptions: { expiresIn: '1d' },
-            }),
-            inject: [ConfigService],
-        }),
-    ],
-    controllers: [AuthController],
-    providers: [JwtStrategy, AuthService],
-    exports: [PassportModule, JwtModule, AuthService],
+  imports: [
+    UsersModule,
+    TenantsModule, // Needed for auto-provisioning
+    PassportModule,
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        secret: 'MOCK_SECRET', // Temporary
+        signOptions: { expiresIn: '1d' },
+      }),
+      inject: [ConfigService],
+    }),
+  ],
+  controllers: [AuthController],
+  providers: [JwtStrategy, AuthService],
+  exports: [PassportModule, JwtModule, AuthService],
 })
-export class AuthModule { }
+export class AuthModule {}

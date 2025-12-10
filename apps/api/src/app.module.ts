@@ -1,6 +1,8 @@
 import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { ScheduleModule } from '@nestjs/schedule';
 import { TenantsModule } from './tenants/tenants.module';
 import { AuthModule } from './auth/auth.module';
 import { RequirementsModule } from './requirements/requirements.module';
@@ -91,6 +93,13 @@ import { RequestLoggerMiddleware } from './common/middleware/request-logger.midd
     AuditModule,
     ExportModule,
     SecurityOpsModule,
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 60,
+      },
+    ]),
+    ScheduleModule.forRoot(),
   ],
   controllers: [AppController],
   providers: [AppService],

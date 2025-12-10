@@ -1,7 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
+import { authApi, tenantsApi } from '@/lib/api';
+import { KnowledgeBaseSettings } from '@/components/settings/knowledge-base-settings';
+import { AiUsageChart } from '@/components/settings/AiUsageChart';
 
 export default function SettingsPage() {
     const [activeTab, setActiveTab] = useState('general');
@@ -35,12 +38,166 @@ export default function SettingsPage() {
                     >
                         Users & Roles
                     </button>
+                    <button
+                        onClick={() => setActiveTab('ai')}
+                        className={`border-b-2 py-4 text-sm font-medium ${activeTab === 'ai'
+                            ? 'border-primary text-primary'
+                            : 'border-transparent text-muted-foreground hover:border-gray-300 hover:text-foreground'
+                            }`}
+                    >
+                        Models & AI
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('knowledge')}
+                        className={`border-b-2 py-4 text-sm font-medium ${activeTab === 'knowledge'
+                            ? 'border-primary text-primary'
+                            : 'border-transparent text-muted-foreground hover:border-gray-300 hover:text-foreground'
+                            }`}
+                    >
+                        Knowledge Base
+                    </button>
                 </nav>
             </div>
 
             <div className="pt-4">
                 {activeTab === 'general' && <GeneralSettings />}
                 {activeTab === 'users' && <UsersSettings />}
+                {activeTab === 'ai' && <AiSettings />}
+                {activeTab === 'knowledge' && <KnowledgeBaseSettings />}
+            </div>
+        </div>
+    );
+}
+
+function AiSettings() {
+    const { showToast } = useToast();
+    const [provider, setProvider] = useState<'foundry' | 'local' | 'azure'>('foundry');
+    const [apiKey, setApiKey] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [tenantId, setTenantId] = useState<string | null>(null);
+
+    useEffect(() => {
+        loadSettings();
+    }, []);
+
+    const loadSettings = async () => {
+        try {
+            setLoading(true);
+            const user = await authApi.me();
+            if (user?.defaultTenantId) {
+                setTenantId(user.defaultTenantId);
+                const tenant = await tenantsApi.get(user.defaultTenantId);
+                if (tenant.settings?.aiConfig) {
+                    setProvider(tenant.settings.aiConfig.provider || 'foundry');
+                    setApiKey(tenant.settings.aiConfig.apiKey || '');
+                }
+            }
+        } catch (error) {
+            console.error('Failed to load AI settings', error);
+            showToast('Failed to load settings', 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSave = async () => {
+        if (!tenantId) {
+            showToast('Tenant ID not found', 'error');
+            return;
+        }
+
+        try {
+            await tenantsApi.updateSettings(tenantId, {
+                aiConfig: {
+                    provider,
+                    apiKey: apiKey || undefined,
+                },
+            });
+            showToast('AI Configuration saved successfully', 'success');
+        } catch (error) {
+            console.error('Failed to save settings', error);
+            showToast('Failed to save settings', 'error');
+        }
+    };
+
+    if (loading) {
+        return <div className="p-6">Loading configuration...</div>;
+    }
+
+    return (
+        <div className="space-y-6 max-w-2xl">
+            <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+                <h3 className="text-lg font-semibold leading-none tracking-tight mb-4">AI Provider Configuration</h3>
+                <div className="space-y-6">
+                    <div className="space-y-4">
+                        <label className="text-sm font-medium leading-none">
+                            Select AI Backend
+                        </label>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <button
+                                onClick={() => setProvider('foundry')}
+                                className={`flex flex-col items-center justify-between rounded-md border-2 p-4 hover:bg-accent hover:text-accent-foreground ${provider === 'foundry' ? 'border-primary bg-accent' : 'border-muted bg-popover'
+                                    }`}
+                            >
+                                <span className="mb-2 text-2xl">🏗️</span>
+                                <span className="font-semibold">Microsoft Foundry</span>
+                                <span className="text-xs text-muted-foreground text-center mt-2">Scale & Compliance</span>
+                            </button>
+                            <button
+                                onClick={() => setProvider('local')}
+                                className={`flex flex-col items-center justify-between rounded-md border-2 p-4 hover:bg-accent hover:text-accent-foreground ${provider === 'local' ? 'border-primary bg-accent' : 'border-muted bg-popover'
+                                    }`}
+                            >
+                                <span className="mb-2 text-2xl">💻</span>
+                                <span className="font-semibold">Local (Private)</span>
+                                <span className="text-xs text-muted-foreground text-center mt-2">Zero Data Egress</span>
+                            </button>
+                            <button
+                                onClick={() => setProvider('azure')}
+                                className={`flex flex-col items-center justify-between rounded-md border-2 p-4 hover:bg-accent hover:text-accent-foreground ${provider === 'azure' ? 'border-primary bg-accent' : 'border-muted bg-popover'
+                                    }`}
+                            >
+                                <span className="mb-2 text-2xl">☁️</span>
+                                <span className="font-semibold">Azure OpenAI</span>
+                                <span className="text-xs text-muted-foreground text-center mt-2">Direct Integration</span>
+                            </button>
+                        </div>
+                        <p className="text-[0.8rem] text-muted-foreground">
+                            {provider === 'local'
+                                ? "Running 100% locally using Ollama. No data leaves your infrastructure."
+                                : "Uses cloud-based models for maximum performance and reasoning capability."}
+                        </p>
+                    </div>
+
+                    <div className="grid gap-2">
+                        <label htmlFor="apiKey" className="text-sm font-medium leading-none">
+                            API Key (Optional / BYOK)
+                        </label>
+                        <input
+                            type="password"
+                            id="apiKey"
+                            value={apiKey}
+                            onChange={(e) => setApiKey(e.target.value)}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            placeholder={provider === 'local' ? 'Not required for Local mode' : 'Leave empty to use System Key'}
+                            disabled={provider === 'local'}
+                        />
+                    </div>
+                </div>
+                <h2 className="text-xl font-semibold mb-4 text-foreground mt-8">Usage & Cost</h2>
+                <div className="bg-card p-4 rounded-lg border shadow-sm">
+                    <AiUsageChart />
+                </div>
+
+                <div className="mt-8 flex justify-end">
+                    <button
+                        onClick={saveAiSettings}
+                        disabled={saving}
+                        className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 disabled:opacity-50"
+                    >
+                        {saving ? 'Saving...' : 'Save Configuration'}
+                    </button>
+                </div>
             </div>
         </div>
     );

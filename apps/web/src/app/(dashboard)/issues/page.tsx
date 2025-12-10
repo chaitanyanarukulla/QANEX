@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, Bot, Loader2, Save } from 'lucide-react';
+import { bugsApi, Bug, BugAnalysisResult } from '@/lib/api';
+import { useToast } from '@/components/ui/use-toast';
 
 const COLUMNS = [
     { id: 'NEW', title: 'New', color: 'bg-red-500/10 text-red-500' },
@@ -10,29 +12,104 @@ const COLUMNS = [
     { id: 'RESOLVED', title: 'Resolved', color: 'bg-green-500/10 text-green-500' },
 ];
 
-// Mock data for initial render
-const INITIAL_BUGS = [
-    { id: '1', title: 'Login page crashes on Safari', status: 'NEW', priority: 'P0', assignee: null },
-    { id: '2', title: 'Typo in privacy policy', status: 'TRIAGED', priority: 'P3', assignee: 'Jane Doe' },
-    { id: '3', title: 'API returning 500 for heavy requests', status: 'IN_PROGRESS', priority: 'P1', assignee: 'John Smith' },
-];
-
 export default function IssuesPage() {
-    const [bugs, setBugs] = useState(INITIAL_BUGS);
-    const [selectedBug, setSelectedBug] = useState<any>(null);
+    const [bugs, setBugs] = useState<Bug[]>([]);
+    const [selectedBug, setSelectedBug] = useState<Bug | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isTriaging, setIsTriaging] = useState(false);
+    const { showToast } = useToast();
 
-    const handleCreate = () => {
-        const title = prompt('Bug Title:');
-        if (title) {
-            setBugs([...bugs, {
-                id: Date.now().toString(),
-                title,
-                status: 'NEW',
-                priority: 'P2',
-                assignee: null
-            }]);
+    useEffect(() => {
+        loadBugs();
+    }, []);
+
+    const loadBugs = async () => {
+        try {
+            setIsLoading(true);
+            const data = await bugsApi.list();
+            setBugs(data);
+        } catch (err) {
+            console.error('Failed to load bugs:', err);
+            showToast('Failed to load issues', 'error');
+        } finally {
+            setIsLoading(false);
         }
     };
+
+    const handleCreate = async () => {
+        const title = prompt('Bug Title:');
+        if (title) {
+            try {
+                const newBug = await bugsApi.create({
+                    title,
+                    description: '',
+                    status: 'NEW',
+                    severity: 'MEDIUM',
+                    priority: 'P2'
+                });
+                setBugs([newBug, ...bugs]);
+                showToast('Issue created', 'success');
+            } catch (err) {
+                showToast('Failed to create issue', 'error');
+            }
+        }
+    };
+
+    const handleTriage = async () => {
+        if (!selectedBug) return;
+        try {
+            setIsTriaging(true);
+            const result = await bugsApi.triage(selectedBug.id);
+            // Result likely contains suggestions. 
+            // In a real app we might show these suggestions. 
+            // For now, let's assume the backend blocked update or returned the updated bug?
+            // Checking backend: bugsController.triage returns service.analyzeBug(bug).
+            // BugTriageService.analyzeBug returns `provider.triageBug(...)`.
+            // The provider returns { suggestedSeverity, suggestedPriority ... }.
+
+            // Let's assume we want to apply them automatically for this demo or show a toast.
+            if (result && (result.suggestedSeverity || result.suggestedPriority)) {
+                const updated = await bugsApi.update(selectedBug.id, {
+                    severity: result.suggestedSeverity || selectedBug.severity,
+                    priority: result.suggestedPriority || selectedBug.priority,
+                    status: 'TRIAGED'
+                });
+                setBugs(bugs.map(b => b.id === updated.id ? updated : b));
+                setSelectedBug(updated);
+                showToast('AI Triage applied successfully', 'success');
+            } else {
+                showToast('AI could not determine triage details', 'info');
+            }
+
+        } catch (err) {
+            console.error('Triage failed', err);
+            showToast('Failed to auto-triage', 'error');
+        } finally {
+            setIsTriaging(false);
+        }
+    };
+
+    const handleUpdateStatus = async (bugId: string, newStatus: any) => {
+        try {
+            // Optimistic update
+            setBugs(bugs.map(b => b.id === bugId ? { ...b, status: newStatus } : b));
+            if (selectedBug && selectedBug.id === bugId) {
+                setSelectedBug({ ...selectedBug, status: newStatus });
+            }
+            await bugsApi.update(bugId, { status: newStatus });
+        } catch (err) {
+            showToast('Failed to update status', 'error');
+            loadBugs(); // Revert
+        }
+    };
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-full">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col h-full overflow-hidden">
@@ -75,21 +152,13 @@ export default function IssuesPage() {
                                         </div>
                                         <div className="flex items-center justify-between text-xs text-muted-foreground">
                                             <span className={`px-1.5 py-0.5 rounded border ${bug.priority === 'P0' ? 'bg-red-500/20 border-red-500/30 text-red-600' :
-                                                    bug.priority === 'P1' ? 'bg-orange-500/20 border-orange-500/30 text-orange-600' :
-                                                        'bg-secondary'
+                                                bug.priority === 'P1' ? 'bg-orange-500/20 border-orange-500/30 text-orange-600' :
+                                                    'bg-secondary'
                                                 }`}>
                                                 {bug.priority}
                                             </span>
-                                            {bug.assignee ? (
-                                                <span className="flex items-center gap-1">
-                                                    <div className="w-4 h-4 rounded-full bg-primary/20 text-[10px] flex items-center justify-center text-primary">
-                                                        {bug.assignee.charAt(0)}
-                                                    </div>
-                                                    <span className="truncate max-w-[80px]">{bug.assignee}</span>
-                                                </span>
-                                            ) : (
-                                                <span className="text-muted-foreground/50">Unassigned</span>
-                                            )}
+                                            {/* Assignee display simplified */}
+                                            <span className="text-muted-foreground/50">#{bug.id.slice(0, 4)}</span>
                                         </div>
                                     </div>
                                 ))}
@@ -102,7 +171,7 @@ export default function IssuesPage() {
             {selectedBug && (
                 <div className="fixed inset-y-0 right-0 w-[400px] bg-background border-l shadow-2xl p-6 overflow-y-auto z-50 animate-in slide-in-from-right duration-300">
                     <div className="flex items-center justify-between mb-6">
-                        <span className="text-xs font-mono text-muted-foreground">BUG-{selectedBug.id}</span>
+                        <span className="text-xs font-mono text-muted-foreground">BUG-{selectedBug.id.slice(0, 8)}</span>
                         <button onClick={() => setSelectedBug(null)} className="text-muted-foreground hover:text-foreground">
                             Close
                         </button>
@@ -116,10 +185,7 @@ export default function IssuesPage() {
                             <select
                                 className="mt-1 w-full p-2 rounded-md border bg-transparent"
                                 value={selectedBug.status}
-                                onChange={(e) => {
-                                    setBugs(bugs.map(b => b.id === selectedBug.id ? { ...b, status: e.target.value } : b));
-                                    setSelectedBug({ ...selectedBug, status: e.target.value });
-                                }}
+                                onChange={(e) => handleUpdateStatus(selectedBug.id, e.target.value)}
                             >
                                 {COLUMNS.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
                             </select>
@@ -130,16 +196,44 @@ export default function IssuesPage() {
                             <textarea
                                 className="mt-1 w-full h-32 p-2 rounded-md border bg-transparent text-sm"
                                 placeholder="Add a description..."
+                                defaultValue={selectedBug.description}
+                                onBlur={async (e) => {
+                                    // Auto save description
+                                    if (e.target.value !== selectedBug.description) {
+                                        await bugsApi.update(selectedBug.id, { description: e.target.value });
+                                    }
+                                }}
                             />
                         </div>
 
                         <div className="rounded-lg border bg-muted/40 p-4">
-                            <div className="flex items-center gap-2 mb-2">
-                                <span className="text-sm font-semibold text-purple-500">AI Suggestions</span>
+                            <div className="flex items-center justify-between gap-2 mb-2">
+                                <div className="flex items-center gap-2">
+                                    <Bot className="h-4 w-4 text-purple-600" />
+                                    <span className="text-sm font-semibold text-purple-600">AI Triage</span>
+                                </div>
+                                <button
+                                    onClick={handleTriage}
+                                    disabled={isTriaging}
+                                    className="text-xs bg-purple-600 text-white px-3 py-1.5 rounded-md hover:bg-purple-700 disabled:opacity-50"
+                                >
+                                    {isTriaging ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Run Analysis'}
+                                </button>
                             </div>
                             <div className="space-y-2 text-sm">
-                                <p><span className="text-muted-foreground">Suggested Severity:</span> <strong>Medium</strong></p>
-                                <p><span className="text-muted-foreground">Linked Requirement:</span> <a href="#" className="text-primary hover:underline">REQ-124: Login Flow</a></p>
+                                <p className="text-muted-foreground text-xs leading-relaxed">
+                                    Click "Run Analysis" to let AI analyze the bug description and suggest Severity and Priority levels automatically.
+                                </p>
+                                <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-purple-200/50">
+                                    <div>
+                                        <span className="block text-xs text-muted-foreground">Severity</span>
+                                        <span className="font-medium">{selectedBug.severity}</span>
+                                    </div>
+                                    <div>
+                                        <span className="block text-xs text-muted-foreground">Priority</span>
+                                        <span className="font-medium">{selectedBug.priority}</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

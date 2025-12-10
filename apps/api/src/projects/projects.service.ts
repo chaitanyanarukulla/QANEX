@@ -5,20 +5,20 @@ import { Project } from './project.entity';
 
 @Injectable()
 export class ProjectsService {
-    constructor(
-        @InjectRepository(Project)
-        private projectsRepository: Repository<Project>,
-    ) { }
+  constructor(
+    @InjectRepository(Project)
+    private projectsRepository: Repository<Project>,
+  ) {}
 
-    findAll(tenantId: string): Promise<Project[]> {
-        return this.projectsRepository.find({ where: { tenantId } });
-    }
+  findAll(tenantId: string): Promise<Project[]> {
+    return this.projectsRepository.find({ where: { tenantId } });
+  }
 
-    create(project: Partial<Project>): Promise<Project> {
-        return this.projectsRepository.save(project);
-    }
+  create(project: Partial<Project>): Promise<Project> {
+    return this.projectsRepository.save(project);
+  }
 
-    async count(tenantId: string): Promise<number> {
-        return this.projectsRepository.count({ where: { tenantId } });
-    }
+  async count(tenantId: string): Promise<number> {
+    return this.projectsRepository.count({ where: { tenantId } });
+  }
 }

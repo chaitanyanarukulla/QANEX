@@ -12,20 +12,20 @@ import { Release } from '../releases/release.entity';
 import { AutomationCandidate } from '../test-automation/automation-candidate.entity';
 
 @Module({
-    imports: [
-        TypeOrmModule.forFeature([
-            Project,
-            Requirement,
-            Sprint,
-            TestCase,
-            TestRun,
-            Bug,
-            Release,
-            AutomationCandidate
-        ])
-    ],
-    controllers: [OnboardingController],
-    providers: [OnboardingService],
-    exports: [OnboardingService],
+  imports: [
+    TypeOrmModule.forFeature([
+      Project,
+      Requirement,
+      Sprint,
+      TestCase,
+      TestRun,
+      Bug,
+      Release,
+      AutomationCandidate,
+    ]),
+  ],
+  controllers: [OnboardingController],
+  providers: [OnboardingService],
+  exports: [OnboardingService],
 })
-export class OnboardingModule { }
+export class OnboardingModule {}

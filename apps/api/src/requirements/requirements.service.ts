@@ -2,66 +2,99 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Requirement, RequirementState } from './requirement.entity';
-import type { AiProvider } from '../ai/ai.interface';
-import { AI_PROVIDER_TOKEN } from '../ai/ai.interface';
 import { RagService } from '../ai/rag.service';
-import { Inject } from '@nestjs/common';
+import { AiProviderFactory } from '../ai/ai-provider.factory';
+import { CreateRequirementDto } from './dto/create-requirement.dto';
+import { UpdateRequirementDto } from './dto/update-requirement.dto';
 
 @Injectable()
 export class RequirementsService {
-    constructor(
-        @InjectRepository(Requirement)
-        private requirementsRepository: Repository<Requirement>,
-        @Inject(AI_PROVIDER_TOKEN) private aiProvider: AiProvider,
-        private ragService: RagService,
-    ) { }
+  constructor(
+    @InjectRepository(Requirement)
+    private readonly repo: Repository<Requirement>,
+    private readonly ragService: RagService,
+    private readonly aiFactory: AiProviderFactory,
+  ) { }
 
-    async create(title: string, content: string, tenantId: string): Promise<Requirement> {
-        const requirement = this.requirementsRepository.create({
-            title,
-            content,
-            tenantId,
-            state: RequirementState.DRAFT,
-        });
-        const saved = await this.requirementsRepository.save(requirement);
+  async create(createDto: CreateRequirementDto, user: any): Promise<Requirement> {
+    const requirement = this.repo.create({
+      ...createDto,
+      tenantId: user.tenantId,
+      // createdBy: user.id, // removed as entity doesn't have it shown in step 341 check.
+      // version: 1, // removed
+    });
+    const saved = await this.repo.save(requirement);
 
-        // Background: Index via RAG
-        this.ragService.indexRequirement(saved.id, tenantId, title, content).catch(console.error);
+    // Background: Index via RAG
+    this.ragService
+      .indexRequirement(saved.id, user.tenantId, saved.title, saved.content)
+      .catch(console.error);
 
-        return saved;
+    return saved;
+  }
+
+  async findAll(tenantId: string): Promise<Requirement[]> {
+    return this.repo.find({
+      where: { tenantId },
+      order: { updatedAt: 'DESC' }
+    });
+  }
+
+  async findOne(id: string, tenantId: string): Promise<Requirement> {
+    const requirement = await this.repo.findOne({ where: { id, tenantId } });
+    if (!requirement) {
+      throw new NotFoundException(`Requirement ${id} not found`);
     }
+    return requirement;
+  }
 
-    async findAll(tenantId: string): Promise<Requirement[]> {
-        return this.requirementsRepository.find({ where: { tenantId } });
-    }
+  async update(id: string, updateDto: UpdateRequirementDto, user: any): Promise<Requirement> {
+    const requirement = await this.findOne(id, user.tenantId);
+    Object.assign(requirement, updateDto);
 
-    async findOne(id: string, tenantId: string): Promise<Requirement> {
-        const requirement = await this.requirementsRepository.findOne({ where: { id, tenantId } });
-        if (!requirement) {
-            throw new NotFoundException(`Requirement ${id} not found`);
-        }
-        return requirement;
-    }
 
-    async analyze(id: string, tenantId: string): Promise<Requirement> {
-        const requirement = await this.findOne(id, tenantId);
+    const saved = await this.repo.save(requirement);
 
-        // Simulate AI Call
-        const rqs = await this.aiProvider.analyzeRequirement(requirement.content);
+    // Update index
+    this.ragService.indexRequirement(saved.id, user.tenantId, saved.title, saved.content).catch(console.error);
 
-        requirement.rqs = rqs;
-        if (rqs.score > 80) {
-            requirement.state = RequirementState.READY;
-        } else {
-            requirement.state = RequirementState.NEEDS_REVISION;
-        }
+    return saved;
+  }
 
-        return this.requirementsRepository.save(requirement);
-    }
+  async analyze(id: string, tenantId: string): Promise<Requirement> {
+    const requirement = await this.findOne(id, tenantId);
 
-    async assignToSprint(id: string, sprintId: string, tenantId: string): Promise<Requirement> {
-        const requirement = await this.findOne(id, tenantId);
-        requirement.sprintId = sprintId;
-        return this.requirementsRepository.save(requirement);
-    }
+    const { provider, config } = await this.aiFactory.getProvider(tenantId);
+
+    // Pass tenant specific API key if available
+    const analysis = await provider.analyzeRequirement(
+      requirement.content || requirement.title,
+      tenantId,
+      config.apiKey,
+    );
+
+    requirement.rqs = {
+      score: analysis.score,
+      clarity: analysis.clarity,
+      completeness: analysis.completeness,
+      testability: analysis.testability,
+      consistency: analysis.consistency,
+      feedback: analysis.feedback || [],
+    };
+
+    return this.repo.save(requirement);
+  }
+
+  async assignToSprint(
+    id: string,
+    sprintId: string,
+    tenantId: string,
+  ): Promise<Requirement> {
+    const requirement = await this.findOne(id, tenantId);
+    requirement.sprintId = sprintId;
+    return this.repo.save(requirement);
+  }
+
+  // Removed getAiSettings as logic is moved to factory
+
 }

@@ -12,19 +12,19 @@ import { Release } from '../releases/release.entity';
 import { AiLog } from '../metrics/ai-log.entity';
 
 @Module({
-    imports: [
-        TypeOrmModule.forFeature([
-            Project,
-            Requirement,
-            Sprint,
-            TestCase,
-            TestRun,
-            Bug,
-            Release,
-            AiLog
-        ])
-    ],
-    controllers: [DemoController],
-    providers: [DemoService],
+  imports: [
+    TypeOrmModule.forFeature([
+      Project,
+      Requirement,
+      Sprint,
+      TestCase,
+      TestRun,
+      Bug,
+      Release,
+      AiLog,
+    ]),
+  ],
+  controllers: [DemoController],
+  providers: [DemoService],
 })
-export class DemoModule { }
+export class DemoModule {}

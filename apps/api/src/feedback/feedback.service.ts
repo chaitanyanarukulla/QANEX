@@ -5,12 +5,12 @@ import { Feedback } from './feedback.entity';
 
 @Injectable()
 export class FeedbackService {
-    constructor(
-        @InjectRepository(Feedback)
-        private feedbackRepo: Repository<Feedback>,
-    ) { }
+  constructor(
+    @InjectRepository(Feedback)
+    private feedbackRepo: Repository<Feedback>,
+  ) {}
 
-    async create(data: Partial<Feedback>): Promise<Feedback> {
-        return this.feedbackRepo.save(this.feedbackRepo.create(data));
-    }
+  async create(data: Partial<Feedback>): Promise<Feedback> {
+    return this.feedbackRepo.save(this.feedbackRepo.create(data));
+  }
 }

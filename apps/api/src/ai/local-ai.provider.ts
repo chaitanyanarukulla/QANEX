@@ -1,8 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
 import { AiProvider } from './ai.interface';
 import { LocalModelGateway } from './local-model.gateway';
 import { RagService } from './rag.service';
 import { aiConfig } from '../config/ai.config';
+import { AiMetricsService } from '../metrics/ai-metrics.service';
 
 @Injectable()
 export class LocalAiProvider implements AiProvider {
@@ -11,9 +11,10 @@ export class LocalAiProvider implements AiProvider {
   constructor(
     private readonly localModelGateway: LocalModelGateway,
     private readonly ragService: RagService,
-  ) {}
+    private readonly metricsService: AiMetricsService,
+  ) { }
 
-  async analyzeRequirement(content: string): Promise<{
+  async analyzeRequirement(content: string, tenantId: string, apiKey?: string): Promise<{
     score: number;
     clarity: number;
     completeness: number;
@@ -39,6 +40,7 @@ export class LocalAiProvider implements AiProvider {
         }
         `;
 
+    const startTime = Date.now();
     try {
       const result = await this.localModelGateway.complete({
         model: 'llama3:instruct',
@@ -47,9 +49,14 @@ export class LocalAiProvider implements AiProvider {
         temperature: aiConfig.tasks.requirementAnalysis.temperature,
       });
 
+      const duration = Date.now() - startTime;
+      this.metricsService.logUsage(tenantId, 'ANALYZE_REQUIREMENT', 'LOCAL', 'llama3:instruct', duration, undefined, true);
+
       return JSON.parse(result);
     } catch (error: unknown) {
       const err = error as Error;
+      const duration = Date.now() - startTime;
+      this.metricsService.logUsage(tenantId, 'ANALYZE_REQUIREMENT', 'LOCAL', 'llama3:instruct', duration, undefined, false);
       this.logger.error('Failed to analyze requirement locally', err.stack);
       return {
         score: 0,
@@ -57,12 +64,14 @@ export class LocalAiProvider implements AiProvider {
         completeness: 0,
         testability: 0,
         consistency: 0,
-        feedback: ['Local AI analysis failed. Please check local model status.'],
+        feedback: [
+          'Local AI analysis failed. Please check local model status.',
+        ],
       };
     }
   }
 
-  async triageBug(bugValues: { title: string; description: string }): Promise<{
+  async triageBug(bugValues: { title: string; description: string }, tenantId: string, apiKey?: string): Promise<{
     suggestedSeverity: string;
     suggestedPriority: string;
     duplicateCandidates: string[];
@@ -84,6 +93,7 @@ export class LocalAiProvider implements AiProvider {
         }
         `;
 
+    const startTime = Date.now();
     try {
       const result = await this.localModelGateway.complete({
         model: 'llama3:instruct',
@@ -92,9 +102,14 @@ export class LocalAiProvider implements AiProvider {
         temperature: aiConfig.tasks.bugTriage.temperature,
       });
 
+      const duration = Date.now() - startTime;
+      this.metricsService.logUsage(tenantId, 'TRIAGE_BUG', 'LOCAL', 'llama3:instruct', duration, undefined, true);
+
       return JSON.parse(result);
     } catch (error: unknown) {
       const err = error as Error;
+      const duration = Date.now() - startTime;
+      this.metricsService.logUsage(tenantId, 'TRIAGE_BUG', 'LOCAL', 'llama3:instruct', duration, undefined, false);
       this.logger.error('Failed to triage bug locally', err.stack);
       return {
         suggestedSeverity: 'Medium',
@@ -108,6 +123,8 @@ export class LocalAiProvider implements AiProvider {
   async generateTestCode(
     testCase: { title: string; steps: any[] },
     framework: string,
+    tenantId: string,
+    apiKey?: string,
   ): Promise<string> {
     const prompt = `
         Generate ${framework} test code for the following test case.
@@ -118,17 +135,41 @@ export class LocalAiProvider implements AiProvider {
         Return only the code block.
         `;
 
+    const startTime = Date.now();
     try {
-      return await this.localModelGateway.complete({
+      const result = await this.localModelGateway.complete({
         model: 'llama3:instruct',
         prompt: prompt,
         maxTokens: aiConfig.tasks.codeGeneration.maxTokens,
         temperature: aiConfig.tasks.codeGeneration.temperature,
       });
+      const duration = Date.now() - startTime;
+      this.metricsService.logUsage(tenantId, 'CODE_GEN', 'LOCAL', 'llama3:instruct', duration, undefined, true);
+      return result;
     } catch (error: unknown) {
       const err = error as Error;
+      const duration = Date.now() - startTime;
+      this.metricsService.logUsage(tenantId, 'CODE_GEN', 'LOCAL', 'llama3:instruct', duration, undefined, false);
       this.logger.error('Failed to generate test code locally', err.stack);
       return '// Local AI generation failed.';
     }
   }
-}
+
+  async callChat(prompt: string, tenantId: string, apiKey?: string): Promise<string> {
+    const startTime = Date.now();
+    try {
+      const result = await this.localModelGateway.complete({
+        model: 'llama3:instruct',
+        prompt: prompt,
+        maxTokens: 1000,
+        temperature: 0.7,
+      });
+      const duration = Date.now() - startTime;
+      this.metricsService.logUsage(tenantId, 'CHAT', 'LOCAL', 'llama3:instruct', duration, undefined, true);
+      return result;
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      this.metricsService.logUsage(tenantId, 'CHAT', 'LOCAL', 'llama3:instruct', duration, undefined, false);
+      throw error;
+    }
+  }

@@ -8,13 +8,13 @@ import { RequirementsModule } from '../requirements/requirements.module';
 import { BugsModule } from '../bugs/bugs.module';
 
 @Module({
-    imports: [
-        TypeOrmModule.forFeature([AiLog]),
-        forwardRef(() => RequirementsModule),
-        forwardRef(() => BugsModule),
-    ],
-    providers: [AiMetricsService, ProjectMetricsService],
-    controllers: [MetricsController],
-    exports: [AiMetricsService],
+  imports: [
+    TypeOrmModule.forFeature([AiLog]),
+    forwardRef(() => RequirementsModule),
+    forwardRef(() => BugsModule),
+  ],
+  providers: [AiMetricsService, ProjectMetricsService],
+  controllers: [MetricsController],
+  exports: [AiMetricsService],
 })
-export class MetricsModule { }
+export class MetricsModule {}

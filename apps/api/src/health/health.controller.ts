@@ -44,7 +44,8 @@ export class HealthController {
     } catch (error) {
       checks.database = {
         status: 'error',
-        message: error instanceof Error ? error.message : 'Database connection failed',
+        message:
+          error instanceof Error ? error.message : 'Database connection failed',
       };
     }
 
@@ -56,10 +57,16 @@ export class HealthController {
       if (result.length > 0) {
         checks.pgvector = { status: 'ok', message: `v${result[0].extversion}` };
       } else {
-        checks.pgvector = { status: 'warning', message: 'Extension not installed' };
+        checks.pgvector = {
+          status: 'warning',
+          message: 'Extension not installed',
+        };
       }
     } catch {
-      checks.pgvector = { status: 'warning', message: 'Could not check extension' };
+      checks.pgvector = {
+        status: 'warning',
+        message: 'Could not check extension',
+      };
     }
 
     const allHealthy = Object.values(checks).every(

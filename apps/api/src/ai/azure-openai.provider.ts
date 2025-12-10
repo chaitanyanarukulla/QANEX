@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { AiProvider } from './ai.interface';
 import { PROMPTS } from './prompts';
+import { AiMetricsService } from '../metrics/ai-metrics.service';
 
 /**
  * Azure OpenAI Provider
@@ -29,6 +30,7 @@ export class AzureOpenAiProvider implements AiProvider {
   constructor(
     private httpService: HttpService,
     private configService: ConfigService,
+    private metricsService: AiMetricsService,
   ) {
     this.endpoint = this.configService.get('AZURE_OPENAI_ENDPOINT', '');
     this.apiKey = this.configService.get('AZURE_OPENAI_API_KEY', '');
@@ -56,15 +58,18 @@ export class AzureOpenAiProvider implements AiProvider {
     }
   }
 
-  async analyzeRequirement(content: string): Promise<any> {
+  async analyzeRequirement(content: string, tenantId: string, apiKey?: string): Promise<any> {
     const prompt = PROMPTS.ANALYZE_REQUIREMENT('Requirement', content, '');
     return this.callChat(prompt, this.gpt4Deployment, 'ANALYZE_REQUIREMENT', {
       maxTokens: 2000,
       temperature: 0.2,
-    });
+    }, tenantId, apiKey);
   }
 
-  async triageBug(bugValues: { title: string; description: string }): Promise<any> {
+  async triageBug(bugValues: {
+    title: string;
+    description: string;
+  }, tenantId: string, apiKey?: string): Promise<any> {
     const prompt = PROMPTS.TRIAGE_BUG(
       bugValues.title,
       bugValues.description,
@@ -73,81 +78,47 @@ export class AzureOpenAiProvider implements AiProvider {
     return this.callChat(prompt, this.gpt4Deployment, 'TRIAGE_BUG', {
       maxTokens: 1000,
       temperature: 0.1,
-    });
+    }, tenantId, apiKey);
   }
 
   async generateTestCode(
     testCase: { title: string; steps: any[] },
     framework: string,
+    tenantId: string,
+    apiKey?: string,
   ): Promise<string> {
     const stepsStr = testCase.steps
       .map((s) => `- ${s.step} (Expect: ${s.expected})`)
       .join('\n');
-    const prompt = PROMPTS.GENERATE_TEST_CODE(testCase.title, stepsStr, framework);
+    const prompt = PROMPTS.GENERATE_TEST_CODE(
+      testCase.title,
+      stepsStr,
+      framework,
+    );
     return this.callChatRaw(prompt, this.gpt4Deployment, 'CODE_GEN', {
       maxTokens: 4000,
       temperature: 0.1,
-    });
+    }, tenantId, apiKey);
   }
 
-  async explainRcs(releaseInfo: { score: number; breakdown: any }): Promise<any> {
-    const prompt = PROMPTS.EXPLAIN_RCS(
-      releaseInfo.score,
-      JSON.stringify(releaseInfo.breakdown, null, 2),
-    );
-    return this.callChat(prompt, this.gpt4Deployment, 'EXPLAIN_RCS', {
-      maxTokens: 1000,
-      temperature: 0.7,
-    });
-  }
-
-  /**
-   * Generate embeddings using Azure OpenAI
-   */
-  async generateEmbedding(text: string): Promise<number[]> {
-    if (!this.isConfigured()) {
-      throw new Error('Azure OpenAI not configured');
-    }
-
-    const url = `${this.endpoint}openai/deployments/${this.embeddingDeployment}/embeddings?api-version=${this.apiVersion}`;
-
-    try {
-      const response = await firstValueFrom(
-        this.httpService.post(
-          url,
-          { input: text },
-          {
-            headers: {
-              'api-key': this.apiKey,
-              'Content-Type': 'application/json',
-            },
-          },
-        ),
-      );
-
-      return response.data?.data?.[0]?.embedding || [];
-    } catch (error) {
-      this.logger.error('Azure OpenAI embedding failed', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Check if Azure OpenAI is properly configured
-   */
-  isConfigured(): boolean {
-    return !!(this.endpoint && this.apiKey);
-  }
-
-  private async callChat(
+  async callChat(
     prompt: string,
     deployment: string,
     action: string,
     options: { maxTokens: number; temperature: number },
+    tenantId: string,
+    apiKey?: string,
   ): Promise<any> {
     try {
-      const result = await this.callChatRaw(prompt, deployment, action, options);
-      // Parse JSON from response
+      const result = await this.callChatRaw(
+        prompt,
+        deployment,
+        action,
+        options,
+        tenantId,
+        apiKey,
+      );
+      // Parse JSON
       const jsonStart = result.indexOf('{');
       const jsonEnd = result.lastIndexOf('}');
       if (jsonStart >= 0 && jsonEnd >= 0) {
@@ -165,8 +136,12 @@ export class AzureOpenAiProvider implements AiProvider {
     deployment: string,
     action: string,
     options: { maxTokens: number; temperature: number },
+    tenantId: string,
+    apiKey?: string,
   ): Promise<string> {
-    if (!this.isConfigured()) {
+    const activeApiKey = apiKey || this.apiKey; // BYOK
+
+    if (!this.endpoint || !activeApiKey) {
       this.logger.warn('Azure OpenAI not configured. Returning mock response.');
       return 'Mock Response (Azure OpenAI not configured)';
     }
@@ -187,25 +162,40 @@ export class AzureOpenAiProvider implements AiProvider {
           },
           {
             headers: {
-              'api-key': this.apiKey,
+              'api-key': activeApiKey,
               'Content-Type': 'application/json',
             },
-            timeout: 60000, // 60 second timeout
+            timeout: 60000,
           },
         ),
       );
 
       const content = response.data?.choices?.[0]?.message?.content;
+      const usage = response.data?.usage;
       if (!content) throw new Error('Empty response from Azure OpenAI');
+
+      const duration = Date.now() - startTime;
+      const tokens = usage ? {
+        prompt: usage.prompt_tokens,
+        completion: usage.completion_tokens,
+        total: usage.total_tokens
+      } : undefined;
+
+      this.metricsService.logUsage(tenantId, action, 'AZURE', deployment, duration, tokens, true);
 
       return content;
     } catch (error) {
+      // ... error handling
       success = false;
+      const duration = Date.now() - startTime;
+      this.metricsService.logUsage(tenantId, action, 'AZURE', deployment, duration, undefined, false);
       this.logger.error(`Azure OpenAI API call failed for ${action}`, error);
       throw error;
     } finally {
       const duration = Date.now() - startTime;
-      this.logger.debug(`Azure OpenAI call ${action} completed in ${duration}ms, success=${success}`);
+      this.logger.debug(
+        `Azure OpenAI call ${action} completed in ${duration}ms, success=${success}`,
+      );
     }
   }
 }

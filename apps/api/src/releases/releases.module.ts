@@ -10,15 +10,15 @@ import { TestKeysModule } from '../test-keys/test-keys.module';
 import { SecurityOpsModule } from '../security-ops/security-ops.module';
 
 @Module({
-    imports: [
-        TypeOrmModule.forFeature([Release]),
-        RequirementsModule,
-        BugsModule,
-        TestKeysModule,
-        SecurityOpsModule,
-    ],
-    providers: [ReleasesService, RcsService],
-    controllers: [ReleasesController],
-    exports: [ReleasesService],
+  imports: [
+    TypeOrmModule.forFeature([Release]),
+    RequirementsModule,
+    BugsModule,
+    TestKeysModule,
+    SecurityOpsModule,
+  ],
+  providers: [ReleasesService, RcsService],
+  controllers: [ReleasesController],
+  exports: [ReleasesService],
 })
-export class ReleasesModule { }
+export class ReleasesModule {}

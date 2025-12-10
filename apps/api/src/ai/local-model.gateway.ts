@@ -25,17 +25,25 @@ export class LocalModelGateway {
     };
 
     try {
-      const { data } = await firstValueFrom(this.httpService.post(url, payload));
+      const { data } = await firstValueFrom(
+        this.httpService.post(url, payload),
+      );
       // Assuming OpenAI-compatible response structure
       return data.choices[0]?.message?.content || '';
     } catch (error: unknown) {
       const err = error as Error;
-      this.logger.error(`Error calling local LLM at ${url}: ${err.message}`, err.stack);
+      this.logger.error(
+        `Error calling local LLM at ${url}: ${err.message}`,
+        err.stack,
+      );
       throw new Error('Failed to complete prompt with local LLM');
     }
   }
 
-  async embed(params: { model: string; inputs: string[] }): Promise<number[][]> {
+  async embed(params: {
+    model: string;
+    inputs: string[];
+  }): Promise<number[][]> {
     const url = `${aiConfig.local.embeddingBaseUrl}/embeddings`;
     const payload = {
       model: params.model,
@@ -43,7 +51,9 @@ export class LocalModelGateway {
     };
 
     try {
-      const { data } = await firstValueFrom(this.httpService.post(url, payload));
+      const { data } = await firstValueFrom(
+        this.httpService.post(url, payload),
+      );
       // Assuming OpenAI-compatible response structure
       // data.data is an array of objects { embedding: number[], ... }
       return data.data.map((item: any) => item.embedding);

@@ -5,10 +5,10 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 @Controller('demo')
 @UseGuards(JwtAuthGuard)
 export class DemoController {
-    constructor(private readonly demoService: DemoService) { }
+  constructor(private readonly demoService: DemoService) {}
 
-    @Post('project')
-    async createDemoProject(@Request() req: any) {
-        return this.demoService.createDemoProject(req.user.tenantId);
-    }
+  @Post('project')
+  async createDemoProject(@Request() req: any) {
+    return this.demoService.createDemoProject(req.user.tenantId);
+  }
 }

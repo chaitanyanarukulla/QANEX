@@ -1,6 +1,8 @@
 import { Injectable, Logger, Inject, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { DataSource } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Tenant } from '../tenants/tenant.entity';
 import { LocalModelGateway } from './local-model.gateway';
 import { RagBackend, RagItem } from './rag.service';
 
@@ -19,6 +21,7 @@ export class PgVectorRagAdapter implements RagBackend {
     private readonly dataSource: DataSource,
     private readonly configService: ConfigService,
     @Optional() private readonly localModelGateway: LocalModelGateway,
+    @InjectRepository(Tenant) private readonly tenantRepo: Repository<Tenant>,
   ) {
     this.aiProvider = this.configService.get('AI_PROVIDER', 'mock');
   }
@@ -26,13 +29,29 @@ export class PgVectorRagAdapter implements RagBackend {
   /**
    * Generate embeddings using appropriate provider
    */
-  private async generateEmbedding(text: string): Promise<number[] | null> {
+  private async generateEmbedding(text: string, tenantId?: string): Promise<number[] | null> {
     try {
-      if (this.aiProvider === 'azure') {
-        return await this.generateAzureEmbedding(text);
-      } else if (this.aiProvider === 'local' && this.localModelGateway) {
+      let activeProvider = this.aiProvider;
+      let activeApiKey = this.configService.get('AZURE_OPENAI_API_KEY');
+
+      if (tenantId) {
+        const tenant = await this.tenantRepo.findOne({ where: { id: tenantId } });
+        if (tenant?.settings?.aiConfig?.provider) {
+          activeProvider = tenant.settings.aiConfig.provider;
+        }
+        if (tenant?.settings?.aiConfig?.apiKey) {
+          activeApiKey = tenant.settings.aiConfig.apiKey;
+        }
+      }
+
+      if (activeProvider === 'azure' || activeProvider === 'foundry') {
+        return await this.generateAzureEmbedding(text, activeApiKey);
+      } else if (activeProvider === 'local' && this.localModelGateway) {
         const embeddings = await this.localModelGateway.embed({
-          model: this.configService.get('LOCAL_EMBEDDING_MODEL', 'nomic-embed-text'),
+          model: this.configService.get(
+            'LOCAL_EMBEDDING_MODEL',
+            'nomic-embed-text',
+          ),
           inputs: [text],
         });
         return embeddings?.[0] || null;
@@ -50,13 +69,19 @@ export class PgVectorRagAdapter implements RagBackend {
   /**
    * Generate embeddings using Azure OpenAI
    */
-  private async generateAzureEmbedding(text: string): Promise<number[]> {
+  private async generateAzureEmbedding(text: string, apiKey?: string): Promise<number[]> {
     const endpoint = this.configService.get('AZURE_OPENAI_ENDPOINT');
-    const apiKey = this.configService.get('AZURE_OPENAI_API_KEY');
-    const apiVersion = this.configService.get('AZURE_OPENAI_API_VERSION', '2024-02-15-preview');
-    const deployment = this.configService.get('AZURE_OPENAI_DEPLOYMENT_EMBEDDING', 'text-embedding-ada-002');
+    const finalApiKey = apiKey || this.configService.get('AZURE_OPENAI_API_KEY');
+    const apiVersion = this.configService.get(
+      'AZURE_OPENAI_API_VERSION',
+      '2024-02-15-preview',
+    );
+    const deployment = this.configService.get(
+      'AZURE_OPENAI_DEPLOYMENT_EMBEDDING',
+      'text-embedding-ada-002',
+    );
 
-    if (!endpoint || !apiKey) {
+    if (!endpoint || !finalApiKey) {
       throw new Error('Azure OpenAI not configured for embeddings');
     }
 
@@ -65,7 +90,7 @@ export class PgVectorRagAdapter implements RagBackend {
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'api-key': apiKey,
+        'api-key': finalApiKey,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ input: text }),
@@ -110,7 +135,10 @@ export class PgVectorRagAdapter implements RagBackend {
         )
       `);
 
-      // Create indexes
+      // Create indexes - using HNSW for better performance
+      await this.dataSource.query(`
+        CREATE INDEX IF NOT EXISTS idx_rag_embedding_hnsw ON rag_documents USING hnsw (embedding vector_cosine_ops);
+      `);
       await this.dataSource.query(`
         CREATE INDEX IF NOT EXISTS idx_rag_tenant ON rag_documents(tenant_id)
       `);
@@ -135,9 +163,11 @@ export class PgVectorRagAdapter implements RagBackend {
     // Generate embedding if not provided
     let embedding: number[] | undefined = item.embeddings;
     if (!embedding) {
-      const generated = await this.generateEmbedding(item.content);
+      const generated = await this.generateEmbedding(item.content, item.tenantId);
       if (!generated) {
-        this.logger.warn(`No embedding generated for ${item.id}, skipping index`);
+        this.logger.warn(
+          `No embedding generated for ${item.id}, skipping index`,
+        );
         return;
       }
       embedding = generated;
@@ -155,7 +185,14 @@ export class PgVectorRagAdapter implements RagBackend {
         embedding = EXCLUDED.embedding,
         updated_at = NOW()
     `,
-      [item.id, item.tenantId, item.type, item.content, item.metadata, embeddingString],
+      [
+        item.id,
+        item.tenantId,
+        item.type,
+        item.content,
+        item.metadata,
+        embeddingString,
+      ],
     );
 
     this.logger.debug(`Indexed ${item.type} ${item.id}`);
@@ -167,7 +204,7 @@ export class PgVectorRagAdapter implements RagBackend {
   async search(query: string, tenantId: string, topK = 5): Promise<RagItem[]> {
     await this.ensureTable();
 
-    const queryEmbedding = await this.generateEmbedding(query);
+    const queryEmbedding = await this.generateEmbedding(query, tenantId);
     if (!queryEmbedding) {
       this.logger.error('Failed to generate query embedding');
       return [];
@@ -206,7 +243,7 @@ export class PgVectorRagAdapter implements RagBackend {
   ): Promise<RagItem[]> {
     await this.ensureTable();
 
-    const queryEmbedding = await this.generateEmbedding(query);
+    const queryEmbedding = await this.generateEmbedding(query, tenantId);
     if (!queryEmbedding) {
       // Fall back to full-text search only
       return this.fullTextSearch(query, tenantId, options?.topK || 5);
@@ -267,9 +304,39 @@ export class PgVectorRagAdapter implements RagBackend {
    * Delete items by tenant
    */
   async clearTenant(tenantId: string): Promise<void> {
-    await this.dataSource.query('DELETE FROM rag_documents WHERE tenant_id = $1::uuid', [
-      tenantId,
-    ]);
+    await this.dataSource.query(
+      'DELETE FROM rag_documents WHERE tenant_id = $1::uuid',
+      [tenantId],
+    );
     this.logger.log(`RAG documents cleared for tenant ${tenantId}`);
+  }
+
+  /**
+   * List all items for a tenant (metadata only)
+   */
+  async listItems(tenantId: string): Promise<RagItem[]> {
+    await this.ensureTable();
+    return this.dataSource.query(
+      `
+      SELECT id, tenant_id as "tenantId", type, content, metadata, created_at
+      FROM rag_documents
+      WHERE tenant_id = $1::uuid
+      ORDER BY created_at DESC
+      LIMIT 100
+      `, // Cap at 100 for now to prevent massive payloads
+      [tenantId],
+    );
+  }
+
+  /**
+   * Delete specific item
+   */
+  async deleteItem(id: string, tenantId: string): Promise<void> {
+    await this.ensureTable();
+    await this.dataSource.query(
+      'DELETE FROM rag_documents WHERE id = $1::uuid AND tenant_id = $2::uuid',
+      [id, tenantId],
+    );
+    this.logger.log(`Deleted RAG document ${id} for tenant ${tenantId}`);
   }
 }

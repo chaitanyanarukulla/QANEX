@@ -9,24 +9,26 @@ import { Bug } from '../bugs/bug.entity';
 
 @Injectable()
 export class ExportService {
-    constructor(
-        @InjectRepository(Requirement)
-        private requirementsRepo: Repository<Requirement>,
-        @InjectRepository(Bug)
-        private bugsRepo: Repository<Bug>,
-    ) { }
+  constructor(
+    @InjectRepository(Requirement)
+    private requirementsRepo: Repository<Requirement>,
+    @InjectRepository(Bug)
+    private bugsRepo: Repository<Bug>,
+  ) {}
 
-    async exportAllJson(tenantId: string): Promise<any> {
-        const requirements = await this.requirementsRepo.find({ where: { tenantId } });
-        const bugs = await this.bugsRepo.find({ where: { tenantId } });
+  async exportAllJson(tenantId: string): Promise<any> {
+    const requirements = await this.requirementsRepo.find({
+      where: { tenantId },
+    });
+    const bugs = await this.bugsRepo.find({ where: { tenantId } });
 
-        return {
-            tenantId,
-            exportedAt: new Date(),
-            requirements,
-            bugs,
-            // tests: [],
-            // releases: [],
-        };
-    }
+    return {
+      tenantId,
+      exportedAt: new Date(),
+      requirements,
+      bugs,
+      // tests: [],
+      // releases: [],
+    };
+  }
 }

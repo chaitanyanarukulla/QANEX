@@ -1,5 +1,9 @@
 export const PROMPTS = {
-  ANALYZE_REQUIREMENT: (title: string, description: string, context: string) => `
+  ANALYZE_REQUIREMENT: (
+    title: string,
+    description: string,
+    context: string,
+  ) => `
 You are a QA Architect. Analyze the following requirement for clarity, completeness, testability, and consistency.
 
 Requirement: "${title}"

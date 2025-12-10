@@ -9,17 +9,15 @@ import { BILLING_PROVIDER_TOKEN } from './billing-provider.interface';
 
 @Global()
 @Module({
-    imports: [
-        TypeOrmModule.forFeature([Plan, Subscription]),
-    ],
-    providers: [
-        SubscriptionService,
-        PlanLimitsService,
-        {
-            provide: BILLING_PROVIDER_TOKEN,
-            useClass: StripeBillingProvider,
-        },
-    ],
-    exports: [SubscriptionService, PlanLimitsService],
+  imports: [TypeOrmModule.forFeature([Plan, Subscription])],
+  providers: [
+    SubscriptionService,
+    PlanLimitsService,
+    {
+      provide: BILLING_PROVIDER_TOKEN,
+      useClass: StripeBillingProvider,
+    },
+  ],
+  exports: [SubscriptionService, PlanLimitsService],
 })
-export class BillingModule { }
+export class BillingModule {}

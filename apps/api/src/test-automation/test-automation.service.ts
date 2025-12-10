@@ -1,13 +1,15 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { AutomationCandidate, CandidateStatus } from './automation-candidate.entity';
+import {
+  AutomationCandidate,
+  CandidateStatus,
+} from './automation-candidate.entity';
 import { AutomationRun, RunStatus } from './automation-run.entity';
 import { TestAutomationSettingsService } from './test-automation-settings.service';
 import { GitIntegrationService } from './git-integration.service';
 import { TestCase } from '../test-keys/test-case.entity';
-import type { AiProvider } from '../ai/ai.interface';
-import { AI_PROVIDER_TOKEN } from '../ai/ai.interface';
+import { AiProviderFactory } from '../ai/ai-provider.factory';
 
 @Injectable()
 export class TestAutomationService {
@@ -20,27 +22,36 @@ export class TestAutomationService {
     private testCaseRepo: Repository<TestCase>,
     private settingsService: TestAutomationSettingsService,
     private gitService: GitIntegrationService,
-    @Inject(AI_PROVIDER_TOKEN) private aiProvider: AiProvider,
-  ) {}
+    private aiFactory: AiProviderFactory,
+  ) { }
 
   async generatePr(tenantId: string, projectId: string, candidateId: string) {
     // 1. Fetch Context
     const candidate = await this.candidateRepo.findOneBy({ id: candidateId });
     if (!candidate) throw new NotFoundException('Candidate not found');
 
-    const testCase = await this.testCaseRepo.findOneBy({ id: candidate.testCaseId });
+    const testCase = await this.testCaseRepo.findOneBy({
+      id: candidate.testCaseId,
+    });
     if (!testCase) throw new NotFoundException('Test Case not found');
 
-    const settings = await this.settingsService.getSettings(tenantId, projectId);
-    if (!settings.enabled) throw new Error('Automation is disabled for this project');
+    const settings = await this.settingsService.getSettings(
+      tenantId,
+      projectId,
+    );
+    if (!settings.enabled)
+      throw new Error('Automation is disabled for this project');
 
     // 2. Generate Code
-    const code = await this.aiProvider.generateTestCode(
+    const { provider, config } = await this.aiFactory.getProvider(tenantId);
+    const code = await provider.generateTestCode(
       {
         title: testCase.title,
         steps: testCase.steps || [],
       },
-      settings.framework,
+      'playwright', // Default/Hardcoded for now as per previous context
+      tenantId,
+      config.apiKey,
     );
 
     // 3. Git Operations

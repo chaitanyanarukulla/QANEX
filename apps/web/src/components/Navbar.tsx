@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { FeedbackModal } from './feedback/FeedbackModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { aiApi, SearchResult } from '@/lib/api';
+import { AiStatusIndicator } from './AiStatusIndicator';
 
 export function Navbar() {
     const { user, logout } = useAuth();
@@ -26,16 +27,14 @@ export function Navbar() {
 
         setIsSearching(true);
         try {
-            const searchResults = await aiApi.search(searchQuery);
+            // Use Agentic Search for better reasoning
+            const searchResults = await aiApi.search(searchQuery, 'agentic');
             setResults(searchResults);
             setShowResults(true);
         } catch (err) {
             console.error('Search failed:', err);
-            // Fallback to mock results if API fails
-            setResults([
-                { id: 'mock-1', type: 'REQUIREMENT', content: `Results for "${searchQuery}"`, metadata: { title: 'Search unavailable' } },
-            ]);
-            setShowResults(true);
+            setResults([]);
+            setShowResults(false);
         } finally {
             setIsSearching(false);
         }
@@ -53,7 +52,7 @@ export function Navbar() {
         if (val.length > 2) {
             searchTimeout.current = setTimeout(() => {
                 performSearch(val);
-            }, 300);
+            }, 500); // Increased debounce for agentic
         } else {
             setResults([]);
             setShowResults(false);
@@ -70,6 +69,9 @@ export function Navbar() {
                 return `/tests`;
             case 'RELEASE':
                 return `/releases/${result.id}`;
+            // @ts-ignore
+            case 'ANSWER':
+                return '#';
             default:
                 return '#';
         }
@@ -90,7 +92,7 @@ export function Navbar() {
                     )}
                     <input
                         type="search"
-                        placeholder="Search requirements, bugs, tests... (AI Powered)"
+                        placeholder="Ask AI anything..."
                         className="h-9 w-full rounded-md border border-input bg-background pl-9 pr-4 text-sm outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary"
                         value={query}
                         onChange={handleSearch}
@@ -98,15 +100,20 @@ export function Navbar() {
                         onFocus={() => query.length > 2 && setShowResults(true)}
                     />
                     {showResults && (
-                        <div className="absolute top-full mt-1 w-full rounded-md border bg-popover p-2 shadow-md z-50">
-                            <div className="text-xs font-semibold text-muted-foreground mb-2 px-2 flex items-center justify-between">
-                                <span>AI Search Results</span>
-                                {results.length > 0 && (
-                                    <span className="text-xs text-muted-foreground">{results.length} found</span>
-                                )}
-                            </div>
-                            {results.length > 0 ? (
-                                results.map(res => (
+                        <div className="absolute top-full mt-1 w-full rounded-md border bg-popover p-2 shadow-md z-50 max-h-[80vh] overflow-y-auto">
+                            {results.map(res => {
+                                // @ts-ignore
+                                if (res.type === 'ANSWER') {
+                                    return (
+                                        <div key={res.id} className="p-3 mb-2 bg-primary/5 rounded-md border border-primary/20">
+                                            <div className="flex items-center gap-2 mb-2 text-primary font-semibold text-xs uppercase tracking-wider">
+                                                <span className="text-lg">✨</span> AI Answer
+                                            </div>
+                                            <p className="text-sm text-foreground whitespace-pre-wrap">{res.content}</p>
+                                        </div>
+                                    );
+                                }
+                                return (
                                     <Link
                                         key={res.id}
                                         href={getResultLink(res)}
@@ -116,13 +123,14 @@ export function Navbar() {
                                             setQuery('');
                                         }}
                                     >
-                                        <span className="font-mono text-xs mr-2 text-primary">[{res.type}]</span>
+                                        <span className="font-mono text-xs mr-2 text-muted-foreground">[{res.type}]</span>
                                         {getResultTitle(res)}
                                     </Link>
-                                ))
-                            ) : (
+                                );
+                            })}
+                            {results.length === 0 && (
                                 <div className="px-2 py-3 text-sm text-muted-foreground text-center">
-                                    No results found for "{query}"
+                                    No results found for &quot;{query}&quot;
                                 </div>
                             )}
                         </div>
@@ -139,6 +147,8 @@ export function Navbar() {
                         <option>Beta Inc</option>
                     </select>
                 </div>
+
+                <AiStatusIndicator />
 
                 <button
                     onClick={() => setIsFeedbackOpen(true)}

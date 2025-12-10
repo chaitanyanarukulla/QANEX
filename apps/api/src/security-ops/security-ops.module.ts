@@ -5,9 +5,9 @@ import { SecurityOpsService } from './security-ops.service';
 import { SecurityOpsController } from './security-ops.controller';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([SecurityCheck])],
-    controllers: [SecurityOpsController],
-    providers: [SecurityOpsService],
-    exports: [SecurityOpsService],
+  imports: [TypeOrmModule.forFeature([SecurityCheck])],
+  controllers: [SecurityOpsController],
+  providers: [SecurityOpsService],
+  exports: [SecurityOpsService],
 })
-export class SecurityOpsModule { }
+export class SecurityOpsModule {}

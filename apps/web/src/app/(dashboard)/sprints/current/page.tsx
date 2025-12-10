@@ -8,10 +8,23 @@ export default function CurrentSprintPage() {
     const router = useRouter();
 
     useEffect(() => {
-        // In a real app, this would fetch the current active sprint from the API
-        // For now, redirect to a mock sprint ID
-        const mockCurrentSprintId = 'sprint-current';
-        router.replace(`/sprints/${mockCurrentSprintId}`);
+        const fetchActiveSprint = async () => {
+            try {
+                // Fetch the current active sprint from the API
+                const { sprintsApi } = await import('@/lib/api');
+                const activeSprint = await sprintsApi.getActive();
+                if (activeSprint && activeSprint.id) {
+                    router.replace(`/sprints/${activeSprint.id}`);
+                } else {
+                    router.replace('/sprints');
+                }
+            } catch (error) {
+                console.error('Failed to fetch active sprint:', error);
+                router.replace('/sprints');
+            }
+        };
+
+        fetchActiveSprint();
     }, [router]);
 
     return (

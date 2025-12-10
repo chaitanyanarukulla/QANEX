@@ -7,9 +7,9 @@ import { TestRun } from './test-run.entity';
 import { TestResult } from './test-result.entity';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([TestCase, TestRun, TestResult])],
-    providers: [TestKeysService],
-    controllers: [TestKeysController],
-    exports: [TestKeysService],
+  imports: [TypeOrmModule.forFeature([TestCase, TestRun, TestResult])],
+  providers: [TestKeysService],
+  controllers: [TestKeysController],
+  exports: [TestKeysService],
 })
-export class TestKeysModule { }
+export class TestKeysModule {}

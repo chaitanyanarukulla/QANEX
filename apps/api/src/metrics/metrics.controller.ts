@@ -6,20 +6,26 @@ import { AiMetricsService } from './ai-metrics.service';
 @Controller('metrics')
 @UseGuards(JwtAuthGuard)
 export class MetricsController {
-    constructor(
-        private readonly projectMetrics: ProjectMetricsService,
-        private readonly aiMetrics: AiMetricsService
-    ) { }
+  constructor(
+    private readonly projectMetrics: ProjectMetricsService,
+    private readonly aiMetrics: AiMetricsService,
+  ) { }
 
-    @Get('dashboard')
-    async getDashboard(@Request() req: any) {
-        const tenantId = req.user.tenantId;
-        const project = await this.projectMetrics.getProjectStats(tenantId);
-        const ai = await this.aiMetrics.getStats(tenantId);
+  @Get('dashboard')
+  async getDashboard(@Request() req: any) {
+    const tenantId = req.user.tenantId;
+    const project = await this.projectMetrics.getProjectStats(tenantId);
+    const ai = await this.aiMetrics.getStats(tenantId);
 
-        return {
-            project,
-            ai
-        };
-    }
+    return {
+      project,
+      ai,
+    };
+  }
+
+  @Get('ai/usage')
+  async getAiUsage(@Request() req: any) {
+    const tenantId = req.user.tenantId;
+    return this.aiMetrics.getUsageHistory(tenantId);
+  }
 }

@@ -268,6 +268,12 @@ export const requirementsApi = {
   analyze: (id: string) => api<Requirement>(`/requirements/${id}/analyze`, { method: 'POST' }),
 };
 
+export interface BugAnalysisResult {
+  suggestedSeverity?: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+  suggestedPriority?: 'P0' | 'P1' | 'P2' | 'P3';
+  analysis?: string;
+}
+
 // Bugs API
 export const bugsApi = {
   list: () => api<Bug[]>('/bugs'),
@@ -276,7 +282,7 @@ export const bugsApi = {
   update: (id: string, data: Partial<Bug>) =>
     api<Bug>(`/bugs/${id}`, { method: 'PATCH', body: data }),
   delete: (id: string) => api(`/bugs/${id}`, { method: 'DELETE' }),
-  triage: (id: string) => api<Bug>(`/bugs/${id}/triage`, { method: 'POST' }),
+  triage: (id: string) => api<BugAnalysisResult>(`/bugs/${id}/triage`, { method: 'POST' }),
 };
 
 // Sprints API
@@ -433,6 +439,25 @@ export const demoApi = {
   createProject: () => api('/demo/project', { method: 'POST' }),
 };
 
+// Tenants API
+export interface TenantSettings {
+  rqsThreshold?: number;
+  rcsThresholds?: Record<string, number>;
+  aiConfig?: {
+    provider?: 'foundry' | 'azure' | 'local';
+    apiKey?: string;
+  };
+}
+
+export const tenantsApi = {
+  get: (id: string) => api<{ id: string; settings: TenantSettings }>(`/tenants/${id}`),
+  updateSettings: (id: string, settings: TenantSettings) =>
+    api<{ settings: TenantSettings }>(`/tenants/${id}/settings`, {
+      method: 'POST',
+      body: settings,
+    }),
+};
+
 // Test Automation Types
 export interface AutomationCandidate {
   id: string;
@@ -488,6 +513,9 @@ export interface SearchResult {
 
 // AI/RAG API
 export const aiApi = {
-  search: (query: string) =>
-    api<SearchResult[]>('/ai/search', { method: 'POST', body: { query } }),
+  search: (query: string, mode: 'simple' | 'agentic' = 'simple') =>
+    api<SearchResult[]>('/ai/search', { method: 'POST', body: { query, mode } }),
+  listDocuments: () => api<SearchResult[]>('/ai/documents'),
+  deleteDocument: (id: string) => api<{ status: string; id: string }>(`/ai/documents/${id}`, { method: 'DELETE' }),
+  reindex: () => api<{ status: string; indexed: { total: number } }>('/ai/reindex', { method: 'POST' }),
 };

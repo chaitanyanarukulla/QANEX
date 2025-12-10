@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BugsService } from './bugs.service';
 import { BugsController } from './bugs.controller';
@@ -7,12 +7,9 @@ import { BugTriageService } from './bug-triage.service';
 import { AiModule } from '../ai/ai.module';
 
 @Module({
-    imports: [
-        TypeOrmModule.forFeature([Bug]),
-        AiModule
-    ],
-    providers: [BugsService, BugTriageService],
-    controllers: [BugsController],
-    exports: [BugsService],
+  imports: [TypeOrmModule.forFeature([Bug]), forwardRef(() => AiModule)],
+  providers: [BugsService, BugTriageService],
+  controllers: [BugsController],
+  exports: [BugsService],
 })
 export class BugsModule { }
