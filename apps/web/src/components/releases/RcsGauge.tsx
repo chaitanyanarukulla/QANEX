@@ -3,13 +3,10 @@
 export function RcsGauge({ score }: { score: number }) {
     // Color logic
     let color = 'text-green-500';
-    let bgColor = 'bg-green-500';
     if (score < 50) {
         color = 'text-red-500';
-        bgColor = 'bg-red-500';
     } else if (score < 80) {
         color = 'text-yellow-500';
-        bgColor = 'bg-yellow-500';
     }
 
     const circumference = 2 * Math.PI * 40;

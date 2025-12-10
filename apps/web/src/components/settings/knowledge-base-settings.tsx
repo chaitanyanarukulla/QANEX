@@ -9,10 +9,6 @@ export function KnowledgeBaseSettings() {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
 
-    useEffect(() => {
-        loadDocuments();
-    }, []);
-
     const loadDocuments = async () => {
         try {
             setLoading(true);
@@ -25,6 +21,11 @@ export function KnowledgeBaseSettings() {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        loadDocuments();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const handleDelete = async (id: string) => {
         if (!confirm('Are you sure? This removes the item from AI memory, but keeps the original record.')) return;

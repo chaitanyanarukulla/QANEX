@@ -199,6 +199,7 @@ export default function AISettingsPage() {
         setFoundryModel((foundryModels[0] as any).alias || (foundryModels[0] as any).id);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProviderInfo, selectedProvider]);
 
   // Get models for selected provider

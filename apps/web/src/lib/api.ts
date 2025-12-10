@@ -352,7 +352,7 @@ export interface ReleaseGate {
   count?: number;
   percent?: number;
   threshold: number;
-  details?: any[];
+  details?: Record<string, unknown>[];
 }
 
 export interface ReleaseGatesEvaluation {
@@ -582,7 +582,7 @@ export interface AIConnectionTestResult {
 export interface AIFoundryLocalStatus {
   running: boolean;
   endpoint?: string;
-  loadedModels?: any[];
+  loadedModels?: Record<string, unknown>[];
   hardwareInfo?: {
     accelerationType: 'CPU' | 'GPU' | 'NPU' | 'Unknown';
     loadedModels: Array<{ name: string; executionProvider: string }>;
@@ -605,7 +605,7 @@ export const aiSettingsApi = {
   getFoundryLocalStatus: () => api<AIFoundryLocalStatus>('/ai/settings/foundry-local/status'),
 
   getFoundryLocalModels: () =>
-    api<{ loaded: any[]; available: any[]; error?: string }>('/ai/settings/foundry-local/models'),
+    api<{ loaded: Record<string, unknown>[]; available: Record<string, unknown>[]; error?: string }>('/ai/settings/foundry-local/models'),
 
   getEmbeddingOptions: (provider: AIProviderType) =>
     api<{

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { api, requirementsApi, bugsApi, releasesApi } from '@/lib/api';
+import { api, releasesApi } from '@/lib/api';
 
 interface DashboardStats {
   totalRequirements: number;
@@ -91,7 +91,8 @@ export function useDashboard() {
 
   useEffect(() => {
     fetchDashboard();
-  }, [fetchDashboard]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return { ...state, refresh: fetchDashboard };
 }

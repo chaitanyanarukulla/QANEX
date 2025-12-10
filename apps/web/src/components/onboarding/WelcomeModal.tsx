@@ -1,19 +1,15 @@
 'use client';
 
 import { X } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export function WelcomeModal() {
-    const [isOpen, setIsOpen] = useState(false);
+    const [isOpen, setIsOpen] = useState(() => {
+        if (typeof window === 'undefined') return false;
+        return !localStorage.getItem('hasSeenWelcomeV2');
+    });
     const router = useRouter();
-
-    useEffect(() => {
-        const hasSeen = localStorage.getItem('hasSeenWelcomeV2');
-        if (!hasSeen) {
-            setIsOpen(true);
-        }
-    }, []);
 
     const handleClose = () => {
         setIsOpen(false);
@@ -75,7 +71,7 @@ export function WelcomeModal() {
                         onClick={handleClose}
                         className="px-4 py-2 text-sm font-medium rounded-md hover:bg-muted"
                     >
-                        I'll explore myself
+                        I&apos;ll explore myself
                     </button>
                     <button
                         onClick={handleDemo}

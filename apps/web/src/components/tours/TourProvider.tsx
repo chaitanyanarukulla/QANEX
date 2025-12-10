@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { TourConfig, TourStep, TourContextType } from './types';
+import type { TourContextType } from './types';
 import { X, ChevronRight, ChevronLeft } from 'lucide-react';
 
 const TourContext = createContext<TourContextType | undefined>(undefined);

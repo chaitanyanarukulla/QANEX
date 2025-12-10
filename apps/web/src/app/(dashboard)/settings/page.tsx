@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
-import { authApi, tenantsApi } from '@/lib/api';
 import { KnowledgeBaseSettings } from '@/components/settings/knowledge-base-settings';
 import { AiUsageChart } from '@/components/settings/AiUsageChart';
 

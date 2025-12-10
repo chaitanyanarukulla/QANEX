@@ -1,4 +1,11 @@
-export function PillarCard({ title, score, max = 100, icon: Icon }: any) {
+interface PillarCardProps {
+    title: string;
+    score: number;
+    max?: number;
+    icon?: React.ComponentType<{ className?: string }>;
+}
+
+export function PillarCard({ title, score, max = 100, icon: Icon }: PillarCardProps) {
     let color = 'bg-green-500';
     if (score < 50) color = 'bg-red-500';
     else if (score < 80) color = 'bg-yellow-500';
