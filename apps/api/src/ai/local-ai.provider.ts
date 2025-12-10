@@ -1,3 +1,4 @@
+import { Injectable, Logger } from '@nestjs/common';
 import { AiProvider } from './ai.interface';
 import { LocalModelGateway } from './local-model.gateway';
 import { RagService } from './rag.service';
@@ -173,3 +174,4 @@ export class LocalAiProvider implements AiProvider {
       throw error;
     }
   }
+}

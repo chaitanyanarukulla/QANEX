@@ -35,12 +35,12 @@ export class BugsService {
 
   async triage(id: string, tenantId: string) {
     const bug = await this.findOne(id, tenantId);
-    const provider = await this.aiFactory.getProvider(tenantId);
+    const { provider } = await this.aiFactory.getProvider(tenantId);
     // Assuming aiProvider.triageBug returns { suggestedSeverity, suggestedPriority, ... }
     const suggestion = await provider.triageBug({
       title: bug.title,
       description: bug.description || '',
-    });
+    }, tenantId);
 
     // Update bug with AI suggestions (could be separate columns, here treating as direct update for prototype)
     if (suggestion?.suggestedSeverity)

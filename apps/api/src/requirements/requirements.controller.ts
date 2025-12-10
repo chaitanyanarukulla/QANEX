@@ -11,20 +11,17 @@ import { RequirementsService } from './requirements.service';
 import { Requirement } from './requirement.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { CreateRequirementDto } from './dto/create-requirement.dto';
 
 @Controller('requirements')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class RequirementsController {
-  constructor(private readonly requirementsService: RequirementsService) {}
+  constructor(private readonly requirementsService: RequirementsService) { }
 
   @Post()
-  create(
-    @Body() dto: { title: string; content: string },
-    @Request() req: any,
-  ): Promise<Requirement> {
-    // In a real app, tenantId validates against user's tenant
-    const tenantId = req.user.tenantId || 'mock-tenant-id';
-    return this.requirementsService.create(dto.title, dto.content, tenantId);
+  create(@Body() dto: CreateRequirementDto, @Request() req: any) {
+    // Controller passes DTO and User object (containing tenantId)
+    return this.requirementsService.create(dto, req.user);
   }
 
   @Get()

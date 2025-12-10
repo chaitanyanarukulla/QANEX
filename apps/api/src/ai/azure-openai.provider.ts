@@ -60,7 +60,7 @@ export class AzureOpenAiProvider implements AiProvider {
 
   async analyzeRequirement(content: string, tenantId: string, apiKey?: string): Promise<any> {
     const prompt = PROMPTS.ANALYZE_REQUIREMENT('Requirement', content, '');
-    return this.callChat(prompt, this.gpt4Deployment, 'ANALYZE_REQUIREMENT', {
+    return this.callChatWithOptions(prompt, this.gpt4Deployment, 'ANALYZE_REQUIREMENT', {
       maxTokens: 2000,
       temperature: 0.2,
     }, tenantId, apiKey);
@@ -75,7 +75,7 @@ export class AzureOpenAiProvider implements AiProvider {
       bugValues.description,
       '',
     );
-    return this.callChat(prompt, this.gpt4Deployment, 'TRIAGE_BUG', {
+    return this.callChatWithOptions(prompt, this.gpt4Deployment, 'TRIAGE_BUG', {
       maxTokens: 1000,
       temperature: 0.1,
     }, tenantId, apiKey);
@@ -102,6 +102,39 @@ export class AzureOpenAiProvider implements AiProvider {
   }
 
   async callChat(
+    prompt: string,
+    tenantId: string, // tenantId is required by interface
+    apiKey?: string,
+  ): Promise<any> {
+    try {
+      const options = { maxTokens: 1000, temperature: 0.7 }; // Default options for generic chat
+      const result = await this.callChatRaw(
+        prompt,
+        this.gpt4Deployment, // Default deployment
+        'CHAT',
+        options,
+        tenantId,
+        apiKey,
+      );
+      // Parse JSON
+      const jsonStart = result.indexOf('{');
+      const jsonEnd = result.lastIndexOf('}');
+      if (jsonStart >= 0 && jsonEnd >= 0) {
+        return JSON.parse(result.substring(jsonStart, jsonEnd + 1));
+      }
+      return result;
+    } catch (e) {
+      this.logger.error('Failed to parse Azure OpenAI JSON response', e);
+      throw new Error('AI Response parsing failed');
+    }
+  }
+
+  // Renaming old callChat to callChatInternal or similar if it was used internally with more options
+  // Looking at the file, it seems the previous callChat was private and taken implementation details. 
+  // But now it conflicts with the public interface method. 
+  // I will introduce a private helper with rich options.
+
+  private async callChatWithOptions(
     prompt: string,
     deployment: string,
     action: string,

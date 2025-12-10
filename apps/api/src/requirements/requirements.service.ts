@@ -23,12 +23,12 @@ export class RequirementsService {
       // createdBy: user.id, // removed as entity doesn't have it shown in step 341 check.
       // version: 1, // removed
     });
-    const saved = await this.repo.save(requirement);
+    const saved = await this.repo.save(requirement) as Requirement;
 
-    // Background: Index via RAG
+    // Background: Index    // Auto-Index
     this.ragService
       .indexRequirement(saved.id, user.tenantId, saved.title, saved.content)
-      .catch(console.error);
+      .catch((e) => console.error('RAG Index failed', e));
 
     return saved;
   }

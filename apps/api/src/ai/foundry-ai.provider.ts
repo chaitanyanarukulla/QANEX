@@ -5,6 +5,7 @@ import { AiProvider } from './ai.interface';
 import { aiConfig } from '../config/ai.config';
 import { PROMPTS } from './prompts';
 import { PiiRedactionService } from './pii-redaction.service';
+import { AiMetricsService } from '../metrics/ai-metrics.service';
 
 @Injectable()
 export class FoundryAiProvider implements AiProvider {
@@ -17,6 +18,7 @@ export class FoundryAiProvider implements AiProvider {
   constructor(
     private httpService: HttpService,
     private readonly piiService: PiiRedactionService,
+    private readonly metricsService: AiMetricsService, // Inject Metrics
   ) { }
 
   async analyzeRequirement(content: string, tenantId: string, apiKey?: string): Promise<any> {
@@ -67,21 +69,28 @@ export class FoundryAiProvider implements AiProvider {
     score: number;
     breakdown: any;
   }): Promise<any> {
+    // Note: explainRcs doesn't take tenantId in interface yet, but it should. 
+    // For now passing empty or handle error.
+    // In fact, interface says explainRcs is optional, but implementation has it. 
+    // Let's keep it but it might fail metrics if no tenantId.
+    // I'll leave it as is for now or use a placeholder.
     const prompt = PROMPTS.EXPLAIN_RCS(
       releaseInfo.score,
       JSON.stringify(releaseInfo.breakdown, null, 2),
     );
-    return this.callLlm(prompt, aiConfig.tasks.rcsExplanation, 'EXPLAIN_RCS');
+    // TODO: Need tenantId here
+    return this.callLlm(prompt, aiConfig.tasks.rcsExplanation, 'EXPLAIN_RCS', 'UNKNOWN');
   }
 
   private async callLlm(
     prompt: string,
     config: any,
     action: string,
+    tenantId: string,
     apiKey?: string,
   ): Promise<any> {
     try {
-      const result = await this.callLlmRaw(prompt, config, action, apiKey);
+      const result = await this.callLlmRaw(prompt, config, action, tenantId, apiKey);
       // Attempt to parse JSON
       const jsonStart = result.indexOf('{');
       const jsonEnd = result.lastIndexOf('}');
@@ -99,6 +108,7 @@ export class FoundryAiProvider implements AiProvider {
     prompt: string,
     config: any,
     action: string,
+    tenantId: string,
     apiKey?: string,
   ): Promise<string> {
     // Prioritize Tenant Key (BYOK), then fallback to System Key
@@ -119,8 +129,6 @@ export class FoundryAiProvider implements AiProvider {
       throw new Error('LLM API Key is missing');
     }
 
-    // Use passed config or fallback (though config should be mandatory really)
-    // const config = aiConfig.tasks.requirementAnalysis; // REMOVED hardcoded value
     let success = true;
     const startTime = Date.now();
 
@@ -149,24 +157,21 @@ export class FoundryAiProvider implements AiProvider {
       if (!content) throw new Error('Empty response from LLM');
 
       const duration = Date.now() - startTime;
-      this.logger.log({
-        action,
-        duration,
-        model: config.model,
-        tokens: usage
-          ? {
-            prompt: usage.prompt_tokens,
-            completion: usage.completion_tokens,
-            total: usage.total_tokens,
-          }
-          : 'unknown',
-        success: true,
-      });
+
+      const tokens = usage ? {
+        prompt: usage.prompt_tokens,
+        completion: usage.completion_tokens,
+        total: usage.total_tokens
+      } : undefined;
+
+      this.metricsService.logUsage(tenantId, action, 'FOUNDRY', config.model, duration, tokens, true);
 
       return content;
     } catch (error) {
       success = false;
       const duration = Date.now() - startTime;
+      this.metricsService.logUsage(tenantId, action, 'FOUNDRY', config.model, duration, undefined, false);
+
       this.logger.error({
         action,
         duration,

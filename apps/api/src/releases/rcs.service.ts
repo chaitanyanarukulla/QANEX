@@ -110,7 +110,7 @@ export class RcsService {
     breakdown: any,
   ) {
     try {
-      const provider = await this.aiFactory.getProvider(tenantId);
+      const { provider } = await this.aiFactory.getProvider(tenantId);
       if (provider.explainRcs) {
         const explanation = await provider.explainRcs({
           score,
