@@ -9,7 +9,6 @@ import {
 } from '@nestjs/common';
 import { SecurityOpsService } from './security-ops.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { Request as ExpressRequest } from 'express';
 
 @Controller('security-ops')
 @UseGuards(JwtAuthGuard)

@@ -214,7 +214,7 @@ export class SprintsController {
   @Post('items/task-breakdown')
   generateTaskBreakdown(
     @Body() dto: { requirementId: string; title: string; description: string },
-    @Request() req: any,
+    @Request() _req: any,
   ) {
     return this.sprintsService.generateTaskBreakdown(
       dto.requirementId,

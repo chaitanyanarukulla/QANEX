@@ -14,7 +14,6 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { TestResultStatus } from './test-result.entity';
 import { TestPriority } from './test-case.entity';
-import { Request as ExpressRequest } from 'express';
 
 @Controller('tests')
 @UseGuards(JwtAuthGuard, RolesGuard)
