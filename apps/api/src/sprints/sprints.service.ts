@@ -217,4 +217,120 @@ export class SprintsService {
         });
         return sprint;
     }
+
+    // ===== AI Planning =====
+
+    async planSprint(tenantId: string, capacity: number = 20): Promise<{
+        recommendedItems: Array<{
+            item: SprintItem;
+            reason: string;
+            score: number;
+        }>;
+        totalRecommended: number;
+        capacityUtilized: number;
+        reasoning: string;
+    }> {
+        // Get all backlog items
+        const backlogItems = await this.getBacklogItems(tenantId);
+
+        if (backlogItems.length === 0) {
+            return {
+                recommendedItems: [],
+                totalRecommended: 0,
+                capacityUtilized: 0,
+                reasoning: 'No backlog items available for planning.',
+            };
+        }
+
+        // Score each item based on priority and RQS
+        const scoredItems = backlogItems.map(item => {
+            // Priority scoring: CRITICAL=40, HIGH=30, MEDIUM=20, LOW=10
+            const priorityScore = {
+                [SprintItemPriority.CRITICAL]: 40,
+                [SprintItemPriority.HIGH]: 30,
+                [SprintItemPriority.MEDIUM]: 20,
+                [SprintItemPriority.LOW]: 10,
+            }[item.priority] || 0;
+
+            // RQS scoring: normalize 0-100 to 0-40 points
+            const rqsScore = ((item.rqsScore || 0) / 100) * 40;
+
+            // Type impact: Features are more valuable than tasks, tasks > bugs
+            const typeScore = {
+                [SprintItemType.FEATURE]: 20,
+                [SprintItemType.TASK]: 15,
+                [SprintItemType.BUG]: 10,
+            }[item.type] || 0;
+
+            // Total score out of 100
+            const totalScore = priorityScore + rqsScore + typeScore;
+
+            return {
+                item,
+                score: Math.round(totalScore),
+                breakdown: { priorityScore, rqsScore, typeScore },
+            };
+        });
+
+        // Sort by score descending
+        scoredItems.sort((a, b) => b.score - a.score);
+
+        // Select items up to capacity
+        const recommendedItems = [];
+        let currentCapacity = 0;
+
+        for (const { item, score, breakdown } of scoredItems) {
+            if (currentCapacity < capacity) {
+                // Generate reasoning for this item
+                const reasons = [];
+                if (breakdown.priorityScore >= 30) {
+                    reasons.push(`Critical/High priority (${item.priority})`);
+                }
+                if (item.rqsScore && item.rqsScore >= 70) {
+                    reasons.push(`Strong requirement quality (RQS: ${item.rqsScore})`);
+                }
+                if (item.type === SprintItemType.FEATURE) {
+                    reasons.push('High-value feature');
+                }
+                if (item.priority === SprintItemPriority.CRITICAL) {
+                    reasons.push('Blocks release');
+                }
+
+                recommendedItems.push({
+                    item,
+                    reason: reasons.join('; '),
+                    score,
+                });
+
+                currentCapacity++;
+            }
+        }
+
+        // Generate overall reasoning
+        const reasoning = this.generatePlanningReasoning(
+            backlogItems.length,
+            recommendedItems.length,
+            capacity
+        );
+
+        return {
+            recommendedItems,
+            totalRecommended: recommendedItems.length,
+            capacityUtilized: recommendedItems.length,
+            reasoning,
+        };
+    }
+
+    private generatePlanningReasoning(
+        totalBacklog: number,
+        recommended: number,
+        capacity: number
+    ): string {
+        const utilizationRate = Math.round((recommended / capacity) * 100);
+        const remainingBacklog = totalBacklog - recommended;
+
+        return `AI selected ${recommended} items for your sprint (${utilizationRate}% capacity utilization). ` +
+            `${remainingBacklog} items remain in backlog. ` +
+            `Selection prioritizes: Critical/High priority items, high RQS requirements, and valuable features. `;
+    }
 }

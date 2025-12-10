@@ -122,4 +122,12 @@ export class SprintsController {
         const tenantId = req.user.tenantId || 'mock-tenant-id';
         return this.sprintsService.getSprintMetrics(id, tenantId);
     }
+
+    // ===== AI Planning =====
+
+    @Post('ai/plan')
+    planSprint(@Body() dto: { capacity?: number }, @Request() req: any) {
+        const tenantId = req.user.tenantId || 'mock-tenant-id';
+        return this.sprintsService.planSprint(tenantId, dto.capacity || 20);
+    }
 }

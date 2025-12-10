@@ -141,6 +141,17 @@ export interface SprintMetrics {
   avgRqsScore: number | null;
 }
 
+export interface AIPlanRecommendation {
+  recommendedItems: Array<{
+    item: SprintItem;
+    reason: string;
+    score: number;
+  }>;
+  totalRecommended: number;
+  capacityUtilized: number;
+  reasoning: string;
+}
+
 export interface Release {
   id: string;
   version: string;
@@ -263,6 +274,13 @@ export const sprintsApi = {
 
   // Sprint Metrics
   getMetrics: (sprintId: string) => api<SprintMetrics>(`/sprints/${sprintId}/metrics`),
+
+  // AI Planning
+  planSprint: (capacity?: number) =>
+    api<AIPlanRecommendation>('/sprints/ai/plan', {
+      method: 'POST',
+      body: { capacity: capacity || 20 },
+    }),
 };
 
 // Releases API

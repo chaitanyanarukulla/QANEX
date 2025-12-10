@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Calendar, Plus, ArrowRight, Bot, MoreHorizontal, Loader2 } from 'lucide-react';
-import { sprintsApi, SprintItem } from '@/lib/api';
+import { Calendar, Plus, ArrowRight, Bot, MoreHorizontal, Loader2, Lightbulb, X } from 'lucide-react';
+import { sprintsApi, SprintItem, AIPlanRecommendation } from '@/lib/api';
 
 export default function PlanningPage() {
     const router = useRouter();
@@ -11,7 +11,9 @@ export default function PlanningPage() {
     const [sprintItems, setSprintItems] = useState<SprintItem[]>([]);
     const [isStarting, setIsStarting] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [isPlanning, setIsPlanning] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [aiRecommendation, setAiRecommendation] = useState<AIPlanRecommendation | null>(null);
 
     useEffect(() => {
         loadBacklogItems();
@@ -41,27 +43,29 @@ export default function PlanningPage() {
         setBacklog([...backlog, item]);
     };
 
-    const handleAutoPlan = () => {
-        // Sort backlog by priority and RQS score
-        const sorted = [...backlog].sort((a, b) => {
-            // Priority order: CRITICAL > HIGH > MEDIUM > LOW
-            const priorityOrder = { CRITICAL: 4, HIGH: 3, MEDIUM: 2, LOW: 1 };
-            const aPriority = priorityOrder[a.priority] || 0;
-            const bPriority = priorityOrder[b.priority] || 0;
+    const handleAutoPlan = async () => {
+        try {
+            setIsPlanning(true);
+            setError(null);
 
-            if (aPriority !== bPriority) return bPriority - aPriority;
+            // Call AI planning endpoint
+            const recommendation = await sprintsApi.planSprint(20);
+            setAiRecommendation(recommendation);
 
-            // If same priority, sort by RQS score
-            return (b.rqsScore || 0) - (a.rqsScore || 0);
-        });
+            // Auto-add recommended items to sprint
+            const recommendedItems = recommendation.recommendedItems.map(r => r.item);
+            const remainingBacklog = backlog.filter(item =>
+                !recommendedItems.some(rec => rec.id === item.id)
+            );
 
-        // Select top 3-5 items based on capacity
-        const selectedCount = Math.min(5, sorted.length);
-        const selected = sorted.slice(0, selectedCount);
-        const remaining = sorted.slice(selectedCount);
-
-        setSprintItems([...sprintItems, ...selected]);
-        setBacklog(remaining);
+            setSprintItems([...sprintItems, ...recommendedItems]);
+            setBacklog(remainingBacklog);
+        } catch (err) {
+            console.error('Failed to plan sprint:', err);
+            setError('Failed to get AI recommendations');
+        } finally {
+            setIsPlanning(false);
+        }
     };
 
     const handleStartSprint = async () => {
@@ -123,6 +127,43 @@ export default function PlanningPage() {
                 </div>
             )}
 
+            {aiRecommendation && (
+                <div className="rounded-lg border border-purple-200 dark:border-purple-900/50 bg-purple-50/50 dark:bg-purple-900/10 p-4">
+                    <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-start gap-3 flex-1">
+                            <Lightbulb className="h-5 w-5 text-purple-600 dark:text-purple-400 flex-shrink-0 mt-0.5" />
+                            <div className="flex-1">
+                                <h3 className="font-semibold text-purple-900 dark:text-purple-100 mb-1">
+                                    AI Planning Recommendation
+                                </h3>
+                                <p className="text-sm text-purple-700 dark:text-purple-300 mb-3">
+                                    {aiRecommendation.reasoning}
+                                </p>
+                                <div className="space-y-2">
+                                    {aiRecommendation.recommendedItems.slice(0, 3).map((rec, idx) => (
+                                        <div key={rec.item.id} className="text-xs text-purple-600 dark:text-purple-400">
+                                            <span className="font-medium">{rec.item.title}</span>
+                                            <span className="text-purple-500 dark:text-purple-500"> ({rec.score} pts)</span>
+                                            {rec.reason && <span className="text-purple-600 dark:text-purple-400"> - {rec.reason}</span>}
+                                        </div>
+                                    ))}
+                                    {aiRecommendation.recommendedItems.length > 3 && (
+                                        <div className="text-xs text-purple-600 dark:text-purple-400">
+                                            +{aiRecommendation.recommendedItems.length - 3} more items recommended
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => setAiRecommendation(null)}
+                            className="text-purple-400 hover:text-purple-600 dark:hover:text-purple-300 flex-shrink-0">
+                            <X className="h-4 w-4" />
+                        </button>
+                    </div>
+                </div>
+            )}
+
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight">Sprint Planning</h1>
@@ -131,10 +172,19 @@ export default function PlanningPage() {
                 <div className="flex gap-2">
                     <button
                         onClick={handleAutoPlan}
-                        disabled={backlog.length === 0}
+                        disabled={backlog.length === 0 || isPlanning}
                         className="inline-flex items-center justify-center rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-purple-700 disabled:opacity-50">
-                        <Bot className="mr-2 h-4 w-4" />
-                        AI Auto-Plan
+                        {isPlanning ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Planning...
+                            </>
+                        ) : (
+                            <>
+                                <Bot className="mr-2 h-4 w-4" />
+                                AI Auto-Plan
+                            </>
+                        )}
                     </button>
                     <button
                         onClick={handleStartSprint}
