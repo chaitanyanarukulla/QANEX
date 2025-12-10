@@ -25,11 +25,21 @@ export class FoundryAiProvider implements AiProvider {
     private httpService: HttpService,
     private readonly piiService: PiiRedactionService,
     private readonly metricsService: AiMetricsService, // Inject Metrics
-  ) { }
+  ) {}
 
-  async analyzeRequirement(content: string, tenantId: string, apiKey?: string): Promise<any> {
+  async analyzeRequirement(
+    content: string,
+    tenantId: string,
+    apiKey?: string,
+  ): Promise<any> {
     const prompt = PROMPTS.ANALYZE_REQUIREMENT('Requirement', content, '');
-    return this.callLlmRaw(prompt, aiConfig.tasks.requirementAnalysis as AiTaskConfig, 'ANALYZE_REQUIREMENT', tenantId, apiKey);
+    return this.callLlmRaw(
+      prompt,
+      aiConfig.tasks.requirementAnalysis as AiTaskConfig,
+      'ANALYZE_REQUIREMENT',
+      tenantId,
+      apiKey,
+    );
   }
 
   async triageBug(
@@ -45,7 +55,13 @@ export class FoundryAiProvider implements AiProvider {
       bugValues.description,
       '',
     );
-    return this.callLlm(prompt, aiConfig.tasks.bugTriage as AiTaskConfig, 'TRIAGE_BUG', tenantId, apiKey);
+    return this.callLlm(
+      prompt,
+      aiConfig.tasks.bugTriage as AiTaskConfig,
+      'TRIAGE_BUG',
+      tenantId,
+      apiKey,
+    );
   }
 
   async generateTestCode(
@@ -64,20 +80,36 @@ export class FoundryAiProvider implements AiProvider {
     );
 
     // Return raw text, logged as CODE_GEN
-    return this.callLlmRaw(prompt, aiConfig.tasks.codeGeneration, 'CODE_GEN', tenantId, apiKey);
+    return this.callLlmRaw(
+      prompt,
+      aiConfig.tasks.codeGeneration,
+      'CODE_GEN',
+      tenantId,
+      apiKey,
+    );
   }
 
-  async callChat(prompt: string, tenantId: string, apiKey?: string): Promise<string> {
-    return this.callLlmRaw(prompt, { model: 'gpt-4', temperature: 0.7, maxTokens: 1000 }, 'CHAT', tenantId, apiKey);
+  async callChat(
+    prompt: string,
+    tenantId: string,
+    apiKey?: string,
+  ): Promise<string> {
+    return this.callLlmRaw(
+      prompt,
+      { model: 'gpt-4', temperature: 0.7, maxTokens: 1000 },
+      'CHAT',
+      tenantId,
+      apiKey,
+    );
   }
 
   async explainRcs(releaseInfo: {
     score: number;
     breakdown: any;
   }): Promise<any> {
-    // Note: explainRcs doesn't take tenantId in interface yet, but it should. 
+    // Note: explainRcs doesn't take tenantId in interface yet, but it should.
     // For now passing empty or handle error.
-    // In fact, interface says explainRcs is optional, but implementation has it. 
+    // In fact, interface says explainRcs is optional, but implementation has it.
     // Let's keep it but it might fail metrics if no tenantId.
     // I'll leave it as is for now or use a placeholder.
     const prompt = PROMPTS.EXPLAIN_RCS(
@@ -85,7 +117,12 @@ export class FoundryAiProvider implements AiProvider {
       JSON.stringify(releaseInfo.breakdown, null, 2),
     );
     // TODO: Need tenantId here
-    return this.callLlm(prompt, aiConfig.tasks.rcsExplanation, 'EXPLAIN_RCS', 'UNKNOWN');
+    return this.callLlm(
+      prompt,
+      aiConfig.tasks.rcsExplanation,
+      'EXPLAIN_RCS',
+      'UNKNOWN',
+    );
   }
 
   private async callLlm(
@@ -96,7 +133,13 @@ export class FoundryAiProvider implements AiProvider {
     apiKey?: string,
   ): Promise<any> {
     try {
-      const result = await this.callLlmRaw(prompt, config, action, tenantId, apiKey);
+      const result = await this.callLlmRaw(
+        prompt,
+        config,
+        action,
+        tenantId,
+        apiKey,
+      );
       // Attempt to parse JSON
       const jsonStart = result.indexOf('{');
       const jsonEnd = result.lastIndexOf('}');
@@ -135,7 +178,7 @@ export class FoundryAiProvider implements AiProvider {
       throw new Error('LLM API Key is missing');
     }
 
-    let success = true;
+    let _success = true;
     const startTime = Date.now();
 
     try {
@@ -164,19 +207,37 @@ export class FoundryAiProvider implements AiProvider {
 
       const duration = Date.now() - startTime;
 
-      const tokens = usage ? {
-        prompt: usage.prompt_tokens,
-        completion: usage.completion_tokens,
-        total: usage.total_tokens
-      } : undefined;
+      const tokens = usage
+        ? {
+            prompt: usage.prompt_tokens,
+            completion: usage.completion_tokens,
+            total: usage.total_tokens,
+          }
+        : undefined;
 
-      await this.metricsService.logUsage(tenantId, action, 'FOUNDRY', (config as AiTaskConfig).model, duration, tokens, true);
+      await this.metricsService.logUsage(
+        tenantId,
+        action,
+        'FOUNDRY',
+        (config as AiTaskConfig).model,
+        duration,
+        tokens,
+        true,
+      );
 
       return content;
     } catch (error) {
-      success = false;
+      _success = false;
       const duration = Date.now() - startTime;
-      await this.metricsService.logUsage(tenantId, action, 'FOUNDRY', (config as AiTaskConfig).model, duration, undefined, false);
+      await this.metricsService.logUsage(
+        tenantId,
+        action,
+        'FOUNDRY',
+        (config as AiTaskConfig).model,
+        duration,
+        undefined,
+        false,
+      );
 
       this.logger.error({
         action,

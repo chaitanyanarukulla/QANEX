@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ReleasesService } from './releases.service';
 import { RequirementsService } from '../requirements/requirements.service';
 import { TestKeysService } from '../test-keys/test-keys.service';
@@ -15,7 +15,7 @@ export class RcsService {
     private bugsService: BugsService,
     private securityOpsService: SecurityOpsService,
     private aiFactory: AiProviderFactory,
-  ) { }
+  ) {}
 
   async calculateRcs(releaseId: string, tenantId: string) {
     // 1. Fetch Release Context

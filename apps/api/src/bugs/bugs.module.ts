@@ -12,4 +12,4 @@ import { AiModule } from '../ai/ai.module';
   controllers: [BugsController],
   exports: [BugsService],
 })
-export class BugsModule { }
+export class BugsModule {}

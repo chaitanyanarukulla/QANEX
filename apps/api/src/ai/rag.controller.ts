@@ -35,7 +35,7 @@ export class RagController {
     private readonly requirementsService: RequirementsService,
     @Inject(forwardRef(() => BugsService))
     private readonly bugsService: BugsService,
-  ) { }
+  ) {}
 
   @Post('reindex')
   async reindex(@Request() req: any) {
@@ -50,13 +50,23 @@ export class RagController {
 
     let reqCount = 0;
     for (const req of requirements) {
-      await this.ragService.indexRequirement(req.id, tenantId, req.title, req.content);
+      await this.ragService.indexRequirement(
+        req.id,
+        tenantId,
+        req.title,
+        req.content,
+      );
       reqCount++;
     }
 
     let bugCount = 0;
     for (const bug of bugs) {
-      await this.ragService.indexBug(bug.id, tenantId, bug.title, bug.description || '');
+      await this.ragService.indexBug(
+        bug.id,
+        tenantId,
+        bug.title,
+        bug.description || '',
+      );
       bugCount++;
     }
 
@@ -65,13 +75,16 @@ export class RagController {
       indexed: {
         requirements: reqCount,
         bugs: bugCount,
-        total: reqCount + bugCount
-      }
+        total: reqCount + bugCount,
+      },
     };
   }
 
   @Post('search')
-  async search(@Body() body: { query: string; mode?: 'simple' | 'agentic' }, @Request() req: any) {
+  async search(
+    @Body() body: { query: string; mode?: 'simple' | 'agentic' },
+    @Request() req: any,
+  ) {
     const tenantId = (req.user as UserPayload)?.tenantId;
     if (!tenantId) throw new ForbiddenException();
 
@@ -85,7 +98,7 @@ export class RagController {
       // The implementation plan said: "Update POST /ai/search to accept optional mode... Default to agentic".
       // BUT, standard search usually returns documents. Agentic RAG returns an ANSWER.
       // Let's return a special structure or if the frontend expects documents, we return the docs FOUND by the agent?
-      // AgenticRagService.answer returns string. 
+      // AgenticRagService.answer returns string.
       // Let's modify the return type to be dynamic or add a new endpoint if strictly different.
       // Implementation plan said "Update POST /ai/search".
       // If I change return type, I break frontend potentially.
@@ -100,18 +113,18 @@ export class RagController {
           id: 'agent-answer',
           type: 'ANSWER',
           content: answer,
-          metadata: { title: 'AI Generated Answer' }
-        }
+          metadata: { title: 'AI Generated Answer' },
+        },
       ];
     }
 
     // Default Simple Search
     const results = await this.ragService.search(body.query, tenantId);
-    return results.map(r => ({
+    return results.map((r) => ({
       id: r.id,
       type: r.type,
       content: r.content,
-      metadata: r.metadata
+      metadata: r.metadata,
     }));
   }
 

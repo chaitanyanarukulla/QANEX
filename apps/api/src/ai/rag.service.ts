@@ -1,4 +1,4 @@
-import { Injectable, Inject, Optional } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { PiiRedactionService } from './pii-redaction.service';
 
 export interface RagItem {
@@ -69,7 +69,7 @@ export class RagService {
   constructor(
     @Inject(RAG_BACKEND_TOKEN) private readonly backend: RagBackend,
     private readonly piiService: PiiRedactionService,
-  ) { }
+  ) {}
 
   async indexItem(item: RagItem): Promise<void> {
     // Redact content before indexing
@@ -107,7 +107,11 @@ export class RagService {
     });
   }
 
-  async search(query: string, tenantId: string, topK?: number): Promise<RagItem[]> {
+  async search(
+    query: string,
+    tenantId: string,
+    topK?: number,
+  ): Promise<RagItem[]> {
     return this.backend.search(query, tenantId, topK);
   }
 

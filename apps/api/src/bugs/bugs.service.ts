@@ -14,7 +14,7 @@ export class BugsService {
     private bugsRepository: Repository<Bug>,
     private aiFactory: AiProviderFactory,
     private ragService: RagService,
-  ) { }
+  ) {}
 
   async create(data: Partial<Bug>, tenantId: string): Promise<Bug> {
     const bug = this.bugsRepository.create({ ...data, tenantId });
@@ -37,10 +37,13 @@ export class BugsService {
     const bug = await this.findOne(id, tenantId);
     const { provider } = await this.aiFactory.getProvider(tenantId);
     // Assuming aiProvider.triageBug returns { suggestedSeverity, suggestedPriority, ... }
-    const suggestion = await provider.triageBug({
-      title: bug.title,
-      description: bug.description || '',
-    }, tenantId);
+    const suggestion = await provider.triageBug(
+      {
+        title: bug.title,
+        description: bug.description || '',
+      },
+      tenantId,
+    );
 
     // Update bug with AI suggestions (could be separate columns, here treating as direct update for prototype)
     if (suggestion?.suggestedSeverity)

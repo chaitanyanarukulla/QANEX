@@ -67,27 +67,49 @@ export class AzureOpenAiProvider implements AiProvider {
     }
   }
 
-  async analyzeRequirement(content: string, tenantId: string, apiKey?: string): Promise<any> {
+  async analyzeRequirement(
+    content: string,
+    tenantId: string,
+    apiKey?: string,
+  ): Promise<any> {
     const prompt = PROMPTS.ANALYZE_REQUIREMENT('Requirement', content, '');
-    return this.callChatWithOptions(prompt, this.gpt4Deployment, 'ANALYZE_REQUIREMENT', {
-      maxTokens: 2000,
-      temperature: 0.2,
-    }, tenantId, apiKey);
+    return this.callChatWithOptions(
+      prompt,
+      this.gpt4Deployment,
+      'ANALYZE_REQUIREMENT',
+      {
+        maxTokens: 2000,
+        temperature: 0.2,
+      },
+      tenantId,
+      apiKey,
+    );
   }
 
-  async triageBug(bugValues: {
-    title: string;
-    description: string;
-  }, tenantId: string, apiKey?: string): Promise<any> {
+  async triageBug(
+    bugValues: {
+      title: string;
+      description: string;
+    },
+    tenantId: string,
+    apiKey?: string,
+  ): Promise<any> {
     const prompt = PROMPTS.TRIAGE_BUG(
       bugValues.title,
       bugValues.description,
       '',
     );
-    return this.callChatWithOptions(prompt, this.gpt4Deployment, 'TRIAGE_BUG', {
-      maxTokens: 1000,
-      temperature: 0.1,
-    }, tenantId, apiKey);
+    return this.callChatWithOptions(
+      prompt,
+      this.gpt4Deployment,
+      'TRIAGE_BUG',
+      {
+        maxTokens: 1000,
+        temperature: 0.1,
+      },
+      tenantId,
+      apiKey,
+    );
   }
 
   async generateTestCode(
@@ -97,17 +119,27 @@ export class AzureOpenAiProvider implements AiProvider {
     apiKey?: string,
   ): Promise<string> {
     const stepsStr = testCase.steps
-      .map((s: { step: string; expected: string }) => `- ${s.step} (Expect: ${s.expected})`)
+      .map(
+        (s: { step: string; expected: string }) =>
+          `- ${s.step} (Expect: ${s.expected})`,
+      )
       .join('\n');
     const prompt = PROMPTS.GENERATE_TEST_CODE(
       testCase.title,
       stepsStr,
       framework,
     );
-    return this.callChatRaw(prompt, this.gpt4Deployment, 'CODE_GEN', {
-      maxTokens: 4000,
-      temperature: 0.1,
-    }, tenantId, apiKey);
+    return this.callChatRaw(
+      prompt,
+      this.gpt4Deployment,
+      'CODE_GEN',
+      {
+        maxTokens: 4000,
+        temperature: 0.1,
+      },
+      tenantId,
+      apiKey,
+    );
   }
 
   async callChat(
@@ -139,8 +171,8 @@ export class AzureOpenAiProvider implements AiProvider {
   }
 
   // Renaming old callChat to callChatInternal or similar if it was used internally with more options
-  // Looking at the file, it seems the previous callChat was private and taken implementation details. 
-  // But now it conflicts with the public interface method. 
+  // Looking at the file, it seems the previous callChat was private and taken implementation details.
+  // But now it conflicts with the public interface method.
   // I will introduce a private helper with rich options.
 
   private async callChatWithOptions(
@@ -218,20 +250,38 @@ export class AzureOpenAiProvider implements AiProvider {
       if (!content) throw new Error('Empty response from Azure OpenAI');
 
       const duration = Date.now() - startTime;
-      const tokens = usage ? {
-        prompt: usage.prompt_tokens,
-        completion: usage.completion_tokens,
-        total: usage.total_tokens
-      } : undefined;
+      const tokens = usage
+        ? {
+            prompt: usage.prompt_tokens,
+            completion: usage.completion_tokens,
+            total: usage.total_tokens,
+          }
+        : undefined;
 
-      await this.metricsService.logUsage(tenantId, action, 'AZURE', deployment, duration, tokens, true);
+      await this.metricsService.logUsage(
+        tenantId,
+        action,
+        'AZURE',
+        deployment,
+        duration,
+        tokens,
+        true,
+      );
 
       return content;
     } catch (error) {
       // ... error handling
       success = false;
       const duration = Date.now() - startTime;
-      await this.metricsService.logUsage(tenantId, action, 'AZURE', deployment, duration, undefined, false);
+      await this.metricsService.logUsage(
+        tenantId,
+        action,
+        'AZURE',
+        deployment,
+        duration,
+        undefined,
+        false,
+      );
       this.logger.error(`Azure OpenAI API call failed for ${action}`, error);
       throw error;
     } finally {

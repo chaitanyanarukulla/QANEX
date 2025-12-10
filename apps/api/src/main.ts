@@ -9,7 +9,7 @@ async function bootstrap() {
   // Validate environment variables before starting
   try {
     validateEnv();
-  } catch (error) {
+  } catch (_error) {
     logger.error('Failed to start: Environment validation failed');
     process.exit(1);
   }

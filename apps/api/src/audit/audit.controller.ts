@@ -5,13 +5,13 @@ import { AuditService } from './audit.service';
 @Controller('audit-logs')
 @UseGuards(JwtAuthGuard)
 export class AuditController {
-  constructor(private readonly auditService: AuditService) { }
+  constructor(private readonly auditService: AuditService) {}
 
   @Get()
   async getLogs(@Request() req: any, @Query('limit') limit: number) {
     // Enforce tenant isolation via req.user.tenantId (assuming populated by middleware/guard)
     // For MVP, if middleware populates it:
-    const tenantId = (req.user as any)?.tenantId || (req as any).tenantId;
+    const tenantId = req.user?.tenantId || req.tenantId;
     if (!tenantId) {
       // Should be handled by guard
       return [];

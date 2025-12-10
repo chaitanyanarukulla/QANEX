@@ -13,9 +13,13 @@ export class LocalAiProvider implements AiProvider {
     private readonly localModelGateway: LocalModelGateway,
     private readonly ragService: RagService,
     private readonly metricsService: AiMetricsService,
-  ) { }
+  ) {}
 
-  async analyzeRequirement(content: string, tenantId: string, _apiKey?: string): Promise<{
+  async analyzeRequirement(
+    content: string,
+    tenantId: string,
+    _apiKey?: string,
+  ): Promise<{
     score: number;
     clarity: number;
     completeness: number;
@@ -43,7 +47,7 @@ export class LocalAiProvider implements AiProvider {
 
     const startTime = Date.now();
     try {
-      const result = await this.localModelGateway.complete({
+      const _result = await this.localModelGateway.complete({
         model: 'llama3:instruct',
         prompt: prompt,
         maxTokens: aiConfig.tasks.requirementAnalysis.maxTokens,
@@ -51,11 +55,27 @@ export class LocalAiProvider implements AiProvider {
       });
 
       const duration = Date.now() - startTime;
-      await this.metricsService.logUsage(tenantId, 'ANALYZE_REQUIREMENT', 'LOCAL', 'llama3:instruct', duration, undefined, true);
+      await this.metricsService.logUsage(
+        tenantId,
+        'ANALYZE_REQUIREMENT',
+        'LOCAL',
+        'llama3:instruct',
+        duration,
+        undefined,
+        true,
+      );
     } catch (error: unknown) {
       const err = error as Error;
       const duration = Date.now() - startTime;
-      await this.metricsService.logUsage(tenantId, 'ANALYZE_REQUIREMENT', 'LOCAL', 'llama3:instruct', duration, undefined, false);
+      await this.metricsService.logUsage(
+        tenantId,
+        'ANALYZE_REQUIREMENT',
+        'LOCAL',
+        'llama3:instruct',
+        duration,
+        undefined,
+        false,
+      );
       this.logger.error('Failed to analyze requirement locally', err.stack);
       return {
         score: 0,
@@ -70,7 +90,11 @@ export class LocalAiProvider implements AiProvider {
     }
   }
 
-  async triageBug(bugValues: { title: string; description: string }, tenantId: string, _apiKey?: string): Promise<{
+  async triageBug(
+    bugValues: { title: string; description: string },
+    tenantId: string,
+    _apiKey?: string,
+  ): Promise<{
     suggestedSeverity: string;
     suggestedPriority: string;
     duplicateCandidates: string[];
@@ -94,7 +118,7 @@ export class LocalAiProvider implements AiProvider {
 
     const startTime = Date.now();
     try {
-      const result = await this.localModelGateway.complete({
+      const _result = await this.localModelGateway.complete({
         model: 'llama3:instruct',
         prompt: prompt,
         maxTokens: aiConfig.tasks.bugTriage.maxTokens,
@@ -102,13 +126,29 @@ export class LocalAiProvider implements AiProvider {
       });
 
       const duration = Date.now() - startTime;
-      await this.metricsService.logUsage(tenantId, 'TRIAGE_BUG', 'LOCAL', 'llama3:instruct', duration, undefined, true);
+      await this.metricsService.logUsage(
+        tenantId,
+        'TRIAGE_BUG',
+        'LOCAL',
+        'llama3:instruct',
+        duration,
+        undefined,
+        true,
+      );
 
       return JSON.parse(result);
     } catch (error: unknown) {
       const err = error as Error;
       const duration = Date.now() - startTime;
-      await this.metricsService.logUsage(tenantId, 'TRIAGE_BUG', 'LOCAL', 'llama3:instruct', duration, undefined, false);
+      await this.metricsService.logUsage(
+        tenantId,
+        'TRIAGE_BUG',
+        'LOCAL',
+        'llama3:instruct',
+        duration,
+        undefined,
+        false,
+      );
       this.logger.error('Failed to triage bug locally', err.stack);
       return {
         suggestedSeverity: 'Medium',
@@ -136,39 +176,75 @@ export class LocalAiProvider implements AiProvider {
 
     const startTime = Date.now();
     try {
-      const result = await this.localModelGateway.complete({
+      const _result = await this.localModelGateway.complete({
         model: 'llama3:instruct',
         prompt: prompt,
         maxTokens: aiConfig.tasks.codeGeneration.maxTokens,
         temperature: aiConfig.tasks.codeGeneration.temperature,
       });
       const duration = Date.now() - startTime;
-      await this.metricsService.logUsage(tenantId, 'CODE_GEN', 'LOCAL', 'llama3:instruct', duration, undefined, true);
+      await this.metricsService.logUsage(
+        tenantId,
+        'CODE_GEN',
+        'LOCAL',
+        'llama3:instruct',
+        duration,
+        undefined,
+        true,
+      );
       return result;
     } catch (error: unknown) {
       const err = error as Error;
       const duration = Date.now() - startTime;
-      await this.metricsService.logUsage(tenantId, 'CODE_GEN', 'LOCAL', 'llama3:instruct', duration, undefined, false);
+      await this.metricsService.logUsage(
+        tenantId,
+        'CODE_GEN',
+        'LOCAL',
+        'llama3:instruct',
+        duration,
+        undefined,
+        false,
+      );
       this.logger.error('Failed to generate test code locally', err.stack);
       return '// Local AI generation failed.';
     }
   }
 
-  async callChat(prompt: string, tenantId: string, _apiKey?: string): Promise<string> {
+  async callChat(
+    prompt: string,
+    tenantId: string,
+    _apiKey?: string,
+  ): Promise<string> {
     const startTime = Date.now();
     try {
-      const result = await this.localModelGateway.complete({
+      const _result = await this.localModelGateway.complete({
         model: 'llama3:instruct',
         prompt: prompt,
         maxTokens: 1000,
         temperature: 0.7,
       });
       const duration = Date.now() - startTime;
-      await this.metricsService.logUsage(tenantId, 'CHAT', 'LOCAL', 'llama3:instruct', duration, undefined, true);
+      await this.metricsService.logUsage(
+        tenantId,
+        'CHAT',
+        'LOCAL',
+        'llama3:instruct',
+        duration,
+        undefined,
+        true,
+      );
       return result;
     } catch (error) {
       const duration = Date.now() - startTime;
-      await this.metricsService.logUsage(tenantId, 'CHAT', 'LOCAL', 'llama3:instruct', duration, undefined, false);
+      await this.metricsService.logUsage(
+        tenantId,
+        'CHAT',
+        'LOCAL',
+        'llama3:instruct',
+        duration,
+        undefined,
+        false,
+      );
       throw error;
     }
   }

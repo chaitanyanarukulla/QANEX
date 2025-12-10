@@ -9,7 +9,7 @@ export class MetricsController {
   constructor(
     private readonly projectMetrics: ProjectMetricsService,
     private readonly aiMetrics: AiMetricsService,
-  ) { }
+  ) {}
 
   @Get('dashboard')
   async getDashboard(@Request() req: any) {

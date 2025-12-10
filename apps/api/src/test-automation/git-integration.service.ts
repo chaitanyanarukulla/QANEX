@@ -30,7 +30,7 @@ export class GitIntegrationService {
     repoName: string,
     branchName: string,
     title: string,
-    body: string,
+    _body: string,
   ) {
     console.log(`[MockGit] Created PR "${title}" for ${branchName}`);
     return {

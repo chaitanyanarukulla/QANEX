@@ -7,7 +7,7 @@ import { firstValueFrom } from 'rxjs';
 export class LocalModelGateway {
   private readonly logger = new Logger(LocalModelGateway.name);
 
-  constructor(private readonly httpService: HttpService) { }
+  constructor(private readonly httpService: HttpService) {}
 
   async complete(params: {
     model: string;
@@ -29,7 +29,7 @@ export class LocalModelGateway {
         this.httpService.post(url, payload),
       );
       // Assuming OpenAI-compatible response structure
-      return (data as any).choices?.[0]?.message?.content || '';
+      return data.choices?.[0]?.message?.content || '';
     } catch (error: unknown) {
       const err = error as Error;
       this.logger.error(
@@ -56,7 +56,7 @@ export class LocalModelGateway {
       );
       // Assuming OpenAI-compatible response structure
       // data.data is an array of objects { embedding: number[], ... }
-      return (data as any).data.map((item: any) => item.embedding);
+      return data.data.map((item: any) => item.embedding);
     } catch (error: unknown) {
       const err = error as Error;
       this.logger.error(

@@ -1,12 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import {
-  SecurityCheck,
-  CheckType,
-  CheckStatus,
-  Severity,
-} from './security-check.entity';
+import { SecurityCheck, CheckType, CheckStatus } from './security-check.entity';
 
 @Injectable()
 export class SecurityOpsService {

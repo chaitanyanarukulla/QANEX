@@ -1,4 +1,4 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {
@@ -23,7 +23,7 @@ export class TestAutomationService {
     private settingsService: TestAutomationSettingsService,
     private gitService: GitIntegrationService,
     private aiFactory: AiProviderFactory,
-  ) { }
+  ) {}
 
   async generatePr(tenantId: string, projectId: string, candidateId: string) {
     // 1. Fetch Context

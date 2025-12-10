@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { User } from './user.entity';
-import { UserTenant, OrgRole } from './user-tenant.entity';
+import { OrgRole } from './user-tenant.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/auth.decorators';

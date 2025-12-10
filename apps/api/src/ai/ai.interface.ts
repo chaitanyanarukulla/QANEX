@@ -1,5 +1,9 @@
 export interface AiProvider {
-  analyzeRequirement(content: string, tenantId: string, apiKey?: string): Promise<{
+  analyzeRequirement(
+    content: string,
+    tenantId: string,
+    apiKey?: string,
+  ): Promise<{
     score: number;
     clarity: number;
     completeness: number;
@@ -26,8 +30,8 @@ export interface AiProvider {
     apiKey?: string,
   ): Promise<string>;
 
-  callChat(prompt: string, tenantId: string, apiKey?: string): Promise<string>; // Keeping callChat simple for now or update it too? 
-  // Wait, AgenticRag uses callChat but doesn't log metrics yet effectively if it uses generic provider. 
+  callChat(prompt: string, tenantId: string, apiKey?: string): Promise<string>; // Keeping callChat simple for now or update it too?
+  // Wait, AgenticRag uses callChat but doesn't log metrics yet effectively if it uses generic provider.
   // But wait, AgenticRagService has tenantId context. Ideally callChat should take tenantId too.
   // Let's update callChat as well.
 

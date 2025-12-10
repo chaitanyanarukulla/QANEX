@@ -1,4 +1,4 @@
-import { Controller, Get, Res, Request, UseGuards } from '@nestjs/common';
+import { Controller, Get, Res, Request } from '@nestjs/common';
 import type { Response } from 'express';
 import { ExportService } from './export.service';
 
@@ -19,7 +19,7 @@ export class ExportController {
     res.setHeader('Content-Type', 'application/json');
     res.setHeader(
       'Content-Disposition',
-      `attachment; filename="export-${tenantId}-${Date.now()}.json"`,
+      `attachment; filename = "export-${tenantId}-${Date.now()}.json"`,
     );
     return res.send(data);
   }

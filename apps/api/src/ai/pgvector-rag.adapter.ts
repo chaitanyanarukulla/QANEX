@@ -1,4 +1,4 @@
-import { Injectable, Logger, Inject, Optional } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DataSource, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -29,13 +29,18 @@ export class PgVectorRagAdapter implements RagBackend {
   /**
    * Generate embeddings using appropriate provider
    */
-  private async generateEmbedding(text: string, tenantId?: string): Promise<number[] | null> {
+  private async generateEmbedding(
+    text: string,
+    tenantId?: string,
+  ): Promise<number[] | null> {
     try {
       let activeProvider = this.aiProvider;
       let activeApiKey = this.configService.get('AZURE_OPENAI_API_KEY');
 
       if (tenantId) {
-        const tenant = await this.tenantRepo.findOne({ where: { id: tenantId } });
+        const tenant = await this.tenantRepo.findOne({
+          where: { id: tenantId },
+        });
         if (tenant?.settings?.aiConfig?.provider) {
           activeProvider = tenant.settings.aiConfig.provider;
         }
@@ -51,7 +56,7 @@ export class PgVectorRagAdapter implements RagBackend {
           model: this.configService.get(
             'LOCAL_EMBEDDING_MODEL',
             'nomic-embed-text',
-          ) as string,
+          ),
           inputs: [text],
         });
         return embeddings?.[0] || null;
@@ -69,9 +74,13 @@ export class PgVectorRagAdapter implements RagBackend {
   /**
    * Generate embeddings using Azure OpenAI
    */
-  private async generateAzureEmbedding(text: string, apiKey?: string): Promise<number[]> {
+  private async generateAzureEmbedding(
+    text: string,
+    apiKey?: string,
+  ): Promise<number[]> {
     const endpoint = this.configService.get('AZURE_OPENAI_ENDPOINT');
-    const finalApiKey = apiKey || this.configService.get('AZURE_OPENAI_API_KEY');
+    const finalApiKey =
+      apiKey || this.configService.get('AZURE_OPENAI_API_KEY');
     const apiVersion = this.configService.get(
       'AZURE_OPENAI_API_VERSION',
       '2024-02-15-preview',
@@ -163,7 +172,10 @@ export class PgVectorRagAdapter implements RagBackend {
     // Generate embedding if not provided
     let embedding: number[] | undefined = item.embeddings;
     if (!embedding) {
-      const generated = await this.generateEmbedding(item.content, item.tenantId);
+      const generated = await this.generateEmbedding(
+        item.content,
+        item.tenantId,
+      );
       if (!generated) {
         this.logger.warn(
           `No embedding generated for ${item.id}, skipping index`,

@@ -37,7 +37,7 @@ export class SprintsController {
       startDate?: string;
       endDate?: string;
     },
-    @Request() req: any,
+    @Request() _req: any,
   ): Promise<Sprint> {
     const tenantId = req.user.tenantId || 'mock-tenant-id';
     return this.sprintsService.create(
@@ -51,19 +51,19 @@ export class SprintsController {
   }
 
   @Get()
-  findAll(@Request() req: any): Promise<Sprint[]> {
+  findAll(@Request() _req: any): Promise<Sprint[]> {
     const tenantId = req.user.tenantId || 'mock-tenant-id';
     return this.sprintsService.findAll(tenantId);
   }
 
   @Get('active')
-  getActiveSprint(@Request() req: any): Promise<Sprint | null> {
+  getActiveSprint(@Request() _req: any): Promise<Sprint | null> {
     const tenantId = req.user.tenantId || 'mock-tenant-id';
     return this.sprintsService.getActiveSprint(tenantId);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string, @Request() req: any): Promise<Sprint> {
+  findOne(@Param('id') id: string, @Request() _req: any): Promise<Sprint> {
     const tenantId = req.user.tenantId || 'mock-tenant-id';
     return this.sprintsService.findOne(id, tenantId);
   }
@@ -72,7 +72,7 @@ export class SprintsController {
   update(
     @Param('id') id: string,
     @Body() dto: Partial<Sprint>,
-    @Request() req: any,
+    @Request() _req: any,
   ): Promise<Sprint> {
     const tenantId = req.user.tenantId || 'mock-tenant-id';
     return this.sprintsService.update(id, tenantId, dto);
@@ -82,7 +82,7 @@ export class SprintsController {
   updateStatus(
     @Param('id') id: string,
     @Body() dto: { status: SprintStatus },
-    @Request() req: any,
+    @Request() _req: any,
   ): Promise<Sprint> {
     const tenantId = req.user.tenantId || 'mock-tenant-id';
     return this.sprintsService.updateStatus(id, tenantId, dto.status);
@@ -105,14 +105,14 @@ export class SprintsController {
       assigneeId?: string;
       assigneeName?: string;
     },
-    @Request() req: any,
+    @Request() _req: any,
   ): Promise<SprintItem> {
     const tenantId = req.user.tenantId || 'mock-tenant-id';
     return this.sprintsService.addItem(dto.sprintId || null, tenantId, dto);
   }
 
   @Get('backlog/items')
-  getBacklogItems(@Request() req: any): Promise<SprintItem[]> {
+  getBacklogItems(@Request() _req: any): Promise<SprintItem[]> {
     const tenantId = req.user.tenantId || 'mock-tenant-id';
     return this.sprintsService.getBacklogItems(tenantId);
   }
@@ -120,7 +120,7 @@ export class SprintsController {
   @Get(':id/items')
   getSprintItems(
     @Param('id') id: string,
-    @Request() req: any,
+    @Request() _req: any,
   ): Promise<SprintItem[]> {
     const tenantId = req.user.tenantId || 'mock-tenant-id';
     return this.sprintsService.getSprintItems(id, tenantId);
@@ -130,7 +130,7 @@ export class SprintsController {
   updateItem(
     @Param('itemId') itemId: string,
     @Body() dto: Partial<SprintItem>,
-    @Request() req: any,
+    @Request() _req: any,
   ): Promise<SprintItem> {
     const tenantId = req.user.tenantId || 'mock-tenant-id';
     return this.sprintsService.updateItem(itemId, tenantId, dto);
@@ -140,7 +140,7 @@ export class SprintsController {
   moveItem(
     @Param('itemId') itemId: string,
     @Body() dto: { sprintId?: string; status?: SprintItemStatus },
-    @Request() req: any,
+    @Request() _req: any,
   ): Promise<SprintItem> {
     const tenantId = req.user.tenantId || 'mock-tenant-id';
     return this.sprintsService.moveItemToSprint(
@@ -154,7 +154,7 @@ export class SprintsController {
   @Delete('items/:itemId')
   removeItem(
     @Param('itemId') itemId: string,
-    @Request() req: any,
+    @Request() _req: any,
   ): Promise<void> {
     const tenantId = req.user.tenantId || 'mock-tenant-id';
     return this.sprintsService.removeItem(itemId, tenantId);
@@ -163,7 +163,7 @@ export class SprintsController {
   // ===== Sprint Metrics =====
 
   @Get(':id/metrics')
-  getMetrics(@Param('id') id: string, @Request() req: any) {
+  getMetrics(@Param('id') id: string, @Request() _req: any) {
     const tenantId = req.user.tenantId || 'mock-tenant-id';
     return this.sprintsService.getSprintMetrics(id, tenantId);
   }
@@ -171,7 +171,7 @@ export class SprintsController {
   // ===== AI Planning =====
 
   @Post('ai/plan')
-  planSprint(@Body() dto: { capacity?: number }, @Request() req: any) {
+  planSprint(@Body() dto: { capacity?: number }, @Request() _req: any) {
     const tenantId = req.user.tenantId || 'mock-tenant-id';
     return this.sprintsService.planSprint(tenantId, dto.capacity || 20);
   }
@@ -179,19 +179,19 @@ export class SprintsController {
   // ===== Option C: Velocity & Burndown =====
 
   @Post(':id/velocity/calculate')
-  calculateVelocity(@Param('id') id: string, @Request() req: any) {
+  calculateVelocity(@Param('id') id: string, @Request() _req: any) {
     const tenantId = req.user.tenantId || 'mock-tenant-id';
     return this.sprintsService.calculateVelocity(id, tenantId);
   }
 
   @Get('velocity/trend')
-  getVelocityTrend(@Request() req: any) {
+  getVelocityTrend(@Request() _req: any) {
     const tenantId = req.user.tenantId || 'mock-tenant-id';
     return this.sprintsService.getVelocityTrend(tenantId);
   }
 
   @Get(':id/burndown')
-  getBurndownData(@Param('id') id: string, @Request() req: any) {
+  getBurndownData(@Param('id') id: string, @Request() _req: any) {
     const tenantId = req.user.tenantId || 'mock-tenant-id';
     return this.sprintsService.getBurndownData(id, tenantId);
   }
@@ -201,7 +201,7 @@ export class SprintsController {
   @Post('items/from-requirements')
   createItemsFromRequirements(
     @Body() dto: { requirementIds: string[]; sprintId?: string },
-    @Request() req: any,
+    @Request() _req: any,
   ) {
     const tenantId = req.user.tenantId || 'mock-tenant-id';
     return this.sprintsService.createItemsFromRequirements(
@@ -214,7 +214,7 @@ export class SprintsController {
   @Post('items/task-breakdown')
   generateTaskBreakdown(
     @Body() dto: { requirementId: string; title: string; description: string },
-    @Request() req: any,
+    @Request() _req: any,
   ) {
     return this.sprintsService.generateTaskBreakdown(
       dto.requirementId,

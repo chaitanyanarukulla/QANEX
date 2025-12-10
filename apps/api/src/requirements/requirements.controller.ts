@@ -16,7 +16,7 @@ import { CreateRequirementDto } from './dto/create-requirement.dto';
 @Controller('requirements')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class RequirementsController {
-  constructor(private readonly requirementsService: RequirementsService) { }
+  constructor(private readonly requirementsService: RequirementsService) {}
 
   @Post()
   create(@Body() dto: CreateRequirementDto, @Request() req: any) {

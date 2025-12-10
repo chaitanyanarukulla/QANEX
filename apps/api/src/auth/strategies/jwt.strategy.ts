@@ -25,7 +25,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         userId: 'mock-user-id',
         email: 'mock@example.com',
         roles: ['ORG_ADMIN'], // Mock as admin
-        tenantId: (req as any).tenantId || 'mock-tenant-id',
+        tenantId: req.tenantId || 'mock-tenant-id',
       };
     }
 
@@ -35,7 +35,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException();
     }
 
-    const tenantId = (req as any).tenantId || user.tenantId; // Use header tenant or default
+    const tenantId = req.tenantId || user.tenantId; // Use header tenant or default
     let roles = ['VIEWER']; // Default role
 
     if (tenantId) {

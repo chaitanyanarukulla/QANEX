@@ -7,7 +7,7 @@ import { DataSource } from 'typeorm';
 export class RagLifecycleService {
   private readonly logger = new Logger(RagLifecycleService.name);
 
-  constructor(@InjectDataSource() private readonly dataSource: DataSource) { }
+  constructor(@InjectDataSource() private readonly dataSource: DataSource) {}
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async cleanupOldDocuments() {

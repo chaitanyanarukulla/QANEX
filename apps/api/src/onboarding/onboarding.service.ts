@@ -65,7 +65,7 @@ export class OnboardingService {
     ]);
 
     const hasAnalyzedReq = analyzedReqCount > 0;
-    const hasReleaseWithRcs = releaseCount > 0; // Ideally check for RCS score, but let's assume existence implies usage for now or check column if known.
+    const _hasReleaseWithRcs = releaseCount > 0; // Ideally check for RCS score, but let's assume existence implies usage for now or check column if known.
     // Actually, let's refine hasReleaseWithRcs. Release entity likely has `rcs` column.
     // I will just use releaseCount for now, but to be precise I should check rcs column.
     // Let's stick to existence for simplicity unless I check entity content.

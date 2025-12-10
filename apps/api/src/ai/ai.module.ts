@@ -54,7 +54,10 @@ import { MetricsModule } from '../metrics/metrics.module';
         pgVectorAdapter: PgVectorRagAdapter,
         inMemoryAdapter: InMemoryRagAdapter,
       ) => {
-        const vectorStore = configService.get<string>('VECTOR_STORE', 'pgvector');
+        const vectorStore = configService.get<string>(
+          'VECTOR_STORE',
+          'pgvector',
+        );
         // RAG backend choice is currently system-wide infrastructure choice, not per-tenant yet.
         // But we could change this later. For now, pgvector is good for 'local' focus.
         if (vectorStore === 'pgvector') {
@@ -79,4 +82,4 @@ import { MetricsModule } from '../metrics/metrics.module';
     MockAiProvider,
   ],
 })
-export class AiModule { }
+export class AiModule {}

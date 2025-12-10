@@ -8,7 +8,7 @@ export class AiMetricsService {
   constructor(
     @InjectRepository(AiLog)
     private aiLogRepository: Repository<AiLog>,
-  ) { }
+  ) {}
 
   async logUsage(
     tenantId: string,
@@ -23,7 +23,7 @@ export class AiMetricsService {
     if (tokens) {
       // Simple mock cost calculation (e.g. $0.03 input, $0.06 output per 1k / 1000)
       // Adjust based on model if needed. keeping it simple.
-      estimatedCost = (tokens.prompt * 0.00003) + (tokens.completion * 0.00006);
+      estimatedCost = tokens.prompt * 0.00003 + tokens.completion * 0.00006;
     }
 
     const log = this.aiLogRepository.create({
@@ -49,7 +49,10 @@ export class AiMetricsService {
         ? logs.reduce((sum, log) => sum + log.latencyMs, 0) / totalCalls
         : 0;
 
-    const totalCost = logs.reduce((sum, log) => sum + (log.estimatedCost || 0), 0);
+    const totalCost = logs.reduce(
+      (sum, log) => sum + (log.estimatedCost || 0),
+      0,
+    );
 
     return {
       totalCalls,
@@ -64,28 +67,29 @@ export class AiMetricsService {
     };
   }
 
-  async getUsageHistory(tenantId: string, days: number = 30) {
+  async getUsageHistory(tenantId: string, _days: number = 30) {
     // Group by date
-    const query = this.aiLogRepository.createQueryBuilder('log')
-      .select("DATE(log.timestamp)", "date")
-      .addSelect("SUM(log.totalTokens)", "tokens")
-      .addSelect("SUM(log.estimatedCost)", "cost")
-      .addSelect("COUNT(log.id)", "requests")
-      .where("log.tenantId = :tenantId", { tenantId })
+    const query = this.aiLogRepository
+      .createQueryBuilder('log')
+      .select('DATE(log.timestamp)', 'date')
+      .addSelect('SUM(log.totalTokens)', 'tokens')
+      .addSelect('SUM(log.estimatedCost)', 'cost')
+      .addSelect('COUNT(log.id)', 'requests')
+      .where('log.tenantId = :tenantId', { tenantId })
       .andWhere("log.timestamp > NOW() - INTERVAL '30 days'") // For Postgres
-      .groupBy("DATE(log.timestamp)")
-      .orderBy("date", "ASC");
+      .groupBy('DATE(log.timestamp)')
+      .orderBy('date', 'ASC');
 
     const results = await query.getRawMany();
 
     // Check if results are empty to avoid frontend crashing on empty array
     if (!results) return [];
 
-    return results.map(r => ({
+    return results.map((r) => ({
       date: r.date,
       tokens: Number(r.tokens),
       cost: Number(r.cost),
-      requests: Number(r.requests)
+      requests: Number(r.requests),
     }));
   }
 }

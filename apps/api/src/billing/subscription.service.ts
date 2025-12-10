@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  OnModuleInit,
-  Logger,
-  Inject,
-} from '@nestjs/common';
+import { Injectable, OnModuleInit, Logger, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Plan, PlanKey } from './plan.entity';
@@ -26,7 +21,7 @@ export class SubscriptionService implements OnModuleInit {
     private subscriptionRepository: Repository<Subscription>,
     @Inject(BILLING_PROVIDER_TOKEN)
     private billingProvider: BillingProvider,
-  ) { }
+  ) {}
 
   async onModuleInit() {
     await this.seedPlans();

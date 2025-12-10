@@ -6,9 +6,12 @@ import { Requirement } from './requirement.entity';
 import { AiModule } from '../ai/ai.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Requirement]), forwardRef(() => AiModule)],
+  imports: [
+    TypeOrmModule.forFeature([Requirement]),
+    forwardRef(() => AiModule),
+  ],
   providers: [RequirementsService],
   controllers: [RequirementsController],
   exports: [RequirementsService],
 })
-export class RequirementsModule { }
+export class RequirementsModule {}

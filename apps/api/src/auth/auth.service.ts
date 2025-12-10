@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { TenantsService } from '../tenants/tenants.service';
@@ -10,7 +10,7 @@ export class AuthService {
     private usersService: UsersService,
     private tenantsService: TenantsService,
     private jwtService: JwtService,
-  ) { }
+  ) {}
 
   async validateUser(email: string, _sub: string): Promise<any> {
     return this.usersService.findByEmail(email);

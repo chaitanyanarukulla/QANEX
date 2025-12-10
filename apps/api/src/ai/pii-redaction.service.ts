@@ -10,7 +10,7 @@ export class PiiRedactionService {
     },
     // Phone (Simple US/International format match)
     {
-      regex: /(\+\d{1,2}\s?)?1?\-?\.?\s?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/g,
+      regex: /(\+\d{1,2}\s?)?1?-?\.?\s?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/g,
       replacement: '[PHONE_REDACTED]',
     },
     // Credit Card (Major brands, simple match)
