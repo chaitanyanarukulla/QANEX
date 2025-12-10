@@ -53,14 +53,10 @@ const nextConfig: NextConfig = {
   // Strict mode for better error catching
   reactStrictMode: true,
 
-  // TypeScript and ESLint
+  // TypeScript configuration
   typescript: {
     // Set to true to ignore build errors (not recommended for production)
     ignoreBuildErrors: false,
-  },
-  eslint: {
-    // Set to true to ignore ESLint errors during build
-    ignoreDuringBuilds: false,
   },
 };
 

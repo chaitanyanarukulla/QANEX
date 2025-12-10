@@ -26,14 +26,14 @@ export default function AutomationPage() {
     }, []);
 
     const handleGeneratePr = async (id: string, testCaseId: string) => {
-        showToast(\`Generating PR for \${testCaseId}...\`, 'info');
-        
+        showToast(`Generating PR for ${testCaseId}...`, 'info');
+
         // Mock API call
-        // await fetch(\`/api/automation/candidates/\${id}/generate-pr\`, { method: 'POST' });
-        
+        // await fetch(`/api/automation/candidates/${id}/generate-pr`, { method: 'POST' });
+
         // Simulate Success
         setTimeout(() => {
-            showToast(\`PR created successfully for \${testCaseId}\`, 'success');
+            showToast(`PR created successfully for ${testCaseId}`, 'success');
             setCandidates(prev => prev.map(c => c.id === id ? { ...c, status: 'PR_OPEN' } : c));
         }, 1500);
     };
@@ -123,7 +123,7 @@ function Badge({ status }: { status: string }) {
         'REJECTED': 'Rejected',
     };
     // @ts-ignore
-    return <span className={\`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium \${styles[status]}\`}>
+    return <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${styles[status]}`}>
         {/* @ts-ignore */}
         {labels[status]}
     </span>;

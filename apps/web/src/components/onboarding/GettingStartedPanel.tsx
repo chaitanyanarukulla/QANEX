@@ -1,3 +1,5 @@
+'use client';
+
 import { CheckCircle2, Circle, ArrowRight, PlayCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useOnboarding } from '../../hooks/useOnboarding';
