@@ -5,7 +5,8 @@ const API_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http:
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-async function proxyRequest(request: NextRequest, { params }: { params: { path: string[] } }) {
+async function proxyRequest(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
+  const params = await context.params;
   const pathSegments = params.path || [];
   const path = pathSegments.join('/');
   const url = `${API_URL}/api/auth/${path}${request.nextUrl.search}`;
@@ -53,26 +54,26 @@ async function proxyRequest(request: NextRequest, { params }: { params: { path: 
   }
 }
 
-export async function GET(request: NextRequest, context: { params: { path: string[] } }) {
+export async function GET(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
   return proxyRequest(request, context);
 }
 
-export async function POST(request: NextRequest, context: { params: { path: string[] } }) {
+export async function POST(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
   return proxyRequest(request, context);
 }
 
-export async function PUT(request: NextRequest, context: { params: { path: string[] } }) {
+export async function PUT(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
   return proxyRequest(request, context);
 }
 
-export async function PATCH(request: NextRequest, context: { params: { path: string[] } }) {
+export async function PATCH(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
   return proxyRequest(request, context);
 }
 
-export async function DELETE(request: NextRequest, context: { params: { path: string[] } }) {
+export async function DELETE(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
   return proxyRequest(request, context);
 }
 
-export async function OPTIONS(request: NextRequest, context: { params: { path: string[] } }) {
+export async function OPTIONS(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
   return proxyRequest(request, context);
 }
