@@ -454,6 +454,7 @@ export default function AISettingsPage() {
                 </label>
                 <input
                   type="password"
+                  autoComplete="off"
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
                   placeholder={`Enter your ${selectedProviderInfo.name} API key`}
@@ -539,6 +540,7 @@ export default function AISettingsPage() {
                     {anthropicEmbeddingProvider === 'openai' && (
                       <input
                         type="password"
+                        autoComplete="off"
                         value={anthropicEmbeddingApiKey}
                         onChange={(e) => setAnthropicEmbeddingApiKey(e.target.value)}
                         placeholder="Enter OpenAI API key for embeddings"
