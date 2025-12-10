@@ -1,11 +1,18 @@
 import { Module, Global, forwardRef } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { MockAiProvider } from './mock-ai.provider';
-import { FoundryAiProvider } from './foundry-ai.provider';
-import { LocalAiProvider } from './local-ai.provider';
-import { AzureOpenAiProvider } from './azure-openai.provider';
-import { LocalModelGateway } from './local-model.gateway';
+import { HttpModule } from '@nestjs/axios';
+
+// New Provider Architecture
+import {
+  OpenAIProvider,
+  GeminiProvider,
+  AnthropicProvider,
+  FoundryLocalProvider,
+  AiProviderFactory,
+} from './providers';
+
+// RAG Services
 import {
   RagService,
   RAG_BACKEND_TOKEN,
@@ -13,18 +20,34 @@ import {
 } from './rag.service';
 import { PgVectorRagAdapter } from './pgvector-rag.adapter';
 import { RagController } from './rag.controller';
-import { AiProviderFactory } from './ai-provider.factory';
+import { RagLifecycleService } from './rag-lifecycle.service';
+import { AgenticRagService } from './agentic-rag.service';
+
+// Other Services
+import { PiiRedactionService } from './pii-redaction.service';
+import { AiSettingsController } from './ai-settings.controller';
+
+// Entities
 import { Tenant } from '../tenants/tenant.entity';
 
-import { HttpModule } from '@nestjs/axios';
-
-import { PiiRedactionService } from './pii-redaction.service';
-import { RagLifecycleService } from './rag-lifecycle.service';
+// Related Modules
 import { RequirementsModule } from '../requirements/requirements.module';
 import { BugsModule } from '../bugs/bugs.module';
-import { AgenticRagService } from './agentic-rag.service';
 import { MetricsModule } from '../metrics/metrics.module';
 
+/**
+ * AI Module
+ *
+ * New Provider Architecture:
+ * - Option 1 (Cloud): OpenAI, Google Gemini, Anthropic
+ * - Option 2 (Local): Microsoft Foundry Local
+ *
+ * Features:
+ * - Multi-provider support with tenant-level configuration
+ * - RAG with pgvector for semantic search
+ * - PII redaction for data privacy
+ * - Agentic RAG for intelligent querying
+ */
 @Global()
 @Module({
   imports: [
@@ -35,18 +58,26 @@ import { MetricsModule } from '../metrics/metrics.module';
     forwardRef(() => BugsModule),
     MetricsModule,
   ],
-  controllers: [RagController],
+  controllers: [RagController, AiSettingsController],
   providers: [
+    // New Providers (Option 1 - Cloud)
+    OpenAIProvider,
+    GeminiProvider,
+    AnthropicProvider,
+
+    // New Provider (Option 2 - Local)
+    FoundryLocalProvider,
+
+    // Provider Factory
+    AiProviderFactory,
+
+    // RAG Infrastructure
     PiiRedactionService,
     RagLifecycleService,
-    LocalModelGateway,
     PgVectorRagAdapter,
     InMemoryRagAdapter,
-    AzureOpenAiProvider,
-    FoundryAiProvider,
-    LocalAiProvider,
-    MockAiProvider,
-    AiProviderFactory,
+
+    // RAG Backend Selection
     {
       provide: RAG_BACKEND_TOKEN,
       useFactory: (
@@ -54,12 +85,7 @@ import { MetricsModule } from '../metrics/metrics.module';
         pgVectorAdapter: PgVectorRagAdapter,
         inMemoryAdapter: InMemoryRagAdapter,
       ) => {
-        const vectorStore = configService.get<string>(
-          'VECTOR_STORE',
-          'pgvector',
-        );
-        // RAG backend choice is currently system-wide infrastructure choice, not per-tenant yet.
-        // But we could change this later. For now, pgvector is good for 'local' focus.
+        const vectorStore = configService.get<string>('VECTOR_STORE', 'pgvector');
         if (vectorStore === 'pgvector') {
           return pgVectorAdapter;
         }
@@ -67,19 +93,23 @@ import { MetricsModule } from '../metrics/metrics.module';
       },
       inject: [ConfigService, PgVectorRagAdapter, InMemoryRagAdapter],
     },
+
+    // RAG Services
     RagService,
     AgenticRagService,
   ],
   exports: [
+    // Export new provider architecture
     AiProviderFactory,
+    OpenAIProvider,
+    GeminiProvider,
+    AnthropicProvider,
+    FoundryLocalProvider,
+
+    // Export RAG services
     RagService,
     AgenticRagService,
     PiiRedactionService,
-    // Exporting concrete providers if needed, though Factory handles access
-    FoundryAiProvider,
-    AzureOpenAiProvider,
-    LocalAiProvider,
-    MockAiProvider,
   ],
 })
 export class AiModule {}

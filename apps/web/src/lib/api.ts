@@ -439,14 +439,45 @@ export const demoApi = {
   createProject: () => api('/demo/project', { method: 'POST' }),
 };
 
+// AI Provider Types
+export type AIProviderType = 'openai' | 'gemini' | 'anthropic' | 'foundry_local';
+
+export interface AICloudConfig {
+  openai?: {
+    apiKey: string;
+    model: string;
+    embeddingModel: string;
+  };
+  gemini?: {
+    apiKey: string;
+    model: string;
+    embeddingModel: string;
+  };
+  anthropic?: {
+    apiKey: string;
+    model: string;
+    embeddingProvider: 'openai' | 'foundry_local';
+    embeddingApiKey?: string;
+  };
+}
+
+export interface AIFoundryLocalConfig {
+  endpoint: string;
+  model: string;
+  embeddingModel?: string;
+}
+
+export interface TenantAIConfig {
+  provider?: AIProviderType;
+  cloudConfig?: AICloudConfig;
+  foundryLocalConfig?: AIFoundryLocalConfig;
+}
+
 // Tenants API
 export interface TenantSettings {
   rqsThreshold?: number;
   rcsThresholds?: Record<string, number>;
-  aiConfig?: {
-    provider?: 'foundry' | 'azure' | 'local';
-    apiKey?: string;
-  };
+  aiConfig?: TenantAIConfig;
 }
 
 export const tenantsApi = {
@@ -455,6 +486,101 @@ export const tenantsApi = {
     api<{ settings: TenantSettings }>(`/tenants/${id}/settings`, {
       method: 'POST',
       body: settings,
+    }),
+};
+
+// AI Provider Model Info
+export interface AIModelInfo {
+  id: string;
+  name: string;
+  provider: AIProviderType;
+  description?: string;
+  contextWindow: number;
+  maxOutputTokens: number;
+  costPer1kInput?: number;
+  costPer1kOutput?: number;
+  capabilities: string[];
+  recommended?: boolean;
+  category?: 'chat' | 'code' | 'embedding' | 'multimodal';
+}
+
+export interface AIProviderInfo {
+  type: AIProviderType;
+  name: string;
+  category: 'cloud' | 'local';
+  description: string;
+  supportsEmbeddings: boolean;
+  requiresApiKey: boolean;
+  models: AIModelInfo[];
+  setupInstructions?: string;
+}
+
+export interface AIConnectionTestResult {
+  success: boolean;
+  message: string;
+  latencyMs?: number;
+  modelInfo?: {
+    id: string;
+    name: string;
+  };
+}
+
+export interface AIFoundryLocalStatus {
+  running: boolean;
+  endpoint?: string;
+  loadedModels?: any[];
+  hardwareInfo?: {
+    accelerationType: 'CPU' | 'GPU' | 'NPU' | 'Unknown';
+    loadedModels: Array<{ name: string; executionProvider: string }>;
+  };
+  error?: string;
+}
+
+// AI Settings API
+export const aiSettingsApi = {
+  getProviders: () => api<AIProviderInfo[]>('/ai/settings/providers'),
+
+  testConnection: (provider: AIProviderType, credentials: { apiKey?: string; endpoint?: string }) =>
+    api<AIConnectionTestResult>('/ai/settings/test-connection', {
+      method: 'POST',
+      body: { provider, ...credentials },
+    }),
+
+  getModels: (provider: AIProviderType) => api<AIModelInfo[]>(`/ai/settings/models/${provider}`),
+
+  getFoundryLocalStatus: () => api<AIFoundryLocalStatus>('/ai/settings/foundry-local/status'),
+
+  getFoundryLocalModels: () =>
+    api<{ loaded: any[]; available: any[]; error?: string }>('/ai/settings/foundry-local/models'),
+
+  getEmbeddingOptions: (provider: AIProviderType) =>
+    api<{
+      needsAlternative: boolean;
+      message: string;
+      options?: Array<{
+        provider: string;
+        name: string;
+        requiresApiKey: boolean;
+        models: AIModelInfo[];
+      }>;
+    }>(`/ai/settings/embedding-options/${provider}`),
+
+  validateConfig: (config: {
+    provider: AIProviderType;
+    apiKey?: string;
+    model?: string;
+    endpoint?: string;
+    embeddingProvider?: 'openai' | 'foundry_local';
+    embeddingApiKey?: string;
+  }) =>
+    api<{
+      valid: boolean;
+      issues: string[];
+      warnings: string[];
+      connectionResult: AIConnectionTestResult;
+    }>('/ai/settings/validate-config', {
+      method: 'POST',
+      body: config,
     }),
 };
 

@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Requirement } from './requirement.entity';
 import { RagService } from '../ai/rag.service';
-import { AiProviderFactory } from '../ai/ai-provider.factory';
+import { AiProviderFactory } from '../ai/providers';
 import { CreateRequirementDto } from './dto/create-requirement.dto';
 import { UpdateRequirementDto } from './dto/update-requirement.dto';
 
@@ -72,13 +72,11 @@ export class RequirementsService {
   async analyze(id: string, tenantId: string): Promise<Requirement> {
     const requirement = await this.findOne(id, tenantId);
 
-    const { provider, config } = await this.aiFactory.getProvider(tenantId);
+    const { provider } = await this.aiFactory.getProvider(tenantId);
 
-    // Pass tenant specific API key if available
+    // Analyze requirement with new provider architecture
     const analysis = await provider.analyzeRequirement(
       requirement.content || requirement.title,
-      tenantId,
-      config.apiKey,
     );
 
     requirement.rqs = {

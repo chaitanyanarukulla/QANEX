@@ -4,7 +4,7 @@ import { RequirementsService } from '../requirements/requirements.service';
 import { TestKeysService } from '../test-keys/test-keys.service';
 import { BugsService } from '../bugs/bugs.service';
 import { SecurityOpsService } from '../security-ops/security-ops.service';
-import { AiProviderFactory } from '../ai/ai-provider.factory';
+import { AiProviderFactory } from '../ai/providers';
 
 @Injectable()
 export class RcsService {
@@ -112,10 +112,7 @@ export class RcsService {
     try {
       const { provider } = await this.aiFactory.getProvider(tenantId);
       if (provider.explainRcs) {
-        const explanation = await provider.explainRcs({
-          score,
-          breakdown,
-        });
+        const explanation = await provider.explainRcs(score, breakdown);
         await this.releasesService.updateExplanation(releaseId, explanation);
       }
     } catch (error) {

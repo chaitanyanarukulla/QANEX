@@ -70,138 +70,45 @@ export default function SettingsPage() {
 }
 
 function AiSettings() {
-    const { showToast } = useToast();
-    const [provider, setProvider] = useState<'foundry' | 'local' | 'azure'>('foundry');
-    const [apiKey, setApiKey] = useState('');
-    const [loading, setLoading] = useState(true);
-    const [tenantId, setTenantId] = useState<string | null>(null);
-
-    const [saving, setSaving] = useState(false);
-
-    useEffect(() => {
-        loadSettings();
-    }, []);
-
-    const loadSettings = async () => {
-        try {
-            setLoading(true);
-            const user = await authApi.me();
-            if (user?.defaultTenantId) {
-                setTenantId(user.defaultTenantId);
-                const tenant = await tenantsApi.get(user.defaultTenantId);
-                if (tenant.settings?.aiConfig) {
-                    setProvider(tenant.settings.aiConfig.provider || 'foundry');
-                    setApiKey(tenant.settings.aiConfig.apiKey || '');
-                }
-            }
-        } catch (error) {
-            console.error('Failed to load AI settings', error);
-            showToast('Failed to load settings', 'error');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const saveAiSettings = async () => {
-        if (!tenantId) {
-            showToast('Tenant ID not found', 'error');
-            return;
-        }
-
-        try {
-            setSaving(true);
-            await tenantsApi.updateSettings(tenantId, {
-                aiConfig: {
-                    provider,
-                    apiKey: apiKey || undefined,
-                },
-            });
-            showToast('AI Configuration saved successfully', 'success');
-        } catch (error) {
-            console.error('Failed to save settings', error);
-            showToast('Failed to save settings', 'error');
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    if (loading) {
-        return <div className="p-6">Loading configuration...</div>;
-    }
-
     return (
         <div className="space-y-6 max-w-2xl">
             <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
                 <h3 className="text-lg font-semibold leading-none tracking-tight mb-4">AI Provider Configuration</h3>
-                <div className="space-y-6">
-                    <div className="space-y-4">
-                        <label className="text-sm font-medium leading-none">
-                            Select AI Backend
-                        </label>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <button
-                                onClick={() => setProvider('foundry')}
-                                className={`flex flex-col items-center justify-between rounded-md border-2 p-4 hover:bg-accent hover:text-accent-foreground ${provider === 'foundry' ? 'border-primary bg-accent' : 'border-muted bg-popover'
-                                    }`}
-                            >
-                                <span className="mb-2 text-2xl">🏗️</span>
-                                <span className="font-semibold">Microsoft Foundry</span>
-                                <span className="text-xs text-muted-foreground text-center mt-2">Scale & Compliance</span>
-                            </button>
-                            <button
-                                onClick={() => setProvider('local')}
-                                className={`flex flex-col items-center justify-between rounded-md border-2 p-4 hover:bg-accent hover:text-accent-foreground ${provider === 'local' ? 'border-primary bg-accent' : 'border-muted bg-popover'
-                                    }`}
-                            >
-                                <span className="mb-2 text-2xl">💻</span>
-                                <span className="font-semibold">Local (Private)</span>
-                                <span className="text-xs text-muted-foreground text-center mt-2">Zero Data Egress</span>
-                            </button>
-                            <button
-                                onClick={() => setProvider('azure')}
-                                className={`flex flex-col items-center justify-between rounded-md border-2 p-4 hover:bg-accent hover:text-accent-foreground ${provider === 'azure' ? 'border-primary bg-accent' : 'border-muted bg-popover'
-                                    }`}
-                            >
-                                <span className="mb-2 text-2xl">☁️</span>
-                                <span className="font-semibold">Azure OpenAI</span>
-                                <span className="text-xs text-muted-foreground text-center mt-2">Direct Integration</span>
-                            </button>
+                <p className="text-muted-foreground mb-6">
+                    Configure your AI provider for requirement analysis, bug triage, RAG search, and more.
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div className="p-4 border rounded-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                            <span className="text-2xl">☁️</span>
+                            <span className="font-semibold">Option 1: Cloud APIs</span>
                         </div>
-                        <p className="text-[0.8rem] text-muted-foreground">
-                            {provider === 'local'
-                                ? "Running 100% locally using Ollama. No data leaves your infrastructure."
-                                : "Uses cloud-based models for maximum performance and reasoning capability."}
+                        <p className="text-sm text-muted-foreground">
+                            OpenAI, Google Gemini, or Anthropic Claude with your own API key.
                         </p>
                     </div>
-
-                    <div className="grid gap-2">
-                        <label htmlFor="apiKey" className="text-sm font-medium leading-none">
-                            API Key (Optional / BYOK)
-                        </label>
-                        <input
-                            type="password"
-                            id="apiKey"
-                            value={apiKey}
-                            onChange={(e) => setApiKey(e.target.value)}
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            placeholder={provider === 'local' ? 'Not required for Local mode' : 'Leave empty to use System Key'}
-                            disabled={provider === 'local'}
-                        />
+                    <div className="p-4 border rounded-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                            <span className="text-2xl">💻</span>
+                            <span className="font-semibold">Option 2: On-Device</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                            Microsoft Foundry Local - 100% local, no data egress, free.
+                        </p>
                     </div>
                 </div>
+
+                <a
+                    href="/settings/ai"
+                    className="inline-flex items-center justify-center rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+                >
+                    Configure AI Provider
+                </a>
+
                 <h2 className="text-xl font-semibold mb-4 text-foreground mt-8">Usage & Cost</h2>
                 <div className="bg-card p-4 rounded-lg border shadow-sm">
                     <AiUsageChart />
-                </div>
-
-                <div className="mt-8 flex justify-end">
-                    <button
-                        onClick={saveAiSettings}
-                        disabled={saving}
-                        className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 disabled:opacity-50"
-                    >
-                        {saving ? 'Saving...' : 'Save Configuration'}
-                    </button>
                 </div>
             </div>
         </div>

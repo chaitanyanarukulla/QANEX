@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Bug, BugStatus, BugSeverity, BugPriority } from './bug.entity';
-import { AiProviderFactory } from '../ai/ai-provider.factory';
+import { AiProviderFactory } from '../ai/providers';
 import { RagService } from '../ai/rag.service';
 
 @Injectable()
@@ -38,11 +38,8 @@ export class BugsService {
     const { provider } = await this.aiFactory.getProvider(tenantId);
     // Assuming aiProvider.triageBug returns { suggestedSeverity, suggestedPriority, ... }
     const suggestion = await provider.triageBug(
-      {
-        title: bug.title,
-        description: bug.description || '',
-      },
-      tenantId,
+      bug.title,
+      bug.description || '',
     );
 
     // Update bug with AI suggestions (could be separate columns, here treating as direct update for prototype)

@@ -9,7 +9,7 @@ import { AutomationRun, RunStatus } from './automation-run.entity';
 import { TestAutomationSettingsService } from './test-automation-settings.service';
 import { GitIntegrationService } from './git-integration.service';
 import { TestCase } from '../test-keys/test-case.entity';
-import { AiProviderFactory } from '../ai/ai-provider.factory';
+import { AiProviderFactory } from '../ai/providers';
 
 @Injectable()
 export class TestAutomationService {
@@ -43,15 +43,13 @@ export class TestAutomationService {
       throw new Error('Automation is disabled for this project');
 
     // 2. Generate Code
-    const { provider, config } = await this.aiFactory.getProvider(tenantId);
+    const { provider } = await this.aiFactory.getProvider(tenantId);
     const code = await provider.generateTestCode(
       {
         title: testCase.title,
         steps: testCase.steps || [],
       },
-      'playwright', // Default/Hardcoded for now as per previous context
-      tenantId,
-      config.apiKey,
+      'playwright', // Default framework
     );
 
     // 3. Git Operations

@@ -1,70 +1,44 @@
-import { Injectable, Logger, Optional } from '@nestjs/common';
+import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { DataSource, Repository } from 'typeorm';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Tenant } from '../tenants/tenant.entity';
-import { LocalModelGateway } from './local-model.gateway';
+import { DataSource } from 'typeorm';
 import { RagBackend, RagItem } from './rag.service';
+import { AiProviderFactory } from './providers';
 
 /**
  * PgVector RAG Adapter
- * Supports both Azure OpenAI and local Ollama for embeddings
+ * Uses the new AI provider architecture for embeddings
+ * Supports all providers: OpenAI, Gemini, Anthropic (via fallback), and Foundry Local
  * Uses PostgreSQL with pgvector extension for vector storage
+ *
+ * Data Locality:
+ * - When using Foundry Local, all embeddings are generated on-device
+ * - No data leaves the user's machine when configured for local inference
  */
 @Injectable()
 export class PgVectorRagAdapter implements RagBackend {
   private readonly logger = new Logger(PgVectorRagAdapter.name);
   private tableInitialized = false;
-  private readonly aiProvider: string;
 
   constructor(
     private readonly dataSource: DataSource,
     private readonly configService: ConfigService,
-    @Optional() private readonly localModelGateway: LocalModelGateway,
-    @InjectRepository(Tenant) private readonly tenantRepo: Repository<Tenant>,
-  ) {
-    this.aiProvider = this.configService.get('AI_PROVIDER', 'mock');
-  }
+    @Inject(forwardRef(() => AiProviderFactory))
+    private readonly aiProviderFactory: AiProviderFactory,
+  ) {}
 
   /**
-   * Generate embeddings using appropriate provider
+   * Generate embeddings using the tenant's configured provider
    */
   private async generateEmbedding(
     text: string,
-    tenantId?: string,
+    tenantId: string,
   ): Promise<number[] | null> {
     try {
-      let activeProvider = this.aiProvider;
-      let activeApiKey = this.configService.get('AZURE_OPENAI_API_KEY');
-
-      if (tenantId) {
-        const tenant = await this.tenantRepo.findOne({
-          where: { id: tenantId },
-        });
-        if (tenant?.settings?.aiConfig?.provider) {
-          activeProvider = tenant.settings.aiConfig.provider;
-        }
-        if (tenant?.settings?.aiConfig?.apiKey) {
-          activeApiKey = tenant.settings.aiConfig.apiKey;
-        }
-      }
-
-      if (activeProvider === 'azure' || activeProvider === 'foundry') {
-        return await this.generateAzureEmbedding(text, activeApiKey);
-      } else if (activeProvider === 'local' && this.localModelGateway) {
-        const embeddings = await this.localModelGateway.embed({
-          model: this.configService.get(
-            'LOCAL_EMBEDDING_MODEL',
-            'nomic-embed-text',
-          ),
-          inputs: [text],
-        });
-        return embeddings?.[0] || null;
-      } else {
-        // Mock provider - generate random embeddings for development
-        this.logger.debug('Using mock embeddings (AI_PROVIDER=mock)');
-        return this.generateMockEmbedding();
-      }
+      const result = await this.aiProviderFactory.generateEmbeddings(
+        tenantId,
+        [text],
+      );
+      return result.embeddings[0] || null;
     } catch (err) {
       this.logger.error('Failed to generate embedding', err);
       return null;
@@ -72,58 +46,11 @@ export class PgVectorRagAdapter implements RagBackend {
   }
 
   /**
-   * Generate embeddings using Azure OpenAI
-   */
-  private async generateAzureEmbedding(
-    text: string,
-    apiKey?: string,
-  ): Promise<number[]> {
-    const endpoint = this.configService.get('AZURE_OPENAI_ENDPOINT');
-    const finalApiKey =
-      apiKey || this.configService.get('AZURE_OPENAI_API_KEY');
-    const apiVersion = this.configService.get(
-      'AZURE_OPENAI_API_VERSION',
-      '2024-02-15-preview',
-    );
-    const deployment = this.configService.get(
-      'AZURE_OPENAI_DEPLOYMENT_EMBEDDING',
-      'text-embedding-ada-002',
-    );
-
-    if (!endpoint || !finalApiKey) {
-      throw new Error('Azure OpenAI not configured for embeddings');
-    }
-
-    const url = `${endpoint}openai/deployments/${deployment}/embeddings?api-version=${apiVersion}`;
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'api-key': finalApiKey,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ input: text }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Azure OpenAI embedding failed: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return data?.data?.[0]?.embedding || [];
-  }
-
-  /**
-   * Generate mock embeddings for development
-   */
-  private generateMockEmbedding(): number[] {
-    // Generate deterministic-ish embeddings based on text length
-    // This allows basic testing without an AI provider
-    return Array.from({ length: 1536 }, (_, i) => Math.sin(i * 0.1) * 0.5);
-  }
-
-  /**
-   * Ensure RAG table exists
+   * Ensure RAG table exists with correct dimensions
+   * Note: Different providers may have different embedding dimensions
+   * OpenAI text-embedding-3-small: 1536
+   * Gemini text-embedding-004: 768
+   * Foundry Local (nomic-embed-text): 768
    */
   private async ensureTable(): Promise<void> {
     if (this.tableInitialized) return;
@@ -131,6 +58,9 @@ export class PgVectorRagAdapter implements RagBackend {
     try {
       await this.dataSource.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"');
       await this.dataSource.query('CREATE EXTENSION IF NOT EXISTS vector');
+
+      // Use 1536 dimensions (OpenAI default) - other providers will zero-pad
+      // In production, consider dynamic dimension handling or separate tables per dimension
       await this.dataSource.query(`
         CREATE TABLE IF NOT EXISTS rag_documents (
           id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -139,6 +69,8 @@ export class PgVectorRagAdapter implements RagBackend {
           content TEXT NOT NULL,
           metadata JSONB DEFAULT '{}',
           embedding VECTOR(1536),
+          embedding_dimensions INTEGER DEFAULT 1536,
+          provider TEXT,
           created_at TIMESTAMPTZ DEFAULT NOW(),
           updated_at TIMESTAMPTZ DEFAULT NOW()
         )
@@ -164,6 +96,24 @@ export class PgVectorRagAdapter implements RagBackend {
   }
 
   /**
+   * Normalize embedding to target dimensions (1536)
+   * Zero-pads shorter embeddings or truncates longer ones
+   */
+  private normalizeEmbedding(embedding: number[], targetDim = 1536): number[] {
+    if (embedding.length === targetDim) {
+      return embedding;
+    }
+
+    if (embedding.length < targetDim) {
+      // Zero-pad shorter embeddings
+      return [...embedding, ...Array(targetDim - embedding.length).fill(0)];
+    }
+
+    // Truncate longer embeddings (rare case)
+    return embedding.slice(0, targetDim);
+  }
+
+  /**
    * Index an item for RAG search
    */
   async indexItem(item: RagItem): Promise<void> {
@@ -171,6 +121,8 @@ export class PgVectorRagAdapter implements RagBackend {
 
     // Generate embedding if not provided
     let embedding: number[] | undefined = item.embeddings;
+    let originalDimensions = embedding?.length;
+
     if (!embedding) {
       const generated = await this.generateEmbedding(
         item.content,
@@ -183,18 +135,22 @@ export class PgVectorRagAdapter implements RagBackend {
         return;
       }
       embedding = generated;
+      originalDimensions = embedding.length;
     }
 
-    const embeddingString = `[${embedding.join(',')}]`;
+    // Normalize to 1536 dimensions for storage
+    const normalizedEmbedding = this.normalizeEmbedding(embedding);
+    const embeddingString = `[${normalizedEmbedding.join(',')}]`;
 
     await this.dataSource.query(
       `
-      INSERT INTO rag_documents (id, tenant_id, type, content, metadata, embedding)
-      VALUES ($1::uuid, $2::uuid, $3, $4, $5, $6::vector)
+      INSERT INTO rag_documents (id, tenant_id, type, content, metadata, embedding, embedding_dimensions)
+      VALUES ($1::uuid, $2::uuid, $3, $4, $5, $6::vector, $7)
       ON CONFLICT (id) DO UPDATE SET
         content = EXCLUDED.content,
         metadata = EXCLUDED.metadata,
         embedding = EXCLUDED.embedding,
+        embedding_dimensions = EXCLUDED.embedding_dimensions,
         updated_at = NOW()
     `,
       [
@@ -204,10 +160,11 @@ export class PgVectorRagAdapter implements RagBackend {
         item.content,
         item.metadata,
         embeddingString,
+        originalDimensions,
       ],
     );
 
-    this.logger.debug(`Indexed ${item.type} ${item.id}`);
+    this.logger.debug(`Indexed ${item.type} ${item.id} (${originalDimensions} dims)`);
   }
 
   /**
@@ -219,10 +176,13 @@ export class PgVectorRagAdapter implements RagBackend {
     const queryEmbedding = await this.generateEmbedding(query, tenantId);
     if (!queryEmbedding) {
       this.logger.error('Failed to generate query embedding');
-      return [];
+      // Fall back to full-text search
+      return this.fullTextSearch(query, tenantId, topK);
     }
 
-    const embeddingString = `[${queryEmbedding.join(',')}]`;
+    // Normalize query embedding to match stored dimensions
+    const normalizedQuery = this.normalizeEmbedding(queryEmbedding);
+    const embeddingString = `[${normalizedQuery.join(',')}]`;
 
     const results = await this.dataSource.query(
       `
@@ -261,7 +221,8 @@ export class PgVectorRagAdapter implements RagBackend {
       return this.fullTextSearch(query, tenantId, options?.topK || 5);
     }
 
-    const embeddingString = `[${queryEmbedding.join(',')}]`;
+    const normalizedQuery = this.normalizeEmbedding(queryEmbedding);
+    const embeddingString = `[${normalizedQuery.join(',')}]`;
     const topK = options?.topK || 10;
 
     // Check if hybrid_search function exists
@@ -278,7 +239,7 @@ export class PgVectorRagAdapter implements RagBackend {
   }
 
   /**
-   * Full-text search fallback
+   * Full-text search fallback (when embeddings are unavailable)
    */
   private async fullTextSearch(
     query: string,
@@ -335,7 +296,7 @@ export class PgVectorRagAdapter implements RagBackend {
       WHERE tenant_id = $1::uuid
       ORDER BY created_at DESC
       LIMIT 100
-      `, // Cap at 100 for now to prevent massive payloads
+      `,
       [tenantId],
     );
   }

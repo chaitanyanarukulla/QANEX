@@ -39,8 +39,35 @@ export class Tenant {
     rqsThreshold?: number;
     rcsThresholds?: Record<string, number>; // env -> score
     aiConfig?: {
-      provider?: 'foundry' | 'azure' | 'local' | 'mock';
-      apiKey?: string; // Encrypted
+      // Selected provider: openai | gemini | anthropic | foundry_local
+      provider?: 'openai' | 'gemini' | 'anthropic' | 'foundry_local';
+
+      // Cloud provider settings (Option 1)
+      cloudConfig?: {
+        openai?: {
+          apiKey: string;
+          model: string;
+          embeddingModel: string;
+        };
+        gemini?: {
+          apiKey: string;
+          model: string;
+          embeddingModel: string;
+        };
+        anthropic?: {
+          apiKey: string;
+          model: string;
+          embeddingProvider: 'openai' | 'foundry_local';
+          embeddingApiKey?: string;
+        };
+      };
+
+      // Foundry Local settings (Option 2)
+      foundryLocalConfig?: {
+        endpoint: string;
+        model: string;
+        embeddingModel?: string;
+      };
     };
   };
 
