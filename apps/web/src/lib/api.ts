@@ -416,14 +416,68 @@ export const testRunsApi = {
 };
 
 // Dashboard/Metrics API
+export interface AiProviderStats {
+  calls: number;
+  tokens: number;
+  cost: number;
+  avgLatency: number;
+  models: Record<string, number>;
+}
+
+export interface AiModelCost {
+  model: string;
+  calls: number;
+  tokens: number;
+  cost: number;
+}
+
+export interface AiUsageByDate {
+  date: string;
+  tokens: number;
+  cost: number;
+  requests: number;
+}
+
+export interface AiUsageByProviderDate extends AiUsageByDate {
+  provider: string;
+}
+
 export const metricsApi = {
-  dashboard: () => api<{
-    avgRqs: number;
-    bugDensity: number;
-    totalAiInteractions: number;
-    avgAiLatency: number;
-    aiUsageBreakdown: { action: string; count: number }[];
-  }>('/metrics/dashboard'),
+  dashboard: () =>
+    api<{
+      project: {
+        requirements: number;
+        bugs: number;
+        testCases: number;
+        sprints: number;
+      };
+      ai: {
+        totalCalls: number;
+        avgLatency: number;
+        totalCost: number;
+        totalTokens: number;
+        breakdown: {
+          analyze: number;
+          triage: number;
+          codegen: number;
+          chat: number;
+          rcs: number;
+          embedding: number;
+        };
+      };
+    }>('/metrics/dashboard'),
+
+  // AI usage history (daily aggregates)
+  aiUsage: () => api<AiUsageByDate[]>('/metrics/ai/usage'),
+
+  // Stats by provider
+  aiProviders: () => api<Record<string, AiProviderStats>>('/metrics/ai/providers'),
+
+  // Cost breakdown by model
+  aiModels: () => api<AiModelCost[]>('/metrics/ai/models'),
+
+  // Usage history by provider
+  aiUsageByProvider: () => api<AiUsageByProviderDate[]>('/metrics/ai/usage/providers'),
 };
 
 // Onboarding API

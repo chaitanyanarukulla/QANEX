@@ -28,4 +28,22 @@ export class MetricsController {
     const tenantId = req.user.tenantId;
     return this.aiMetrics.getUsageHistory(tenantId);
   }
+
+  @Get('ai/providers')
+  async getAiUsageByProvider(@Request() req: any) {
+    const tenantId = req.user.tenantId;
+    return this.aiMetrics.getStatsByProvider(tenantId);
+  }
+
+  @Get('ai/models')
+  async getAiCostByModel(@Request() req: any) {
+    const tenantId = req.user.tenantId;
+    return this.aiMetrics.getCostByModel(tenantId);
+  }
+
+  @Get('ai/usage/providers')
+  async getAiUsageHistoryByProvider(@Request() req: any) {
+    const tenantId = req.user.tenantId;
+    return this.aiMetrics.getUsageHistoryByProvider(tenantId);
+  }
 }
