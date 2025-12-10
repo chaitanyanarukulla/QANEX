@@ -1,16 +1,19 @@
 'use client';
 
-import { Search, Bell, User, MessageSquare } from 'lucide-react';
+import { Search, Bell, User, MessageSquare, LogOut } from 'lucide-react';
 import { useState } from 'react';
 import Link from 'next/link';
 import { FeedbackModal } from './feedback/FeedbackModal';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function Navbar() {
+    const { user, logout } = useAuth();
     const [query, setQuery] = useState('');
     const [results, setResults] = useState<any[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [showResults, setShowResults] = useState(false);
     const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+    const [showUserMenu, setShowUserMenu] = useState(false);
 
     const handleSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value;
@@ -94,12 +97,45 @@ export function Navbar() {
                     <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500 ring-2 ring-card" />
                 </button>
                 <div className="h-8 w-px bg-border" />
-                <button className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary">
-                        <User className="h-4 w-4" />
-                    </div>
-                    <span className="hidden md:inline">John Doe</span>
-                </button>
+                <div className="relative">
+                    <button
+                        onClick={() => setShowUserMenu(!showUserMenu)}
+                        className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground"
+                    >
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary">
+                            <User className="h-4 w-4" />
+                        </div>
+                        <span className="hidden md:inline">
+                            {user ? `${user.firstName} ${user.lastName}` : 'User'}
+                        </span>
+                    </button>
+                    {showUserMenu && (
+                        <div className="absolute right-0 top-full mt-2 w-48 rounded-md border bg-popover p-1 shadow-md z-50">
+                            <div className="px-3 py-2 text-sm border-b mb-1">
+                                <p className="font-medium">{user?.firstName} {user?.lastName}</p>
+                                <p className="text-xs text-muted-foreground">{user?.email}</p>
+                            </div>
+                            <Link
+                                href="/settings"
+                                className="flex items-center gap-2 rounded-sm px-3 py-2 text-sm hover:bg-accent"
+                                onClick={() => setShowUserMenu(false)}
+                            >
+                                <User className="h-4 w-4" />
+                                Settings
+                            </Link>
+                            <button
+                                onClick={() => {
+                                    logout();
+                                    setShowUserMenu(false);
+                                }}
+                                className="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-sm text-red-500 hover:bg-accent"
+                            >
+                                <LogOut className="h-4 w-4" />
+                                Sign out
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
 
             <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />

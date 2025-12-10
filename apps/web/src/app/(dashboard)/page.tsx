@@ -1,6 +1,6 @@
 import { ArrowUpRight, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
-import { GettingStartedPanel } from '../components/onboarding/GettingStartedPanel';
-import { WelcomeModal } from '../components/onboarding/WelcomeModal';
+import { GettingStartedPanel } from '@/components/onboarding/GettingStartedPanel';
+import { WelcomeModal } from '@/components/onboarding/WelcomeModal';
 
 const stats = [
   { name: 'Active Requirements', value: '24', change: '+2', changeType: 'positive', icon: Clock },
