@@ -120,10 +120,14 @@ export class OpenAIProvider extends BaseAiProvider {
               totalTokens: data.usage.total_tokens,
             }
           : undefined,
-        finishReason: data.choices[0]?.finish_reason as 'stop' | 'length' | 'content_filter',
+        finishReason: data.choices[0]?.finish_reason as
+          | 'stop'
+          | 'length'
+          | 'content_filter',
       };
     } catch (error: any) {
-      const errorMessage = error.response?.data?.error?.message || error.message;
+      const errorMessage =
+        error.response?.data?.error?.message || error.message;
       this.logger.error(`OpenAI chat failed: ${errorMessage}`);
       throw new Error(`OpenAI API error: ${errorMessage}`);
     }
@@ -181,7 +185,8 @@ export class OpenAIProvider extends BaseAiProvider {
         },
       };
     } catch (error: any) {
-      const errorMessage = error.response?.data?.error?.message || error.message;
+      const errorMessage =
+        error.response?.data?.error?.message || error.message;
       this.logger.error(`OpenAI embedding failed: ${errorMessage}`);
       throw new Error(`OpenAI embedding error: ${errorMessage}`);
     }
@@ -217,7 +222,9 @@ export class OpenAIProvider extends BaseAiProvider {
 
       // Check if gpt-4o-mini is available (common model)
       const models = response.data.data || [];
-      const hasGpt4oMini = models.some((m: { id: string }) => m.id === 'gpt-4o-mini');
+      const hasGpt4oMini = models.some(
+        (m: { id: string }) => m.id === 'gpt-4o-mini',
+      );
 
       return {
         success: true,
@@ -231,7 +238,8 @@ export class OpenAIProvider extends BaseAiProvider {
         },
       };
     } catch (error: any) {
-      const errorMessage = error.response?.data?.error?.message || error.message;
+      const errorMessage =
+        error.response?.data?.error?.message || error.message;
 
       if (error.response?.status === 401) {
         return {

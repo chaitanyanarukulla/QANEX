@@ -26,7 +26,7 @@ export interface ModelInfo {
   description?: string;
   contextWindow: number;
   maxOutputTokens: number;
-  costPer1kInput?: number;  // USD per 1k tokens
+  costPer1kInput?: number; // USD per 1k tokens
   costPer1kOutput?: number; // USD per 1k tokens
   capabilities: ModelCapability[];
   recommended?: boolean;
@@ -52,7 +52,13 @@ export const OPENAI_MODELS: ModelInfo[] = [
     maxOutputTokens: 16384,
     costPer1kInput: 0.005,
     costPer1kOutput: 0.015,
-    capabilities: ['chat', 'code_generation', 'analysis', 'vision', 'function_calling'],
+    capabilities: [
+      'chat',
+      'code_generation',
+      'analysis',
+      'vision',
+      'function_calling',
+    ],
     recommended: true,
     category: 'multimodal',
   },
@@ -78,7 +84,13 @@ export const OPENAI_MODELS: ModelInfo[] = [
     maxOutputTokens: 4096,
     costPer1kInput: 0.01,
     costPer1kOutput: 0.03,
-    capabilities: ['chat', 'code_generation', 'analysis', 'vision', 'function_calling'],
+    capabilities: [
+      'chat',
+      'code_generation',
+      'analysis',
+      'vision',
+      'function_calling',
+    ],
     category: 'multimodal',
   },
   {
@@ -116,7 +128,13 @@ export const GEMINI_MODELS: ModelInfo[] = [
     maxOutputTokens: 8192,
     costPer1kInput: 0.00125,
     costPer1kOutput: 0.005,
-    capabilities: ['chat', 'code_generation', 'analysis', 'vision', 'function_calling'],
+    capabilities: [
+      'chat',
+      'code_generation',
+      'analysis',
+      'vision',
+      'function_calling',
+    ],
     recommended: true,
     category: 'multimodal',
   },
@@ -129,7 +147,13 @@ export const GEMINI_MODELS: ModelInfo[] = [
     maxOutputTokens: 8192,
     costPer1kInput: 0.000075,
     costPer1kOutput: 0.0003,
-    capabilities: ['chat', 'code_generation', 'analysis', 'vision', 'function_calling'],
+    capabilities: [
+      'chat',
+      'code_generation',
+      'analysis',
+      'vision',
+      'function_calling',
+    ],
     recommended: true,
     category: 'chat',
   },
@@ -142,7 +166,13 @@ export const GEMINI_MODELS: ModelInfo[] = [
     maxOutputTokens: 8192,
     costPer1kInput: 0.0001,
     costPer1kOutput: 0.0004,
-    capabilities: ['chat', 'code_generation', 'analysis', 'vision', 'function_calling'],
+    capabilities: [
+      'chat',
+      'code_generation',
+      'analysis',
+      'vision',
+      'function_calling',
+    ],
     category: 'multimodal',
   },
   {
@@ -168,7 +198,13 @@ export const ANTHROPIC_MODELS: ModelInfo[] = [
     maxOutputTokens: 8192,
     costPer1kInput: 0.003,
     costPer1kOutput: 0.015,
-    capabilities: ['chat', 'code_generation', 'analysis', 'vision', 'function_calling'],
+    capabilities: [
+      'chat',
+      'code_generation',
+      'analysis',
+      'vision',
+      'function_calling',
+    ],
     recommended: true,
     category: 'multimodal',
   },
@@ -181,7 +217,13 @@ export const ANTHROPIC_MODELS: ModelInfo[] = [
     maxOutputTokens: 8192,
     costPer1kInput: 0.015,
     costPer1kOutput: 0.075,
-    capabilities: ['chat', 'code_generation', 'analysis', 'vision', 'function_calling'],
+    capabilities: [
+      'chat',
+      'code_generation',
+      'analysis',
+      'vision',
+      'function_calling',
+    ],
     category: 'multimodal',
   },
   {
@@ -415,16 +457,10 @@ export interface AiProvider {
   ): Promise<ChatCompletionResult>;
 
   // Simple prompt completion (convenience method)
-  complete(
-    prompt: string,
-    options?: ChatCompletionOptions,
-  ): Promise<string>;
+  complete(prompt: string, options?: ChatCompletionOptions): Promise<string>;
 
   // Embeddings (may throw if not supported)
-  embed(
-    texts: string[],
-    options?: EmbeddingOptions,
-  ): Promise<EmbeddingResult>;
+  embed(texts: string[], options?: EmbeddingOptions): Promise<EmbeddingResult>;
 
   // Domain-specific methods
   analyzeRequirement(

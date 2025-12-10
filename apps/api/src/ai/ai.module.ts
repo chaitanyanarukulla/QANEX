@@ -85,7 +85,10 @@ import { MetricsModule } from '../metrics/metrics.module';
         pgVectorAdapter: PgVectorRagAdapter,
         inMemoryAdapter: InMemoryRagAdapter,
       ) => {
-        const vectorStore = configService.get<string>('VECTOR_STORE', 'pgvector');
+        const vectorStore = configService.get<string>(
+          'VECTOR_STORE',
+          'pgvector',
+        );
         if (vectorStore === 'pgvector') {
           return pgVectorAdapter;
         }

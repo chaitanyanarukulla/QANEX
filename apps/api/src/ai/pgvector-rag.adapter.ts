@@ -34,10 +34,9 @@ export class PgVectorRagAdapter implements RagBackend {
     tenantId: string,
   ): Promise<number[] | null> {
     try {
-      const result = await this.aiProviderFactory.generateEmbeddings(
-        tenantId,
-        [text],
-      );
+      const result = await this.aiProviderFactory.generateEmbeddings(tenantId, [
+        text,
+      ]);
       return result.embeddings[0] || null;
     } catch (err) {
       this.logger.error('Failed to generate embedding', err);
@@ -164,7 +163,9 @@ export class PgVectorRagAdapter implements RagBackend {
       ],
     );
 
-    this.logger.debug(`Indexed ${item.type} ${item.id} (${originalDimensions} dims)`);
+    this.logger.debug(
+      `Indexed ${item.type} ${item.id} (${originalDimensions} dims)`,
+    );
   }
 
   /**

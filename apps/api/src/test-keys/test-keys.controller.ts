@@ -18,7 +18,7 @@ import { TestPriority } from './test-case.entity';
 @Controller('tests')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class TestKeysController {
-  constructor(private readonly testKeysService: TestKeysService) { }
+  constructor(private readonly testKeysService: TestKeysService) {}
 
   // --- Test Cases ---
   @Post('cases')
@@ -67,10 +67,7 @@ export class TestKeysController {
 
   // --- Test Runs ---
   @Post('runs')
-  createRun(
-    @Body() dto: { name: string },
-    @Request() req: any,
-  ) {
+  createRun(@Body() dto: { name: string }, @Request() req: any) {
     return this.testKeysService.createTestRun(dto.name, req.user.tenantId);
   }
 

@@ -59,42 +59,50 @@ export class AiSettingsController {
         type: 'openai',
         name: 'OpenAI',
         category: 'cloud',
-        description: 'GPT-4o, GPT-4o Mini, and embedding models. Best for complex reasoning and code generation.',
+        description:
+          'GPT-4o, GPT-4o Mini, and embedding models. Best for complex reasoning and code generation.',
         supportsEmbeddings: true,
         requiresApiKey: true,
         models: OPENAI_MODELS,
-        setupInstructions: 'Get your API key from https://platform.openai.com/api-keys',
+        setupInstructions:
+          'Get your API key from https://platform.openai.com/api-keys',
       },
       {
         type: 'gemini',
         name: 'Google Gemini',
         category: 'cloud',
-        description: 'Gemini 1.5 Pro/Flash with up to 2M context window. Great for long documents.',
+        description:
+          'Gemini 1.5 Pro/Flash with up to 2M context window. Great for long documents.',
         supportsEmbeddings: true,
         requiresApiKey: true,
         models: GEMINI_MODELS,
-        setupInstructions: 'Get your API key from https://aistudio.google.com/app/apikey',
+        setupInstructions:
+          'Get your API key from https://aistudio.google.com/app/apikey',
       },
       {
         type: 'anthropic',
         name: 'Anthropic Claude',
         category: 'cloud',
-        description: 'Claude Sonnet 4, Opus 4, and Haiku. Excellent for analysis and careful reasoning.',
+        description:
+          'Claude Sonnet 4, Opus 4, and Haiku. Excellent for analysis and careful reasoning.',
         supportsEmbeddings: false,
         requiresApiKey: true,
         models: ANTHROPIC_MODELS,
-        setupInstructions: 'Get your API key from https://console.anthropic.com/settings/keys. Note: Embeddings require OpenAI or Foundry Local.',
+        setupInstructions:
+          'Get your API key from https://console.anthropic.com/settings/keys. Note: Embeddings require OpenAI or Foundry Local.',
       },
       // Local Provider (Option 2)
       {
         type: 'foundry_local',
         name: 'Foundry Local',
         category: 'local',
-        description: '100% on-device AI. No data leaves your machine. Uses Microsoft Foundry Local runtime.',
+        description:
+          '100% on-device AI. No data leaves your machine. Uses Microsoft Foundry Local runtime.',
         supportsEmbeddings: true,
         requiresApiKey: false,
         models: FOUNDRY_LOCAL_MODELS,
-        setupInstructions: 'Install from https://github.com/microsoft/Foundry-Local. Windows: winget install Microsoft.FoundryLocal | macOS: brew install microsoft/foundrylocal/foundrylocal',
+        setupInstructions:
+          'Install from https://github.com/microsoft/Foundry-Local. Windows: winget install Microsoft.FoundryLocal | macOS: brew install microsoft/foundrylocal/foundrylocal',
       },
     ];
   }
@@ -151,8 +159,12 @@ export class AiSettingsController {
         return ANTHROPIC_MODELS;
       case 'foundry_local':
         return FOUNDRY_LOCAL_MODELS;
-      default:
-        throw new BadRequestException(`Unknown provider: ${provider}`);
+      default: {
+        const _exhaustiveCheck: never = provider;
+        throw new BadRequestException(
+          `Unknown provider: ${String(_exhaustiveCheck)}`,
+        );
+      }
     }
   }
 
@@ -187,7 +199,9 @@ export class AiSettingsController {
   @Roles('ORG_ADMIN', 'ADMIN')
   async getFoundryLocalModels() {
     try {
-      const provider = this.aiProviderFactory.getProviderInstance('foundry_local') as any;
+      const provider = this.aiProviderFactory.getProviderInstance(
+        'foundry_local',
+      ) as any;
       const loadedModels = await provider.getLoadedModels();
       const availableModels = FOUNDRY_LOCAL_MODELS;
 
@@ -216,7 +230,8 @@ export class AiSettingsController {
     if (provider === 'anthropic') {
       return {
         needsAlternative: true,
-        message: 'Anthropic does not provide embeddings. Choose an alternative:',
+        message:
+          'Anthropic does not provide embeddings. Choose an alternative:',
         options: [
           {
             provider: 'openai',
@@ -260,13 +275,11 @@ export class AiSettingsController {
     const warnings: string[] = [];
 
     // Test main provider
-    const connectionResult = await this.aiProviderFactory.testProviderConnection(
-      config.provider,
-      {
+    const connectionResult =
+      await this.aiProviderFactory.testProviderConnection(config.provider, {
         apiKey: config.apiKey,
         endpoint: config.endpoint,
-      },
-    );
+      });
 
     if (!connectionResult.success) {
       issues.push(`Main provider: ${connectionResult.message}`);
@@ -275,24 +288,35 @@ export class AiSettingsController {
     // Test embedding provider for Anthropic
     if (config.provider === 'anthropic') {
       if (!config.embeddingProvider) {
-        issues.push('Anthropic requires an embedding provider (OpenAI or Foundry Local)');
-      } else if (config.embeddingProvider === 'openai' && !config.embeddingApiKey) {
+        issues.push(
+          'Anthropic requires an embedding provider (OpenAI or Foundry Local)',
+        );
+      } else if (
+        config.embeddingProvider === 'openai' &&
+        !config.embeddingApiKey
+      ) {
         issues.push('OpenAI API key required for embeddings');
       } else if (config.embeddingProvider === 'foundry_local') {
-        const foundryStatus = await this.aiProviderFactory.getFoundryLocalStatus();
+        const foundryStatus =
+          await this.aiProviderFactory.getFoundryLocalStatus();
         if (!foundryStatus.running) {
-          warnings.push('Foundry Local is not running. Start it before using embeddings.');
+          warnings.push(
+            'Foundry Local is not running. Start it before using embeddings.',
+          );
         }
       }
     }
 
     // Validate Foundry Local if selected
     if (config.provider === 'foundry_local') {
-      const foundryStatus = await this.aiProviderFactory.getFoundryLocalStatus();
+      const foundryStatus =
+        await this.aiProviderFactory.getFoundryLocalStatus();
       if (!foundryStatus.running) {
         issues.push('Foundry Local service is not running');
       } else if (!foundryStatus.loadedModels?.length) {
-        warnings.push('No models loaded in Foundry Local. Run "foundry model run <model>" to load one.');
+        warnings.push(
+          'No models loaded in Foundry Local. Run "foundry model run <model>" to load one.',
+        );
       }
     }
 

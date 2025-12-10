@@ -69,7 +69,7 @@ export class AnthropicProvider extends BaseAiProvider {
         system = msg.content;
       } else {
         anthropicMessages.push({
-          role: msg.role as 'user' | 'assistant',
+          role: msg.role,
           content: msg.content,
         });
       }
@@ -134,8 +134,7 @@ export class AnthropicProvider extends BaseAiProvider {
       this.logger.debug(`Anthropic chat completed in ${latency}ms`);
 
       const data = response.data;
-      const content =
-        data.content.find((c) => c.type === 'text')?.text || '';
+      const content = data.content.find((c) => c.type === 'text')?.text || '';
 
       return {
         content,
@@ -219,10 +218,7 @@ export class AnthropicProvider extends BaseAiProvider {
       const errorMessage =
         error.response?.data?.error?.message || error.message;
 
-      if (
-        error.response?.status === 401 ||
-        error.response?.status === 403
-      ) {
+      if (error.response?.status === 401 || error.response?.status === 403) {
         return {
           success: false,
           message: 'Invalid API key or insufficient permissions',

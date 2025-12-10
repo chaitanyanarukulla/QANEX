@@ -87,7 +87,11 @@ export class FoundryLocalProvider extends BaseAiProvider {
    * Get the endpoint URL (from config or default)
    */
   private getEndpoint(customEndpoint?: string): string {
-    return customEndpoint || process.env.FOUNDRY_LOCAL_ENDPOINT || this.defaultEndpoint;
+    return (
+      customEndpoint ||
+      process.env.FOUNDRY_LOCAL_ENDPOINT ||
+      this.defaultEndpoint
+    );
   }
 
   /**
@@ -98,7 +102,8 @@ export class FoundryLocalProvider extends BaseAiProvider {
     options?: ChatCompletionOptions & { endpoint?: string },
   ): Promise<ChatCompletionResult> {
     const endpoint = this.getEndpoint(options?.endpoint);
-    const model = options?.model || process.env.FOUNDRY_LOCAL_MODEL || 'phi-3.5-mini';
+    const model =
+      options?.model || process.env.FOUNDRY_LOCAL_MODEL || 'phi-3.5-mini';
     const url = `${endpoint}/chat/completions`;
 
     const payload: Record<string, unknown> = {
@@ -143,7 +148,8 @@ export class FoundryLocalProvider extends BaseAiProvider {
         finishReason: data.choices[0]?.finish_reason as 'stop' | 'length',
       };
     } catch (error: any) {
-      const errorMessage = error.response?.data?.error?.message || error.message;
+      const errorMessage =
+        error.response?.data?.error?.message || error.message;
 
       if (error.code === 'ECONNREFUSED') {
         this.logger.error('Foundry Local service is not running');
@@ -166,7 +172,10 @@ export class FoundryLocalProvider extends BaseAiProvider {
     options?: EmbeddingOptions & { endpoint?: string },
   ): Promise<EmbeddingResult> {
     const endpoint = this.getEndpoint(options?.endpoint);
-    const model = options?.model || process.env.FOUNDRY_LOCAL_EMBEDDING_MODEL || 'nomic-embed-text';
+    const model =
+      options?.model ||
+      process.env.FOUNDRY_LOCAL_EMBEDDING_MODEL ||
+      'nomic-embed-text';
     const url = `${endpoint}/embeddings`;
 
     try {
@@ -202,7 +211,8 @@ export class FoundryLocalProvider extends BaseAiProvider {
         },
       };
     } catch (error: any) {
-      const errorMessage = error.response?.data?.error?.message || error.message;
+      const errorMessage =
+        error.response?.data?.error?.message || error.message;
 
       if (error.code === 'ECONNREFUSED') {
         throw new Error(
@@ -211,7 +221,10 @@ export class FoundryLocalProvider extends BaseAiProvider {
       }
 
       // If embedding model is not loaded, provide helpful message
-      if (errorMessage.includes('model not found') || errorMessage.includes('not loaded')) {
+      if (
+        errorMessage.includes('model not found') ||
+        errorMessage.includes('not loaded')
+      ) {
         throw new Error(
           `Embedding model "${model}" not loaded. Run "foundry model run ${model}" to load it.`,
         );
@@ -245,7 +258,8 @@ export class FoundryLocalProvider extends BaseAiProvider {
       if (loadedModels.length === 0) {
         return {
           success: true,
-          message: 'Foundry Local service is running but no models are loaded. Run "foundry model run <model>" to load a model.',
+          message:
+            'Foundry Local service is running but no models are loaded. Run "foundry model run <model>" to load a model.',
           latencyMs: latency,
         };
       }
@@ -265,7 +279,8 @@ export class FoundryLocalProvider extends BaseAiProvider {
       if (error.code === 'ECONNREFUSED') {
         return {
           success: false,
-          message: 'Foundry Local service is not running. Install from https://github.com/microsoft/Foundry-Local and run "foundry service start"',
+          message:
+            'Foundry Local service is not running. Install from https://github.com/microsoft/Foundry-Local and run "foundry service start"',
         };
       }
 
@@ -331,7 +346,7 @@ export class FoundryLocalProvider extends BaseAiProvider {
       );
 
       return response.data.data || [];
-    } catch (error) {
+    } catch (_error) {
       this.logger.warn('Failed to get loaded models from Foundry Local');
       return [];
     }
@@ -382,9 +397,17 @@ export class FoundryLocalProvider extends BaseAiProvider {
     const executionProviders = models.map((m) => m.executionProvider);
     let accelerationType: 'CPU' | 'GPU' | 'NPU' | 'Unknown' = 'CPU';
 
-    if (executionProviders.some((ep) => ep?.includes('CUDA') || ep?.includes('TensorRT'))) {
+    if (
+      executionProviders.some(
+        (ep) => ep?.includes('CUDA') || ep?.includes('TensorRT'),
+      )
+    ) {
       accelerationType = 'GPU';
-    } else if (executionProviders.some((ep) => ep?.includes('QNN') || ep?.includes('NPU'))) {
+    } else if (
+      executionProviders.some(
+        (ep) => ep?.includes('QNN') || ep?.includes('NPU'),
+      )
+    ) {
       accelerationType = 'NPU';
     } else if (executionProviders.some((ep) => ep?.includes('OpenVINO'))) {
       accelerationType = 'GPU'; // Intel GPU

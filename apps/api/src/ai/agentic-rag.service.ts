@@ -45,7 +45,9 @@ export class AgenticRagService {
       provider,
       config,
     );
-    this.logger.debug(`Generated search queries: ${JSON.stringify(searchQueries)}`);
+    this.logger.debug(
+      `Generated search queries: ${JSON.stringify(searchQueries)}`,
+    );
 
     // Step 2: Retrieve - Search for relevant context
     const context = await this.retrieveContext(searchQueries, tenantId);
@@ -72,7 +74,8 @@ Return strictly a JSON array of strings. Example: ["query1", "query2"]`;
     const messages: ChatMessage[] = [
       {
         role: 'system',
-        content: 'You are a helpful assistant that generates search queries. Return only valid JSON.',
+        content:
+          'You are a helpful assistant that generates search queries. Return only valid JSON.',
       },
       { role: 'user', content: planPrompt },
     ];
@@ -119,12 +122,18 @@ Return strictly a JSON array of strings. Example: ["query1", "query2"]`;
       const jsonMatch = result.match(/\[.*\]/s);
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
-        if (Array.isArray(parsed) && parsed.every((i) => typeof i === 'string')) {
+        if (
+          Array.isArray(parsed) &&
+          parsed.every((i) => typeof i === 'string')
+        ) {
           return parsed;
         }
       }
     } catch (e) {
-      this.logger.warn('Failed to plan retrieval, falling back to original query', e);
+      this.logger.warn(
+        'Failed to plan retrieval, falling back to original query',
+        e,
+      );
     }
 
     return [query]; // Fallback to original query
@@ -183,7 +192,8 @@ Cite the specific [Type] Title if possible.`;
     const messages: ChatMessage[] = [
       {
         role: 'system',
-        content: 'You are a helpful QA assistant. Answer based only on provided context.',
+        content:
+          'You are a helpful QA assistant. Answer based only on provided context.',
       },
       { role: 'user', content: synthesisPrompt },
     ];

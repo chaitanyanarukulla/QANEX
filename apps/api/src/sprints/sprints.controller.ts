@@ -23,7 +23,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 @Controller('sprints')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class SprintsController {
-  constructor(private readonly sprintsService: SprintsService) { }
+  constructor(private readonly sprintsService: SprintsService) {}
 
   // ===== Sprint Management =====
 

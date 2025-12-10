@@ -63,7 +63,9 @@ export class AiProviderFactory {
     }
 
     const providerType = aiConfig.provider;
-    this.logger.debug(`Selecting AI provider for tenant ${tenantId}: ${providerType}`);
+    this.logger.debug(
+      `Selecting AI provider for tenant ${tenantId}: ${providerType}`,
+    );
 
     return this.getProviderByType(providerType, aiConfig);
   }
@@ -86,7 +88,8 @@ export class AiProviderFactory {
           config: {
             apiKey: openaiConfig.apiKey,
             model: openaiConfig.model || 'gpt-4o-mini',
-            embeddingModel: openaiConfig.embeddingModel || 'text-embedding-3-small',
+            embeddingModel:
+              openaiConfig.embeddingModel || 'text-embedding-3-small',
           },
         };
       }
@@ -132,8 +135,10 @@ export class AiProviderFactory {
         };
       }
 
-      default:
-        throw new Error(`Unknown provider type: ${providerType}`);
+      default: {
+        const _exhaustiveCheck: never = providerType;
+        throw new Error(`Unknown provider type: ${String(_exhaustiveCheck)}`);
+      }
     }
   }
 
@@ -155,7 +160,8 @@ export class AiProviderFactory {
     // If using Anthropic, use their configured embedding provider
     if (aiConfig.provider === 'anthropic') {
       const anthropicConfig = aiConfig.cloudConfig?.anthropic;
-      const embeddingProvider = anthropicConfig?.embeddingProvider || 'foundry_local';
+      const embeddingProvider =
+        anthropicConfig?.embeddingProvider || 'foundry_local';
 
       if (embeddingProvider === 'openai') {
         const embeddingKey = anthropicConfig?.embeddingApiKey;
@@ -200,17 +206,13 @@ export class AiProviderFactory {
 
     // Use provider-specific embedding method with API key
     if (provider.providerType === 'openai') {
-      return (provider as OpenAIProvider).embedWithKey(
-        texts,
-        config.apiKey!,
-        { model: options?.model || config.model },
-      );
+      return (provider as OpenAIProvider).embedWithKey(texts, config.apiKey!, {
+        model: options?.model || config.model,
+      });
     } else if (provider.providerType === 'gemini') {
-      return (provider as GeminiProvider).embedWithKey(
-        texts,
-        config.apiKey!,
-        { model: options?.model || config.model },
-      );
+      return (provider as GeminiProvider).embedWithKey(texts, config.apiKey!, {
+        model: options?.model || config.model,
+      });
     } else if (provider.providerType === 'foundry_local') {
       return (provider as FoundryLocalProvider).embedWithEndpoint(
         texts,
@@ -248,11 +250,13 @@ export class AiProviderFactory {
       case 'foundry_local':
         return this.foundryLocalProvider.testConnection(credentials.endpoint);
 
-      default:
+      default: {
+        const _exhaustiveCheck: never = providerType;
         return {
           success: false,
-          message: `Unknown provider type: ${providerType}`,
+          message: `Unknown provider type: ${String(_exhaustiveCheck)}`,
         };
+      }
     }
   }
 
@@ -270,8 +274,10 @@ export class AiProviderFactory {
         return this.anthropicProvider;
       case 'foundry_local':
         return this.foundryLocalProvider;
-      default:
-        throw new Error(`Unknown provider type: ${providerType}`);
+      default: {
+        const _exhaustiveCheck: never = providerType;
+        throw new Error(`Unknown provider type: ${String(_exhaustiveCheck)}`);
+      }
     }
   }
 

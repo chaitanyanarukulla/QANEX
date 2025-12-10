@@ -72,7 +72,11 @@ export abstract class BaseAiProvider implements AiProvider {
     content: string,
     context?: string,
   ): Promise<RequirementAnalysis> {
-    const prompt = PROMPTS.ANALYZE_REQUIREMENT('Requirement', content, context || '');
+    const prompt = PROMPTS.ANALYZE_REQUIREMENT(
+      'Requirement',
+      content,
+      context || '',
+    );
 
     try {
       const response = await this.complete(prompt, {
@@ -147,7 +151,11 @@ export abstract class BaseAiProvider implements AiProvider {
       .map((s) => `- ${s.step} (Expect: ${s.expected})`)
       .join('\n');
 
-    const prompt = PROMPTS.GENERATE_TEST_CODE(testCase.title, stepsStr, framework);
+    const prompt = PROMPTS.GENERATE_TEST_CODE(
+      testCase.title,
+      stepsStr,
+      framework,
+    );
 
     try {
       const response = await this.complete(prompt, {
@@ -170,7 +178,10 @@ export abstract class BaseAiProvider implements AiProvider {
     score: number,
     breakdown: Record<string, number>,
   ): Promise<RcsExplanation> {
-    const prompt = PROMPTS.EXPLAIN_RCS(score, JSON.stringify(breakdown, null, 2));
+    const prompt = PROMPTS.EXPLAIN_RCS(
+      score,
+      JSON.stringify(breakdown, null, 2),
+    );
 
     try {
       const response = await this.complete(prompt, {

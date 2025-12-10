@@ -13,7 +13,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 @Controller('security-ops')
 @UseGuards(JwtAuthGuard)
 export class SecurityOpsController {
-  constructor(private securityOpsService: SecurityOpsService) { }
+  constructor(private securityOpsService: SecurityOpsService) {}
 
   @Get()
   async findAll(@Request() req: any) {
@@ -21,10 +21,7 @@ export class SecurityOpsController {
   }
 
   @Get('score')
-  async getScore(
-    @Request() req: any,
-    @Query('releaseId') releaseId?: string,
-  ) {
+  async getScore(@Request() req: any, @Query('releaseId') releaseId?: string) {
     return this.securityOpsService.calculateSoScore(
       req.user.tenantId,
       releaseId,
@@ -40,10 +37,7 @@ export class SecurityOpsController {
   }
 
   @Post('scan')
-  async runScan(
-    @Request() req: any,
-    @Query('releaseId') releaseId?: string,
-  ) {
+  async runScan(@Request() req: any, @Query('releaseId') releaseId?: string) {
     return this.securityOpsService.runMockScan(req.user.tenantId, releaseId);
   }
 }

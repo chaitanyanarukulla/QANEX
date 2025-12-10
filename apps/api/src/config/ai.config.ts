@@ -18,12 +18,16 @@ export const aiConfig = {
     openai: {
       baseUrl: process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1',
       defaultModel: process.env.OPENAI_MODEL || 'gpt-4o-mini',
-      embeddingModel: process.env.OPENAI_EMBEDDING_MODEL || 'text-embedding-3-small',
+      embeddingModel:
+        process.env.OPENAI_EMBEDDING_MODEL || 'text-embedding-3-small',
     },
     gemini: {
-      baseUrl: process.env.GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta',
+      baseUrl:
+        process.env.GEMINI_BASE_URL ||
+        'https://generativelanguage.googleapis.com/v1beta',
       defaultModel: process.env.GEMINI_MODEL || 'gemini-1.5-flash',
-      embeddingModel: process.env.GEMINI_EMBEDDING_MODEL || 'text-embedding-004',
+      embeddingModel:
+        process.env.GEMINI_EMBEDDING_MODEL || 'text-embedding-004',
     },
     anthropic: {
       baseUrl: process.env.ANTHROPIC_BASE_URL || 'https://api.anthropic.com/v1',
@@ -35,7 +39,8 @@ export const aiConfig = {
   foundryLocal: {
     endpoint: process.env.FOUNDRY_LOCAL_ENDPOINT || 'http://127.0.0.1:55588/v1',
     defaultModel: process.env.FOUNDRY_LOCAL_MODEL || 'phi-3.5-mini',
-    embeddingModel: process.env.FOUNDRY_LOCAL_EMBEDDING_MODEL || 'nomic-embed-text',
+    embeddingModel:
+      process.env.FOUNDRY_LOCAL_EMBEDDING_MODEL || 'nomic-embed-text',
   },
 
   // Vector Store configuration

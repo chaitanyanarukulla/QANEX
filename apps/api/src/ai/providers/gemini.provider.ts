@@ -107,7 +107,8 @@ export class GeminiProvider extends BaseAiProvider {
     const model = options?.model || 'gemini-1.5-flash';
     const url = `${this.baseUrl}/models/${model}:generateContent?key=${key}`;
 
-    const { contents, systemInstruction } = this.convertToGeminiFormat(messages);
+    const { contents, systemInstruction } =
+      this.convertToGeminiFormat(messages);
 
     const payload: Record<string, unknown> = {
       contents,
