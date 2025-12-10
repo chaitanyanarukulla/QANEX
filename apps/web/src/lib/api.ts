@@ -91,10 +91,54 @@ export interface Bug {
 export interface Sprint {
   id: string;
   name: string;
+  goal?: string;
   status: 'PLANNED' | 'ACTIVE' | 'COMPLETED';
   startDate?: string;
   endDate?: string;
   capacity?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SprintItem {
+  id: string;
+  sprintId?: string;
+  requirementId?: string;
+  title: string;
+  description?: string;
+  status: 'todo' | 'in_progress' | 'code_review' | 'ready_for_qa' | 'in_testing' | 'done' | 'backlog';
+  type: 'feature' | 'bug' | 'task';
+  priority: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+  rqsScore?: number;
+  assigneeId?: string;
+  assigneeName?: string;
+  estimatedHours?: number;
+  actualHours?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SprintMetrics {
+  total: number;
+  done: number;
+  inProgress: number;
+  todo: number;
+  inTesting: number;
+  codeReview: number;
+  readyForQa: number;
+  progress: number;
+  byPriority: {
+    critical: number;
+    high: number;
+    medium: number;
+    low: number;
+  };
+  byType: {
+    feature: number;
+    bug: number;
+    task: number;
+  };
+  avgRqsScore: number | null;
 }
 
 export interface Release {
@@ -192,11 +236,33 @@ export const bugsApi = {
 
 // Sprints API
 export const sprintsApi = {
+  // Sprint Management
   list: () => api<Sprint[]>('/sprints'),
   get: (id: string) => api<Sprint>(`/sprints/${id}`),
+  getActive: () => api<Sprint | null>('/sprints/active'),
   create: (data: Partial<Sprint>) => api<Sprint>('/sprints', { method: 'POST', body: data }),
   update: (id: string, data: Partial<Sprint>) =>
     api<Sprint>(`/sprints/${id}`, { method: 'PATCH', body: data }),
+  updateStatus: (id: string, status: Sprint['status']) =>
+    api<Sprint>(`/sprints/${id}/status`, { method: 'PATCH', body: { status } }),
+
+  // Sprint Items
+  getItems: (sprintId: string) => api<SprintItem[]>(`/sprints/${sprintId}/items`),
+  getBacklogItems: () => api<SprintItem[]>('/sprints/backlog/items'),
+  addItem: (data: Partial<SprintItem>) =>
+    api<SprintItem>('/sprints/items', { method: 'POST', body: data }),
+  updateItem: (itemId: string, data: Partial<SprintItem>) =>
+    api<SprintItem>(`/sprints/items/${itemId}`, { method: 'PATCH', body: data }),
+  moveItem: (itemId: string, sprintId?: string, status?: SprintItem['status']) =>
+    api<SprintItem>(`/sprints/items/${itemId}/move`, {
+      method: 'PATCH',
+      body: { sprintId, status },
+    }),
+  removeItem: (itemId: string) =>
+    api(`/sprints/items/${itemId}`, { method: 'DELETE' }),
+
+  // Sprint Metrics
+  getMetrics: (sprintId: string) => api<SprintMetrics>(`/sprints/${sprintId}/metrics`),
 };
 
 // Releases API

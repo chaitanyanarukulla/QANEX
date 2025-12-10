@@ -5,8 +5,9 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
     ArrowLeft, Calendar, Users, CheckCircle, AlertCircle,
-    GripVertical, ChevronRight, MoreHorizontal, Plus, X, ChevronDown
+    GripVertical, ChevronRight, MoreHorizontal, Plus, X, ChevronDown, Loader2
 } from 'lucide-react';
+import { sprintsApi } from '@/lib/api';
 
 // SDLC Swimlane definitions
 const SWIMLANES = [
@@ -22,48 +23,55 @@ interface SprintItem {
     id: string;
     title: string;
     description?: string;
-    rqs: number;
+    rqsScore?: number;
     status: string;
     priority: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
-    assignee?: string;
+    assigneeName?: string;
     type: 'feature' | 'bug' | 'task';
 }
-
-// Mock data for initial sprint items
-const MOCK_SPRINT_ITEMS: SprintItem[] = [
-    { id: '1', title: 'User Login with SSO', rqs: 95, status: 'todo', priority: 'HIGH', type: 'feature' },
-    { id: '2', title: 'Export Reports to PDF', rqs: 88, status: 'todo', priority: 'MEDIUM', type: 'feature' },
-    { id: '3', title: 'Dark Mode Toggle', rqs: 92, status: 'in_progress', priority: 'LOW', type: 'feature', assignee: 'John' },
-    { id: '4', title: 'Fix login redirect bug', rqs: 85, status: 'code_review', priority: 'HIGH', type: 'bug', assignee: 'Sarah' },
-    { id: '5', title: 'Setup Database', rqs: 98, status: 'ready_for_qa', priority: 'CRITICAL', type: 'task', assignee: 'Mike' },
-    { id: '6', title: 'API endpoint optimization', rqs: 90, status: 'in_testing', priority: 'MEDIUM', type: 'task', assignee: 'Lisa' },
-    { id: '7', title: 'User profile page', rqs: 87, status: 'done', priority: 'MEDIUM', type: 'feature', assignee: 'John' },
-];
-
-// Mock backlog items
-const MOCK_BACKLOG_ITEMS: SprintItem[] = [
-    { id: '8', title: 'Payment Gateway Integration', rqs: 80, status: 'backlog', priority: 'HIGH', type: 'feature' },
-    { id: '9', title: 'Email Notifications', rqs: 85, status: 'backlog', priority: 'MEDIUM', type: 'feature' },
-    { id: '10', title: 'Database optimization', rqs: 92, status: 'backlog', priority: 'MEDIUM', type: 'task' },
-    { id: '11', title: 'Fix user avatar bug', rqs: 75, status: 'backlog', priority: 'HIGH', type: 'bug' },
-    { id: '12', title: 'Add two-factor auth', rqs: 88, status: 'backlog', priority: 'MEDIUM', type: 'feature' },
-];
 
 export default function SprintBoardPage() {
     const params = useParams();
     const router = useRouter();
     const sprintId = params?.id as string;
 
-    const [items, setItems] = useState<SprintItem[]>(MOCK_SPRINT_ITEMS);
-    const [backlogItems, setBacklogItems] = useState<SprintItem[]>(MOCK_BACKLOG_ITEMS);
+    const [items, setItems] = useState<SprintItem[]>([]);
+    const [backlogItems, setBacklogItems] = useState<SprintItem[]>([]);
     const [draggedItem, setDraggedItem] = useState<SprintItem | null>(null);
     const [showBacklog, setShowBacklog] = useState(false);
-    const [sprintInfo] = useState({
-        name: 'Sprint 1',
-        startDate: 'Dec 9, 2024',
-        endDate: 'Dec 23, 2024',
-        status: 'ACTIVE',
-    });
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [sprintInfo, setSprintInfo] = useState<any>(null);
+    const [metrics, setMetrics] = useState<any>(null);
+
+    useEffect(() => {
+        if (sprintId) {
+            loadSprintData();
+        }
+    }, [sprintId]);
+
+    const loadSprintData = async () => {
+        try {
+            setIsLoading(true);
+            setError(null);
+            const [sprint, sprintItems, backlog, sprintMetrics] = await Promise.all([
+                sprintsApi.get(sprintId),
+                sprintsApi.getItems(sprintId),
+                sprintsApi.getBacklogItems(),
+                sprintsApi.getMetrics(sprintId)
+            ]);
+            setSprintInfo(sprint);
+            setItems(sprintItems);
+            setBacklogItems(backlog);
+            setMetrics(sprintMetrics);
+        } catch (err) {
+            console.error('Failed to load sprint data:', err);
+            setError('Failed to load sprint data');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const getItemsByStatus = (status: string) => {
         return items.filter(item => item.status === status);
@@ -80,30 +88,37 @@ export default function SprintBoardPage() {
         e.dataTransfer.dropEffect = 'move';
     };
 
-    const handleDrop = (e: React.DragEvent, newStatus: string) => {
+    const handleDrop = async (e: React.DragEvent, newStatus: string) => {
         e.preventDefault();
-        if (draggedItem) {
-            const source = e.dataTransfer.getData('source');
+        if (!draggedItem) return;
+
+        const source = e.dataTransfer.getData('source');
+
+        try {
+            setIsSaving(true);
+            setError(null);
 
             if (source === 'backlog') {
                 // Moving from backlog to sprint
-                setBacklogItems(backlogItems.filter(item => item.id !== draggedItem.id));
-                setItems([...items, { ...draggedItem, status: newStatus }]);
+                await sprintsApi.moveItem(draggedItem.id, sprintId, newStatus as any);
             } else {
-                // Moving within sprint
+                // Moving within sprint or to backlog
                 if (newStatus === 'backlog') {
                     // Moving from sprint to backlog
-                    setItems(items.filter(item => item.id !== draggedItem.id));
-                    setBacklogItems([...backlogItems, { ...draggedItem, status: 'backlog' }]);
+                    await sprintsApi.moveItem(draggedItem.id, null as any, 'backlog');
                 } else {
-                    // Moving between swimlanes
-                    setItems(items.map(item =>
-                        item.id === draggedItem.id
-                            ? { ...item, status: newStatus }
-                            : item
-                    ));
+                    // Moving between swimlanes within sprint
+                    await sprintsApi.moveItem(draggedItem.id, sprintId, newStatus as any);
                 }
             }
+
+            // Refresh data to reflect changes
+            await loadSprintData();
+        } catch (err) {
+            console.error('Failed to move item:', err);
+            setError('Failed to move item');
+        } finally {
+            setIsSaving(false);
             setDraggedItem(null);
         }
     };
@@ -112,19 +127,31 @@ export default function SprintBoardPage() {
         setDraggedItem(null);
     };
 
-    const handleRemoveFromSprint = (itemId: string) => {
-        const item = items.find(i => i.id === itemId);
-        if (item) {
-            setItems(items.filter(i => i.id !== itemId));
-            setBacklogItems([...backlogItems, { ...item, status: 'backlog' }]);
+    const handleRemoveFromSprint = async (itemId: string) => {
+        try {
+            setIsSaving(true);
+            setError(null);
+            await sprintsApi.moveItem(itemId, null as any, 'backlog');
+            await loadSprintData();
+        } catch (err) {
+            console.error('Failed to remove item:', err);
+            setError('Failed to remove item from sprint');
+        } finally {
+            setIsSaving(false);
         }
     };
 
-    const handleAddToSprint = (itemId: string) => {
-        const item = backlogItems.find(i => i.id === itemId);
-        if (item) {
-            setBacklogItems(backlogItems.filter(i => i.id !== itemId));
-            setItems([...items, { ...item, status: 'todo' }]);
+    const handleAddToSprint = async (itemId: string) => {
+        try {
+            setIsSaving(true);
+            setError(null);
+            await sprintsApi.moveItem(itemId, sprintId, 'todo');
+            await loadSprintData();
+        } catch (err) {
+            console.error('Failed to add item:', err);
+            setError('Failed to add item to sprint');
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -147,16 +174,22 @@ export default function SprintBoardPage() {
         }
     };
 
-    const stats = {
-        total: items.length,
-        done: items.filter(i => i.status === 'done').length,
-        inProgress: items.filter(i => !['todo', 'done'].includes(i.status)).length,
-    };
-
-    const progress = stats.total > 0 ? Math.round((stats.done / stats.total) * 100) : 0;
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        );
+    }
 
     return (
         <div className="h-[calc(100vh-4rem)] flex flex-col">
+            {error && (
+                <div className="rounded-md border border-red-500/20 bg-red-500/10 p-4 mx-4 mt-4">
+                    <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                </div>
+            )}
+
             {/* Header */}
             <div className="flex items-center justify-between pb-4 border-b">
                 <div className="flex items-center gap-4">
@@ -165,19 +198,19 @@ export default function SprintBoardPage() {
                     </Link>
                     <div>
                         <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-                            {sprintInfo.name}
+                            {sprintInfo?.name || 'Sprint'}
                             <span className="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/30 px-2.5 py-0.5 text-xs font-medium text-green-700 dark:text-green-400">
-                                {sprintInfo.status}
+                                {sprintInfo?.status || 'ACTIVE'}
                             </span>
                         </h1>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
                             <span className="flex items-center gap-1">
                                 <Calendar className="h-4 w-4" />
-                                {sprintInfo.startDate} - {sprintInfo.endDate}
+                                {sprintInfo?.startDate ? new Date(sprintInfo.startDate).toLocaleDateString() : 'N/A'} - {sprintInfo?.endDate ? new Date(sprintInfo.endDate).toLocaleDateString() : 'N/A'}
                             </span>
                             <span className="flex items-center gap-1">
                                 <Users className="h-4 w-4" />
-                                4 team members
+                                {items.length} items
                             </span>
                         </div>
                     </div>
@@ -187,15 +220,15 @@ export default function SprintBoardPage() {
                     {/* Progress Stats */}
                     <div className="flex items-center gap-4 text-sm">
                         <div className="text-center">
-                            <div className="text-2xl font-bold">{stats.total}</div>
+                            <div className="text-2xl font-bold">{metrics?.total ?? 0}</div>
                             <div className="text-xs text-muted-foreground">Total</div>
                         </div>
                         <div className="text-center">
-                            <div className="text-2xl font-bold text-blue-600">{stats.inProgress}</div>
+                            <div className="text-2xl font-bold text-blue-600">{metrics?.inProgress ?? 0}</div>
                             <div className="text-xs text-muted-foreground">In Progress</div>
                         </div>
                         <div className="text-center">
-                            <div className="text-2xl font-bold text-green-600">{stats.done}</div>
+                            <div className="text-2xl font-bold text-green-600">{metrics?.done ?? 0}</div>
                             <div className="text-xs text-muted-foreground">Done</div>
                         </div>
                     </div>
@@ -204,17 +237,17 @@ export default function SprintBoardPage() {
                     <div className="w-32">
                         <div className="flex justify-between text-xs text-muted-foreground mb-1">
                             <span>Progress</span>
-                            <span>{progress}%</span>
+                            <span>{metrics?.progress ?? 0}%</span>
                         </div>
                         <div className="h-2 w-full rounded-full bg-secondary">
                             <div
                                 className="h-full rounded-full bg-green-500 transition-all duration-500"
-                                style={{ width: `${progress}%` }}
+                                style={{ width: `${metrics?.progress ?? 0}%` }}
                             />
                         </div>
                     </div>
 
-                    <button className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm hover:bg-accent">
+                    <button className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm hover:bg-accent" disabled={isSaving}>
                         <MoreHorizontal className="h-4 w-4" />
                     </button>
                 </div>
@@ -269,12 +302,12 @@ export default function SprintBoardPage() {
                                         <div className="flex items-center justify-between mt-3">
                                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                                 <span className="bg-secondary px-1.5 py-0.5 rounded">
-                                                    RQS: {item.rqs}
+                                                    RQS: {item.rqsScore ?? 'N/A'}
                                                 </span>
                                             </div>
-                                            {item.assignee && (
+                                            {item.assigneeName && (
                                                 <div className="w-6 h-6 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-medium">
-                                                    {item.assignee.charAt(0)}
+                                                    {item.assigneeName.charAt(0)}
                                                 </div>
                                             )}
                                         </div>
@@ -342,7 +375,7 @@ export default function SprintBoardPage() {
                                 <div className="flex items-center justify-between mt-2">
                                     <div className={`w-1.5 h-1.5 rounded-full ${getPriorityColor(item.priority)}`} title={item.priority} />
                                     <span className="text-xs text-muted-foreground bg-secondary px-1.5 py-0.5 rounded">
-                                        RQS: {item.rqs}
+                                        RQS: {item.rqsScore ?? 'N/A'}
                                     </span>
                                 </div>
                             </div>
