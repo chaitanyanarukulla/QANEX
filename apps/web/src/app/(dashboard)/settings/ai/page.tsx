@@ -447,7 +447,7 @@ export default function AISettingsPage() {
 
           {/* Cloud provider configuration */}
           {selectedProviderInfo?.category === 'cloud' && (
-            <div className="space-y-4">
+            <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   API Key
@@ -548,7 +548,7 @@ export default function AISettingsPage() {
                   </div>
                 </div>
               )}
-            </div>
+            </form>
           )}
 
           {/* Foundry Local configuration */}
