@@ -138,7 +138,7 @@ export default function TestRunDetailPage() {
                             {run.status.replace('_', ' ')}
                         </span>
                         <span className="text-sm text-muted-foreground">
-                            {run.stats.total} / {testCases.length} tests executed
+                            {run.stats?.total ?? 0} / {testCases.length} tests executed
                         </span>
                     </div>
                 </div>
@@ -146,19 +146,19 @@ export default function TestRunDetailPage() {
                 {/* Stats Summary */}
                 <div className="flex gap-4">
                     <div className="text-center">
-                        <div className="text-2xl font-bold text-green-600">{run.stats.passed}</div>
+                        <div className="text-2xl font-bold text-green-600">{run.stats?.passed ?? 0}</div>
                         <div className="text-xs text-muted-foreground">Passed</div>
                     </div>
                     <div className="text-center">
-                        <div className="text-2xl font-bold text-red-600">{run.stats.failed}</div>
+                        <div className="text-2xl font-bold text-red-600">{run.stats?.failed ?? 0}</div>
                         <div className="text-xs text-muted-foreground">Failed</div>
                     </div>
                     <div className="text-center">
-                        <div className="text-2xl font-bold text-yellow-600">{run.stats.blocked}</div>
+                        <div className="text-2xl font-bold text-yellow-600">{run.stats?.blocked ?? 0}</div>
                         <div className="text-xs text-muted-foreground">Blocked</div>
                     </div>
                     <div className="text-center">
-                        <div className="text-2xl font-bold">{run.stats.passRate}%</div>
+                        <div className="text-2xl font-bold">{run.stats?.passRate ?? 0}%</div>
                         <div className="text-xs text-muted-foreground">Pass Rate</div>
                     </div>
                 </div>

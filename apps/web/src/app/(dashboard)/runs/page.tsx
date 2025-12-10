@@ -143,25 +143,25 @@ export default function TestRunnerPage() {
                                 {/* Stats */}
                                 <div className="grid grid-cols-4 gap-2 text-center">
                                     <div className="rounded-md bg-green-50 dark:bg-green-900/20 p-2">
-                                        <div className="text-lg font-bold text-green-600">{run.stats.passed}</div>
+                                        <div className="text-lg font-bold text-green-600">{run.stats?.passed ?? 0}</div>
                                         <div className="text-xs text-muted-foreground">Passed</div>
                                     </div>
                                     <div className="rounded-md bg-red-50 dark:bg-red-900/20 p-2">
-                                        <div className="text-lg font-bold text-red-600">{run.stats.failed}</div>
+                                        <div className="text-lg font-bold text-red-600">{run.stats?.failed ?? 0}</div>
                                         <div className="text-xs text-muted-foreground">Failed</div>
                                     </div>
                                     <div className="rounded-md bg-yellow-50 dark:bg-yellow-900/20 p-2">
-                                        <div className="text-lg font-bold text-yellow-600">{run.stats.blocked}</div>
+                                        <div className="text-lg font-bold text-yellow-600">{run.stats?.blocked ?? 0}</div>
                                         <div className="text-xs text-muted-foreground">Blocked</div>
                                     </div>
                                     <div className="rounded-md bg-gray-50 dark:bg-gray-900/20 p-2">
-                                        <div className="text-lg font-bold text-gray-600">{run.stats.skipped}</div>
+                                        <div className="text-lg font-bold text-gray-600">{run.stats?.skipped ?? 0}</div>
                                         <div className="text-xs text-muted-foreground">Skipped</div>
                                     </div>
                                 </div>
 
                                 {/* Pass Rate */}
-                                {run.stats.total > 0 && (
+                                {run.stats && run.stats.total > 0 && (
                                     <div className="space-y-2">
                                         <div className="flex justify-between text-xs text-muted-foreground">
                                             <span>Pass Rate</span>
