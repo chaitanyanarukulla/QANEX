@@ -123,7 +123,7 @@ export class OnboardingService {
                 id: 'automation_candidate',
                 label: 'Generate an automation candidate',
                 completed: automationCount > 0,
-                ctaPath: '/testing'
+                ctaPath: '/testing/automation'
             }
         ];
 
