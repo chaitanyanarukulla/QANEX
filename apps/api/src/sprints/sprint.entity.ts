@@ -33,6 +33,12 @@ export class Sprint {
     @Column({ type: 'int', default: 0 })
     capacity!: number;
 
+    @Column({ type: 'int', nullable: true })
+    velocity?: number; // Story points completed
+
+    @Column({ type: 'int', nullable: true })
+    committedPoints?: number; // Initial commitment
+
     @Column()
     tenantId!: string;
 

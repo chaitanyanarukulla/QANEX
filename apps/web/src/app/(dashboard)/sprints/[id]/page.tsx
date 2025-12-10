@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
     ArrowLeft, Calendar, Users, CheckCircle, AlertCircle,
-    GripVertical, ChevronRight, MoreHorizontal, Plus, X, ChevronDown, Loader2
+    GripVertical, ChevronRight, MoreHorizontal, Plus, X, ChevronDown, Loader2, BarChart3
 } from 'lucide-react';
 import { sprintsApi } from '@/lib/api';
 
@@ -247,6 +247,13 @@ export default function SprintBoardPage() {
                         </div>
                     </div>
 
+                    <Link
+                        href={`/sprints/${sprintId}/analytics`}
+                        className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm hover:bg-accent gap-2"
+                    >
+                        <BarChart3 className="h-4 w-4" />
+                        Analytics
+                    </Link>
                     <button className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm hover:bg-accent" disabled={isSaving}>
                         <MoreHorizontal className="h-4 w-4" />
                     </button>

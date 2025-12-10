@@ -130,4 +130,51 @@ export class SprintsController {
         const tenantId = req.user.tenantId || 'mock-tenant-id';
         return this.sprintsService.planSprint(tenantId, dto.capacity || 20);
     }
+
+    // ===== Option C: Velocity & Burndown =====
+
+    @Post(':id/velocity/calculate')
+    calculateVelocity(@Param('id') id: string, @Request() req: any) {
+        const tenantId = req.user.tenantId || 'mock-tenant-id';
+        return this.sprintsService.calculateVelocity(id, tenantId);
+    }
+
+    @Get('velocity/trend')
+    getVelocityTrend(@Request() req: any) {
+        const tenantId = req.user.tenantId || 'mock-tenant-id';
+        return this.sprintsService.getVelocityTrend(tenantId);
+    }
+
+    @Get(':id/burndown')
+    getBurndownData(@Param('id') id: string, @Request() req: any) {
+        const tenantId = req.user.tenantId || 'mock-tenant-id';
+        return this.sprintsService.getBurndownData(id, tenantId);
+    }
+
+    // ===== Option D: Requirement Import =====
+
+    @Post('items/from-requirements')
+    createItemsFromRequirements(
+        @Body() dto: { requirementIds: string[]; sprintId?: string },
+        @Request() req: any
+    ) {
+        const tenantId = req.user.tenantId || 'mock-tenant-id';
+        return this.sprintsService.createItemsFromRequirements(
+            dto.requirementIds,
+            dto.sprintId || null,
+            tenantId
+        );
+    }
+
+    @Post('items/task-breakdown')
+    generateTaskBreakdown(
+        @Body() dto: { requirementId: string; title: string; description: string },
+        @Request() req: any
+    ) {
+        return this.sprintsService.generateTaskBreakdown(
+            dto.requirementId,
+            dto.title,
+            dto.description
+        );
+    }
 }

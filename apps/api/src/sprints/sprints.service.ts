@@ -333,4 +333,204 @@ export class SprintsService {
             `${remainingBacklog} items remain in backlog. ` +
             `Selection prioritizes: Critical/High priority items, high RQS requirements, and valuable features. `;
     }
+
+    // ===== Option C: Velocity Tracking & Burndown Analytics =====
+
+    async calculateVelocity(sprintId: string, tenantId: string): Promise<number> {
+        const sprint = await this.findOne(sprintId, tenantId);
+
+        // Count completed items as velocity
+        const items = await this.sprintItemsRepository.find({
+            where: { sprintId, tenantId, status: SprintItemStatus.DONE },
+        });
+
+        const velocity = items.length;
+
+        // Update sprint velocity
+        sprint.velocity = velocity;
+        await this.sprintsRepository.save(sprint);
+
+        return velocity;
+    }
+
+    async getVelocityTrend(tenantId: string, limit: number = 5): Promise<{
+        sprints: Array<{
+            sprintId: string;
+            name: string;
+            velocity: number;
+            capacity: number;
+            endDate: Date | null;
+        }>;
+        averageVelocity: number;
+        trend: 'increasing' | 'decreasing' | 'stable';
+    }> {
+        const completedSprints = await this.sprintsRepository.find({
+            where: { tenantId, status: SprintStatus.COMPLETED },
+            order: { endDate: 'DESC' },
+            take: limit,
+        });
+
+        const sprintData = completedSprints.map(sprint => ({
+            sprintId: sprint.id,
+            name: sprint.name,
+            velocity: sprint.velocity || 0,
+            capacity: sprint.capacity,
+            endDate: sprint.endDate || null,
+        }));
+
+        const avgVelocity = sprintData.length > 0
+            ? Math.round(sprintData.reduce((sum, s) => sum + s.velocity, 0) / sprintData.length)
+            : 0;
+
+        // Determine trend
+        let trend: 'increasing' | 'decreasing' | 'stable' = 'stable';
+        if (sprintData.length >= 2) {
+            const recent = sprintData.slice(0, 2);
+            if (recent[0].velocity > recent[1].velocity) trend = 'increasing';
+            else if (recent[0].velocity < recent[1].velocity) trend = 'decreasing';
+        }
+
+        return {
+            sprints: sprintData,
+            averageVelocity: avgVelocity,
+            trend,
+        };
+    }
+
+    async getBurndownData(sprintId: string, tenantId: string): Promise<{
+        totalItems: number;
+        completedItems: number;
+        remainingItems: number;
+        dailyBurndown: Array<{
+            date: string;
+            remaining: number;
+            ideal: number;
+        }>;
+        projectedCompletion: string | null;
+    }> {
+        const sprint = await this.findOne(sprintId, tenantId);
+        const items = await this.sprintItemsRepository.find({
+            where: { sprintId, tenantId },
+        });
+
+        const total = items.length;
+        const completed = items.filter(i => i.status === SprintItemStatus.DONE).length;
+        const remaining = total - completed;
+
+        // Generate ideal burndown line
+        const dailyBurndown = [];
+        if (sprint.startDate && sprint.endDate) {
+            const start = new Date(sprint.startDate);
+            const end = new Date(sprint.endDate);
+            const totalDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+            const now = new Date();
+            const daysPassed = Math.max(0, Math.ceil((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+
+            for (let day = 0; day <= Math.min(daysPassed, totalDays); day++) {
+                const date = new Date(start);
+                date.setDate(date.getDate() + day);
+
+                const idealRemaining = Math.max(0, total - (total * day / totalDays));
+                const actualRemaining = day === daysPassed ? remaining : idealRemaining; // Simplified
+
+                dailyBurndown.push({
+                    date: date.toISOString().split('T')[0],
+                    remaining: Math.round(actualRemaining),
+                    ideal: Math.round(idealRemaining),
+                });
+            }
+        }
+
+        // Project completion date based on current velocity
+        let projectedCompletion: string | null = null;
+        if (sprint.startDate && sprint.endDate && remaining > 0) {
+            const velocity = sprint.velocity || completed;
+            if (velocity > 0) {
+                const now = new Date();
+                const start = new Date(sprint.startDate);
+                const daysPassed = Math.max(1, Math.ceil((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+                const dailyVelocity = completed / daysPassed;
+                const daysNeeded = Math.ceil(remaining / dailyVelocity);
+                const projectedDate = new Date(now);
+                projectedDate.setDate(projectedDate.getDate() + daysNeeded);
+                projectedCompletion = projectedDate.toISOString().split('T')[0];
+            }
+        }
+
+        return {
+            totalItems: total,
+            completedItems: completed,
+            remainingItems: remaining,
+            dailyBurndown,
+            projectedCompletion,
+        };
+    }
+
+    // ===== Option D: Auto-create Sprint Items from Requirements =====
+
+    async createItemsFromRequirements(
+        requirementIds: string[],
+        sprintId: string | null,
+        tenantId: string
+    ): Promise<SprintItem[]> {
+        // Note: This requires RequirementsService injection to fetch requirements
+        // For now, we'll create a simplified version that accepts requirement data
+        const createdItems: SprintItem[] = [];
+
+        for (const reqId of requirementIds) {
+            // In production, fetch the requirement details from RequirementsService
+            // For now, create placeholder items
+            const item = await this.addItem(sprintId, tenantId, {
+                title: `Implement Requirement ${reqId}`,
+                description: `Auto-generated from requirement ${reqId}`,
+                type: SprintItemType.FEATURE,
+                priority: SprintItemPriority.MEDIUM,
+                requirementId: reqId,
+                status: sprintId ? SprintItemStatus.TODO : SprintItemStatus.BACKLOG,
+            });
+            createdItems.push(item);
+        }
+
+        return createdItems;
+    }
+
+    async generateTaskBreakdown(requirementId: string, requirementTitle: string, requirementDescription: string): Promise<{
+        suggestedTasks: Array<{
+            title: string;
+            description: string;
+            type: SprintItemType;
+            estimatedHours: number;
+        }>;
+        totalEstimate: number;
+    }> {
+        // AI-powered task breakdown
+        // For MVP, use rule-based breakdown
+        const tasks = [
+            {
+                title: `Design: ${requirementTitle}`,
+                description: `Create technical design for: ${requirementDescription?.substring(0, 100)}...`,
+                type: SprintItemType.TASK,
+                estimatedHours: 4,
+            },
+            {
+                title: `Implement: ${requirementTitle}`,
+                description: `Core implementation of: ${requirementDescription?.substring(0, 100)}...`,
+                type: SprintItemType.FEATURE,
+                estimatedHours: 16,
+            },
+            {
+                title: `Test: ${requirementTitle}`,
+                description: `Write and execute tests for: ${requirementDescription?.substring(0, 100)}...`,
+                type: SprintItemType.TASK,
+                estimatedHours: 8,
+            },
+        ];
+
+        const totalEstimate = tasks.reduce((sum, t) => sum + t.estimatedHours, 0);
+
+        return {
+            suggestedTasks: tasks,
+            totalEstimate,
+        };
+    }
 }

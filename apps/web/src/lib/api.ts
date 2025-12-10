@@ -152,6 +152,40 @@ export interface AIPlanRecommendation {
   reasoning: string;
 }
 
+export interface VelocityTrend {
+  sprints: Array<{
+    sprintId: string;
+    name: string;
+    velocity: number;
+    capacity: number;
+    endDate: string | null;
+  }>;
+  averageVelocity: number;
+  trend: 'increasing' | 'decreasing' | 'stable';
+}
+
+export interface BurndownData {
+  totalItems: number;
+  completedItems: number;
+  remainingItems: number;
+  dailyBurndown: Array<{
+    date: string;
+    remaining: number;
+    ideal: number;
+  }>;
+  projectedCompletion: string | null;
+}
+
+export interface TaskBreakdown {
+  suggestedTasks: Array<{
+    title: string;
+    description: string;
+    type: 'feature' | 'bug' | 'task';
+    estimatedHours: number;
+  }>;
+  totalEstimate: number;
+}
+
 export interface Release {
   id: string;
   version: string;
@@ -280,6 +314,24 @@ export const sprintsApi = {
     api<AIPlanRecommendation>('/sprints/ai/plan', {
       method: 'POST',
       body: { capacity: capacity || 20 },
+    }),
+
+  // Option C: Velocity & Burndown
+  calculateVelocity: (sprintId: string) =>
+    api<number>(`/sprints/${sprintId}/velocity/calculate`, { method: 'POST' }),
+  getVelocityTrend: () => api<VelocityTrend>('/sprints/velocity/trend'),
+  getBurndown: (sprintId: string) => api<BurndownData>(`/sprints/${sprintId}/burndown`),
+
+  // Option D: Requirement Import
+  createItemsFromRequirements: (requirementIds: string[], sprintId?: string) =>
+    api<SprintItem[]>('/sprints/items/from-requirements', {
+      method: 'POST',
+      body: { requirementIds, sprintId },
+    }),
+  generateTaskBreakdown: (requirementId: string, title: string, description: string) =>
+    api<TaskBreakdown>('/sprints/items/task-breakdown', {
+      method: 'POST',
+      body: { requirementId, title, description },
     }),
 };
 
