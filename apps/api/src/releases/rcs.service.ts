@@ -1,12 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { ReleasesService } from './releases.service';
 import { RequirementsService } from '../requirements/requirements.service';
 import { TestKeysService } from '../test-keys/test-keys.service';
 import { BugsService } from '../bugs/bugs.service';
+import { SecurityOpsService } from '../security-ops/security-ops.service';
 
 import type { AiProvider } from '../ai/ai.interface';
 import { AI_PROVIDER_TOKEN } from '../ai/ai.interface';
-import { Inject } from '@nestjs/common';
 
 @Injectable()
 export class RcsService {
@@ -15,6 +15,7 @@ export class RcsService {
         private requirementsService: RequirementsService,
         private testKeysService: TestKeysService,
         private bugsService: BugsService,
+        private securityOpsService: SecurityOpsService,
         @Inject(AI_PROVIDER_TOKEN) private aiProvider: AiProvider,
     ) { }
 
@@ -42,9 +43,8 @@ export class RcsService {
         const rpScore = (readyReqs / totalReqs) * 100;
 
         // Pillar 2: QT (Quality & Testing)
-        // Rule: % of Test Cases passed (mocked for now as 80%)
-        // Real implementation: Fetch latest TestRun -> Aggregated Results -> Pass Rate
-        const qtScore = testRuns.length > 0 ? 85 : 0; // Stub
+        // Rule: % of Test Cases passed from latest test run
+        const qtScore = await this.testKeysService.getLatestPassRate(tenantId);
 
         // Pillar 3: B (Bugs)
         // Rule: Start at 100. Deduct for open bugs based on Severity.
@@ -60,8 +60,9 @@ export class RcsService {
         bScore = Math.max(0, bScore); // Floor at 0
 
         // Pillar 4: SO (Security & Ops)
-        // Stub: 100
-        const soScore = 100;
+        // Calculate from security checks
+        const soResult = await this.securityOpsService.calculateSoScore(tenantId, releaseId);
+        const soScore = soResult.score;
 
         // Final Aggregate (Weighted Average)
         // QT: 40%, B: 30%, RP: 20%, SO: 10%
@@ -75,7 +76,12 @@ export class RcsService {
             details: {
                 openBugs: openBugs.length,
                 readyReqs,
-                totalReqs
+                totalReqs,
+                testPassRate: qtScore,
+                testRunsCount: testRuns.length,
+                securityChecks: soResult.details.checksRun,
+                securityChecksPassed: soResult.details.checksPassed,
+                criticalSecurityIssues: soResult.details.criticalIssues,
             }
         };
 
@@ -89,14 +95,13 @@ export class RcsService {
     }
 
     async generateAiExplanation(releaseId: string, tenantId: string, score: number, breakdown: any) {
-        // Mock prompt construction since interface might not have specific method yet, or we reuse generic
-        // Assuming we added explainRcs to interface or using generic call.
-        // For strict typing, let's assume aiProvider has been updated or we cast.
-        // Actually, let's check AiProvider interface. It has explainRcs?
-        // Step 375 said "explainRcs(...)"
-        // But my Foundry implementation (Step 386) only had analyzeRequirement, triageBug, generateTestCode.
-        // I need to add explainRcs to FoundryAiProvider and Interface. 
-        // For now, I'll skip the call if method missing or implement it.
-        // I will implement it in next step.
+        try {
+            if (this.aiProvider.explainRcs) {
+                const explanation = await this.aiProvider.explainRcs({ score, breakdown });
+                await this.releasesService.updateExplanation(releaseId, explanation);
+            }
+        } catch (error) {
+            console.error('Failed to generate AI explanation:', error);
+        }
     }
 }

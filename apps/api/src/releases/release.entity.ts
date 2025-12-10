@@ -42,6 +42,17 @@ export class Release {
         details: any;
     };
 
+    @Column('jsonb', { nullable: true })
+    rcsExplanation?: {
+        summary: string;
+        risks: string[];
+        strengths: string[];
+        generatedAt: string;
+    };
+
+    @Column({ nullable: true })
+    name?: string;
+
     @Column()
     tenantId!: string;
 

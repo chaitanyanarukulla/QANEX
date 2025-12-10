@@ -21,6 +21,7 @@ import { AuditModule } from './audit/audit.module';
 import { ExportModule } from './export/export.module';
 import { AiModule } from './ai/ai.module';
 import { HealthModule } from './health/health.module';
+import { SecurityOpsModule } from './security-ops/security-ops.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TenantMiddleware } from './tenants/tenant.middleware';
@@ -89,6 +90,7 @@ import { RequestLoggerMiddleware } from './common/middleware/request-logger.midd
     DemoModule,
     AuditModule,
     ExportModule,
+    SecurityOpsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

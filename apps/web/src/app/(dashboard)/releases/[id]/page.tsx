@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { RcsGauge } from '@/components/releases/RcsGauge';
 import { PillarCard } from '@/components/releases/PillarCard';
-import { FileText, Beaker, Bug, Shield, Loader2, ArrowLeft, RefreshCw } from 'lucide-react';
+import { FileText, Beaker, Bug, Shield, Loader2, ArrowLeft, RefreshCw, AlertTriangle, CheckCircle2, Sparkles } from 'lucide-react';
 import { releasesApi, Release } from '@/lib/api';
 import Link from 'next/link';
 
@@ -186,6 +186,57 @@ export default function ReleaseDetailPage() {
           />
         </div>
       </div>
+
+      {/* AI Explanation */}
+      {release.rcsExplanation && (
+        <div className="rounded-xl border bg-card p-6 shadow-sm">
+          <div className="flex items-center gap-2 mb-4">
+            <Sparkles className="h-5 w-5 text-primary" />
+            <h3 className="font-semibold">AI Analysis</h3>
+            <span className="text-xs text-muted-foreground ml-auto">
+              Generated {new Date(release.rcsExplanation.generatedAt).toLocaleString()}
+            </span>
+          </div>
+
+          <p className="text-muted-foreground mb-6">{release.rcsExplanation.summary}</p>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {release.rcsExplanation.risks.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <AlertTriangle className="h-4 w-4 text-amber-500" />
+                  <h4 className="font-medium text-amber-500">Risks</h4>
+                </div>
+                <ul className="space-y-2">
+                  {release.rcsExplanation.risks.map((risk, i) => (
+                    <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
+                      <span className="text-amber-500 mt-1">•</span>
+                      {risk}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {release.rcsExplanation.strengths.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <CheckCircle2 className="h-4 w-4 text-green-500" />
+                  <h4 className="font-medium text-green-500">Strengths</h4>
+                </div>
+                <ul className="space-y-2">
+                  {release.rcsExplanation.strengths.map((strength, i) => (
+                    <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
+                      <span className="text-green-500 mt-1">•</span>
+                      {strength}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* RCS Formula Explanation */}
       <div className="rounded-lg border bg-card p-6">

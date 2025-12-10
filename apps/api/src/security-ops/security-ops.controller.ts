@@ -1,0 +1,37 @@
+import { Controller, Get, Post, Param, Query, UseGuards, Request } from '@nestjs/common';
+import { SecurityOpsService } from './security-ops.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { Request as ExpressRequest } from 'express';
+
+interface AuthenticatedRequest extends ExpressRequest {
+    user: {
+        tenantId: string;
+        userId: string;
+    };
+}
+
+@Controller('security-ops')
+@UseGuards(JwtAuthGuard)
+export class SecurityOpsController {
+    constructor(private securityOpsService: SecurityOpsService) { }
+
+    @Get()
+    async findAll(@Request() req: AuthenticatedRequest) {
+        return this.securityOpsService.findAll(req.user.tenantId);
+    }
+
+    @Get('score')
+    async getScore(@Request() req: AuthenticatedRequest, @Query('releaseId') releaseId?: string) {
+        return this.securityOpsService.calculateSoScore(req.user.tenantId, releaseId);
+    }
+
+    @Get('release/:releaseId')
+    async findByRelease(@Param('releaseId') releaseId: string, @Request() req: AuthenticatedRequest) {
+        return this.securityOpsService.findByRelease(releaseId, req.user.tenantId);
+    }
+
+    @Post('scan')
+    async runScan(@Request() req: AuthenticatedRequest, @Query('releaseId') releaseId?: string) {
+        return this.securityOpsService.runMockScan(req.user.tenantId, releaseId);
+    }
+}

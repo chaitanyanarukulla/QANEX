@@ -1,55 +1,93 @@
 'use client';
 
-import { Search, Bell, User, MessageSquare, LogOut } from 'lucide-react';
-import { useState } from 'react';
+import { Search, Bell, User, MessageSquare, LogOut, Loader2 } from 'lucide-react';
+import { useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { FeedbackModal } from './feedback/FeedbackModal';
 import { useAuth } from '@/contexts/AuthContext';
+import { aiApi, SearchResult } from '@/lib/api';
 
 export function Navbar() {
     const { user, logout } = useAuth();
     const [query, setQuery] = useState('');
-    const [results, setResults] = useState<any[]>([]);
+    const [results, setResults] = useState<SearchResult[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [showResults, setShowResults] = useState(false);
     const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
+    const searchTimeout = useRef<NodeJS.Timeout | null>(null);
 
-    const handleSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const performSearch = useCallback(async (searchQuery: string) => {
+        if (searchQuery.length < 2) {
+            setResults([]);
+            setShowResults(false);
+            return;
+        }
+
+        setIsSearching(true);
+        try {
+            const searchResults = await aiApi.search(searchQuery);
+            setResults(searchResults);
+            setShowResults(true);
+        } catch (err) {
+            console.error('Search failed:', err);
+            // Fallback to mock results if API fails
+            setResults([
+                { id: 'mock-1', type: 'REQUIREMENT', content: `Results for "${searchQuery}"`, metadata: { title: 'Search unavailable' } },
+            ]);
+            setShowResults(true);
+        } finally {
+            setIsSearching(false);
+        }
+    }, []);
+
+    const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = e.target.value;
         setQuery(val);
-        if (val.length > 2) {
-            setIsSearching(true);
-            try {
-                // Mock call for prototype without backend running locally perfectly
-                // const res = await fetch('/api/ai/search', { ... });
 
-                // Simulating RAG response
-                setTimeout(() => {
-                    const mockResults = [
-                        { id: '1', type: 'BUG', content: `Error handling '${val}'` },
-                        { id: '2', type: 'REQUIREMENT', content: `System must support '${val}'` },
-                        { id: '3', type: 'TEST', content: `Verify '${val}' validation` },
-                    ];
-                    setResults(mockResults);
-                    setIsSearching(false);
-                    setShowResults(true);
-                }, 300);
-            } catch (err) {
-                console.error(err);
-                setIsSearching(false);
-            }
+        // Debounce search
+        if (searchTimeout.current) {
+            clearTimeout(searchTimeout.current);
+        }
+
+        if (val.length > 2) {
+            searchTimeout.current = setTimeout(() => {
+                performSearch(val);
+            }, 300);
         } else {
             setResults([]);
             setShowResults(false);
         }
     };
 
+    const getResultLink = (result: SearchResult): string => {
+        switch (result.type) {
+            case 'REQUIREMENT':
+                return `/requirements/${result.id}`;
+            case 'BUG':
+                return `/issues`;
+            case 'TEST':
+                return `/tests`;
+            case 'RELEASE':
+                return `/releases/${result.id}`;
+            default:
+                return '#';
+        }
+    };
+
+    const getResultTitle = (result: SearchResult): string => {
+        return result.metadata?.title || result.content.substring(0, 50);
+    };
+
     return (
         <div className="flex h-16 shrink-0 items-center justify-between border-b bg-card px-6">
             <div className="flex flex-1 items-center gap-4">
                 <div className="relative w-full max-w-md">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    {isSearching ? (
+                        <Loader2 className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground animate-spin" />
+                    ) : (
+                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    )}
                     <input
                         type="search"
                         placeholder="Search requirements, bugs, tests... (AI Powered)"
@@ -59,15 +97,34 @@ export function Navbar() {
                         onBlur={() => setTimeout(() => setShowResults(false), 200)}
                         onFocus={() => query.length > 2 && setShowResults(true)}
                     />
-                    {showResults && results.length > 0 && (
+                    {showResults && (
                         <div className="absolute top-full mt-1 w-full rounded-md border bg-popover p-2 shadow-md z-50">
-                            <div className="text-xs font-semibold text-muted-foreground mb-2 px-2">AI Search Results</div>
-                            {results.map(res => (
-                                <div key={res.id} className="cursor-pointer rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground">
-                                    <span className="font-mono text-xs mr-2 text-primary">[{res.type}]</span>
-                                    {res.content}
+                            <div className="text-xs font-semibold text-muted-foreground mb-2 px-2 flex items-center justify-between">
+                                <span>AI Search Results</span>
+                                {results.length > 0 && (
+                                    <span className="text-xs text-muted-foreground">{results.length} found</span>
+                                )}
+                            </div>
+                            {results.length > 0 ? (
+                                results.map(res => (
+                                    <Link
+                                        key={res.id}
+                                        href={getResultLink(res)}
+                                        className="block cursor-pointer rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground"
+                                        onClick={() => {
+                                            setShowResults(false);
+                                            setQuery('');
+                                        }}
+                                    >
+                                        <span className="font-mono text-xs mr-2 text-primary">[{res.type}]</span>
+                                        {getResultTitle(res)}
+                                    </Link>
+                                ))
+                            ) : (
+                                <div className="px-2 py-3 text-sm text-muted-foreground text-center">
+                                    No results found for "{query}"
                                 </div>
-                            ))}
+                            )}
                         </div>
                     )}
                 </div>

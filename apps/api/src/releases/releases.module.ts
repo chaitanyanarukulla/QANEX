@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ReleasesService } from './releases.service';
 import { ReleasesController } from './releases.controller';
@@ -7,6 +7,7 @@ import { RcsService } from './rcs.service';
 import { RequirementsModule } from '../requirements/requirements.module';
 import { BugsModule } from '../bugs/bugs.module';
 import { TestKeysModule } from '../test-keys/test-keys.module';
+import { SecurityOpsModule } from '../security-ops/security-ops.module';
 
 @Module({
     imports: [
@@ -14,6 +15,7 @@ import { TestKeysModule } from '../test-keys/test-keys.module';
         RequirementsModule,
         BugsModule,
         TestKeysModule,
+        SecurityOpsModule,
     ],
     providers: [ReleasesService, RcsService],
     controllers: [ReleasesController],

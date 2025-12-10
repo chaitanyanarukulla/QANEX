@@ -41,4 +41,14 @@ export class ReleasesService {
     async updateScore(id: string, score: number, breakdown: any): Promise<void> {
         await this.releasesRepository.update(id, { rcsScore: score, rcsBreakdown: breakdown });
     }
+
+    // Helper to save RCS AI explanation
+    async updateExplanation(id: string, explanation: { summary: string; risks: string[]; strengths: string[] }): Promise<void> {
+        await this.releasesRepository.update(id, {
+            rcsExplanation: {
+                ...explanation,
+                generatedAt: new Date().toISOString(),
+            }
+        });
+    }
 }

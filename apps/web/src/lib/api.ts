@@ -108,9 +108,25 @@ export interface Release {
     qt: number;
     b: number;
     so: number;
+    details?: {
+      openBugs: number;
+      readyReqs: number;
+      totalReqs: number;
+    };
+  };
+  rcsExplanation?: {
+    summary: string;
+    risks: string[];
+    strengths: string[];
+    generatedAt: string;
   };
   createdAt: string;
   updatedAt: string;
+}
+
+export interface TestStep {
+  step: string;
+  expected: string;
 }
 
 export interface TestCase {
@@ -118,7 +134,37 @@ export interface TestCase {
   title: string;
   description?: string;
   priority: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+  steps?: TestStep[];
   requirementId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TestRunStats {
+  total: number;
+  passed: number;
+  failed: number;
+  blocked: number;
+  skipped: number;
+  passRate: number;
+}
+
+export interface TestRun {
+  id: string;
+  name: string;
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED';
+  stats: TestRunStats;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TestResult {
+  id: string;
+  runId: string;
+  caseId: string;
+  status: 'PASS' | 'FAIL' | 'BLOCKED' | 'SKIPPED';
+  notes?: string;
+  createdAt: string;
 }
 
 // Requirements API
@@ -165,11 +211,24 @@ export const releasesApi = {
 
 // Test Cases API
 export const testCasesApi = {
-  list: () => api<TestCase[]>('/test-keys'),
-  get: (id: string) => api<TestCase>(`/test-keys/${id}`),
-  create: (data: Partial<TestCase>) => api<TestCase>('/test-keys', { method: 'POST', body: data }),
+  list: () => api<TestCase[]>('/tests/cases'),
+  get: (id: string) => api<TestCase>(`/tests/cases/${id}`),
+  create: (data: Partial<TestCase>) => api<TestCase>('/tests/cases', { method: 'POST', body: data }),
   update: (id: string, data: Partial<TestCase>) =>
-    api<TestCase>(`/test-keys/${id}`, { method: 'PATCH', body: data }),
+    api<TestCase>(`/tests/cases/${id}`, { method: 'PATCH', body: data }),
+  delete: (id: string) => api(`/tests/cases/${id}`, { method: 'DELETE' }),
+};
+
+// Test Runs API
+export const testRunsApi = {
+  list: () => api<TestRun[]>('/tests/runs'),
+  get: (id: string) => api<TestRun>(`/tests/runs/${id}`),
+  create: (name: string) => api<TestRun>('/tests/runs', { method: 'POST', body: { name } }),
+  start: (id: string) => api<TestRun>(`/tests/runs/${id}/start`, { method: 'POST' }),
+  complete: (id: string) => api<TestRun>(`/tests/runs/${id}/complete`, { method: 'POST' }),
+  getResults: (id: string) => api<TestResult[]>(`/tests/runs/${id}/results`),
+  recordResult: (runId: string, caseId: string, status: TestResult['status'], notes?: string) =>
+    api<TestResult>(`/tests/runs/${runId}/results`, { method: 'POST', body: { caseId, status, notes } }),
 };
 
 // Dashboard/Metrics API
@@ -194,4 +253,21 @@ export const onboardingApi = {
 // Demo API
 export const demoApi = {
   createProject: () => api('/demo/project', { method: 'POST' }),
+};
+
+// Search Result Interface
+export interface SearchResult {
+  id: string;
+  type: 'REQUIREMENT' | 'BUG' | 'TEST' | 'RELEASE';
+  content: string;
+  metadata: {
+    title?: string;
+    [key: string]: unknown;
+  };
+}
+
+// AI/RAG API
+export const aiApi = {
+  search: (query: string) =>
+    api<SearchResult[]>('/ai/search', { method: 'POST', body: { query } }),
 };
