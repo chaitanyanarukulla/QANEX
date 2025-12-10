@@ -5,7 +5,7 @@ import { AiProvider } from './ai.interface';
 export class MockAiProvider implements AiProvider {
   private readonly logger = new Logger(MockAiProvider.name);
 
-  async analyzeRequirement(content: string, tenantId: string, apiKey?: string): Promise<{
+  async analyzeRequirement(content: string, tenantId: string, _apiKey?: string): Promise<{
     score: number;
     clarity: number;
     completeness: number;
@@ -28,7 +28,7 @@ export class MockAiProvider implements AiProvider {
     };
   }
 
-  async triageBug(bugValues: { title: string; description: string }, tenantId: string, apiKey?: string) {
+  async triageBug(bugValues: { title: string; description: string }, tenantId: string, _apiKey?: string) {
     this.logger.log(`Mock AI triaging bug for ${tenantId}`);
     const isCritical = bugValues.title.toLowerCase().includes('crash');
     return {
@@ -46,9 +46,9 @@ export class MockAiProvider implements AiProvider {
 
   async generateTestCode(
     testCase: { title: string; steps: any[] },
-    framework: string,
-    tenantId: string,
-    apiKey?: string,
+    _framework: string,
+    _tenantId: string,
+    _apiKey?: string,
   ): Promise<string> {
     return `
 import { test, expect } from '@playwright/test';
@@ -64,7 +64,7 @@ test('${testCase.title}', async ({ page }) => {
 `;
   }
 
-  async callChat(prompt: string, tenantId: string, apiKey?: string): Promise<string> {
+  async callChat(_prompt: string, _tenantId: string, _apiKey?: string): Promise<string> {
     return "This is a mock AI response. Real AI interaction requires configuration.";
   }
 

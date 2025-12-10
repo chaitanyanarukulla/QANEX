@@ -7,7 +7,7 @@ import { DataSource } from 'typeorm';
 export class RagLifecycleService {
   private readonly logger = new Logger(RagLifecycleService.name);
 
-  constructor(@InjectDataSource() private readonly dataSource: DataSource) {}
+  constructor(@InjectDataSource() private readonly dataSource: DataSource) { }
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async cleanupOldDocuments() {
@@ -15,7 +15,7 @@ export class RagLifecycleService {
     const retentionDays = 90; // Default retention
 
     try {
-      const result = await this.dataSource.query(
+      const _result = await this.dataSource.query(
         `DELETE FROM rag_documents WHERE created_at < NOW() - INTERVAL '${retentionDays} days'`,
       );
 

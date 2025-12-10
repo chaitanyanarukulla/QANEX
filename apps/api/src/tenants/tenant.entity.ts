@@ -39,7 +39,7 @@ export class Tenant {
     rqsThreshold?: number;
     rcsThresholds?: Record<string, number>; // env -> score
     aiConfig?: {
-      provider?: 'foundry' | 'azure' | 'local';
+      provider?: 'foundry' | 'azure' | 'local' | 'mock';
       apiKey?: string; // Encrypted
     };
   };

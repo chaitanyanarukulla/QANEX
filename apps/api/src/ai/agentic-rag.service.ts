@@ -43,7 +43,10 @@ export class AgenticRagService {
             // Attempt to parse JSON
             const jsonMatch = planResponse.match(/\[.*\]/s);
             if (jsonMatch) {
-                searchQueries = JSON.parse(jsonMatch[0]);
+                const parsed = JSON.parse(jsonMatch[0]);
+                if (Array.isArray(parsed) && parsed.every(i => typeof i === 'string')) {
+                    searchQueries = parsed as string[];
+                }
             }
         } catch (e) {
             this.logger.warn('Failed to plan retrieval, falling back to original query', e);

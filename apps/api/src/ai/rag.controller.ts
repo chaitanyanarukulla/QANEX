@@ -35,7 +35,7 @@ export class RagController {
 
   @Post('reindex')
   async reindex(@Request() req: any) {
-    const tenantId = req.user?.tenantId;
+    const tenantId = (req.user as any)?.tenantId;
     if (!tenantId) {
       throw new ForbiddenException('Tenant ID is required');
     }
@@ -68,7 +68,7 @@ export class RagController {
 
   @Post('search')
   async search(@Body() body: { query: string; mode?: 'simple' | 'agentic' }, @Request() req: any) {
-    const tenantId = req.user?.tenantId;
+    const tenantId = (req.user as any)?.tenantId;
     if (!tenantId) throw new ForbiddenException();
 
     if (body.mode === 'agentic') {
@@ -114,7 +114,7 @@ export class RagController {
   @Post('index/test')
   async testIndex(@Body() body: { content: string }, @Request() req: any) {
     // Manual trigger for testing
-    const tenantId = req.user?.tenantId;
+    const tenantId = (req.user as any)?.tenantId;
     if (!tenantId) {
       throw new ForbiddenException('Tenant ID is required');
     }
@@ -129,7 +129,7 @@ export class RagController {
   }
   @Get('documents')
   async listDocuments(@Request() req: any) {
-    const tenantId = req.user?.tenantId;
+    const tenantId = (req.user as any)?.tenantId;
     if (!tenantId) {
       throw new ForbiddenException('Tenant ID is required');
     }
@@ -138,7 +138,7 @@ export class RagController {
 
   @Delete('documents/:id')
   async deleteDocument(@Param('id') id: string, @Request() req: any) {
-    const tenantId = req.user?.tenantId;
+    const tenantId = (req.user as any)?.tenantId;
     if (!tenantId) {
       throw new ForbiddenException('Tenant ID is required');
     }

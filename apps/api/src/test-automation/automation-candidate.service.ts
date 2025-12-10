@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {
@@ -32,7 +32,7 @@ export class AutomationCandidateService {
     private testCaseRepo: Repository<TestCase>,
     @InjectRepository(TestResult)
     private testResultRepo: Repository<TestResult>,
-    private aiFactory: AiProviderFactory,
+    // private aiFactory: AiProviderFactory,
   ) { }
 
   async getCandidates(

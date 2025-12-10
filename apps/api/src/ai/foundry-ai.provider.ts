@@ -135,10 +135,10 @@ export class FoundryAiProvider implements AiProvider {
     try {
       const sanitizedPrompt = this.piiService.redact(prompt);
       const payload = {
-        model: config.model,
+        model: (config as any).model,
         messages: [{ role: 'user', content: sanitizedPrompt }],
-        temperature: config.temperature,
-        max_tokens: config.maxTokens,
+        temperature: (config as any).temperature,
+        max_tokens: (config as any).maxTokens,
       };
 
       const response = await lastValueFrom(
@@ -164,18 +164,18 @@ export class FoundryAiProvider implements AiProvider {
         total: usage.total_tokens
       } : undefined;
 
-      this.metricsService.logUsage(tenantId, action, 'FOUNDRY', config.model, duration, tokens, true);
+      await this.metricsService.logUsage(tenantId, action, 'FOUNDRY', (config as any).model, duration, tokens, true);
 
       return content;
     } catch (error) {
       success = false;
       const duration = Date.now() - startTime;
-      this.metricsService.logUsage(tenantId, action, 'FOUNDRY', config.model, duration, undefined, false);
+      await this.metricsService.logUsage(tenantId, action, 'FOUNDRY', (config as any).model, duration, undefined, false);
 
       this.logger.error({
         action,
         duration,
-        model: config.model,
+        model: (config as any).model,
         success: false,
         error: (error as Error).message,
       });

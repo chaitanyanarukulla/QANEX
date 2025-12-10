@@ -214,14 +214,14 @@ export class AzureOpenAiProvider implements AiProvider {
         total: usage.total_tokens
       } : undefined;
 
-      this.metricsService.logUsage(tenantId, action, 'AZURE', deployment, duration, tokens, true);
+      await this.metricsService.logUsage(tenantId, action, 'AZURE', deployment, duration, tokens, true);
 
       return content;
     } catch (error) {
       // ... error handling
       success = false;
       const duration = Date.now() - startTime;
-      this.metricsService.logUsage(tenantId, action, 'AZURE', deployment, duration, undefined, false);
+      await this.metricsService.logUsage(tenantId, action, 'AZURE', deployment, duration, undefined, false);
       this.logger.error(`Azure OpenAI API call failed for ${action}`, error);
       throw error;
     } finally {

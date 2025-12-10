@@ -10,9 +10,9 @@ export class AuthService {
     private usersService: UsersService,
     private tenantsService: TenantsService,
     private jwtService: JwtService,
-  ) {}
+  ) { }
 
-  async validateUser(email: string, sub: string): Promise<any> {
+  async validateUser(email: string, _sub: string): Promise<any> {
     return this.usersService.findByEmail(email);
   }
 

@@ -1,4 +1,4 @@
-import { Module, Global, Logger, forwardRef } from '@nestjs/common';
+import { Module, Global, forwardRef } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MockAiProvider } from './mock-ai.provider';
@@ -6,7 +6,6 @@ import { FoundryAiProvider } from './foundry-ai.provider';
 import { LocalAiProvider } from './local-ai.provider';
 import { AzureOpenAiProvider } from './azure-openai.provider';
 import { LocalModelGateway } from './local-model.gateway';
-import { AI_PROVIDER_TOKEN } from './ai.interface';
 import {
   RagService,
   RAG_BACKEND_TOKEN,
@@ -17,9 +16,7 @@ import { RagController } from './rag.controller';
 import { AiProviderFactory } from './ai-provider.factory';
 import { Tenant } from '../tenants/tenant.entity';
 
-import { HttpModule, HttpService } from '@nestjs/axios';
-
-const logger = new Logger('AiModule');
+import { HttpModule } from '@nestjs/axios';
 
 import { PiiRedactionService } from './pii-redaction.service';
 import { RagLifecycleService } from './rag-lifecycle.service';
@@ -57,7 +54,7 @@ import { MetricsModule } from '../metrics/metrics.module';
         pgVectorAdapter: PgVectorRagAdapter,
         inMemoryAdapter: InMemoryRagAdapter,
       ) => {
-        const vectorStore = configService.get('VECTOR_STORE', 'pgvector');
+        const vectorStore = configService.get<string>('VECTOR_STORE', 'pgvector');
         // RAG backend choice is currently system-wide infrastructure choice, not per-tenant yet.
         // But we could change this later. For now, pgvector is good for 'local' focus.
         if (vectorStore === 'pgvector') {

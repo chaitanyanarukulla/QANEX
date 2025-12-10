@@ -1,7 +1,6 @@
 import {
   Injectable,
   OnModuleInit,
-  NotFoundException,
   Logger,
   Inject,
 } from '@nestjs/common';
@@ -27,7 +26,7 @@ export class SubscriptionService implements OnModuleInit {
     private subscriptionRepository: Repository<Subscription>,
     @Inject(BILLING_PROVIDER_TOKEN)
     private billingProvider: BillingProvider,
-  ) {}
+  ) { }
 
   async onModuleInit() {
     await this.seedPlans();

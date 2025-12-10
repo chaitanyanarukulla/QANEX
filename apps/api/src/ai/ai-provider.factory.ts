@@ -1,4 +1,5 @@
-import { Injectable, Inject, forwardRef } from '@nestjs/common';
+
+import { Injectable, Logger } from '@nestjs/common';
 import { AiProvider } from './ai.interface';
 import { FoundryAiProvider } from './foundry-ai.provider';
 import { AzureOpenAiProvider } from './azure-openai.provider';
@@ -11,6 +12,8 @@ import { Repository } from 'typeorm';
 
 @Injectable()
 export class AiProviderFactory {
+    private readonly logger = new Logger(AiProviderFactory.name);
+
     constructor(
         private readonly foundryProvider: FoundryAiProvider,
         private readonly azureProvider: AzureOpenAiProvider,
@@ -22,34 +25,46 @@ export class AiProviderFactory {
     ) { }
 
     async getProvider(tenantId: string): Promise<{ provider: AiProvider; config: { apiKey?: string } }> {
-        try {
-            const tenant = await this.tenantRepo.findOne({ where: { id: tenantId } });
-            const aiConfig = tenant?.settings?.aiConfig || {};
-            const providerType = aiConfig.provider;
+        // 1. Fetch tenant config
+        const tenant = await this.tenantRepo.findOne({ where: { id: tenantId } });
+        const config = tenant?.settings?.aiConfig;
 
-            let provider: AiProvider;
-            switch (providerType) {
-                case 'foundry':
-                    provider = this.foundryProvider;
-                    break;
-                case 'azure':
-                    provider = this.azureProvider;
-                    break;
-                case 'local':
-                    provider = this.localProvider;
-                    break;
-                default:
-                    // Fallback
-                    const systemDefault = process.env.AI_PROVIDER;
-                    if (systemDefault === 'foundry') provider = this.foundryProvider;
-                    else if (systemDefault === 'azure') provider = this.azureProvider;
-                    else if (systemDefault === 'local') provider = this.localProvider;
-                    else provider = this.mockProvider;
+        const providerType = config?.provider || 'foundry'; // default
+
+        this.logger.debug(
+            `Selecting AI provider for tenant ${tenantId}: ${providerType} `,
+        );
+
+        switch (providerType) {
+            case 'local':
+                return {
+                    provider: this.localProvider,
+                    config: { apiKey: config?.apiKey },
+                };
+            case 'azure':
+                return {
+                    provider: this.azureProvider,
+                    config: { apiKey: config?.apiKey },
+                };
+            case 'mock':
+                return {
+                    provider: this.mockProvider,
+                    config: { apiKey: 'mock-key' },
+                };
+            case 'foundry':
+            default: {
+                const apiKey = config?.apiKey;
+                if (!apiKey) {
+                    this.logger.warn(
+                        `No API Key found for Foundry provider for tenant ${tenantId}.Using system default or failing.`,
+                    );
+                }
+                return {
+                    provider: this.foundryProvider,
+                    config: { apiKey },
+                };
             }
-            return { provider, config: { apiKey: aiConfig.apiKey } };
-        } catch (error) {
-            console.error(`Failed to resolve AI provider for tenant ${tenantId}`, error);
-            return { provider: this.mockProvider, config: {} };
+
         }
     }
 }

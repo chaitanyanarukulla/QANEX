@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Bug } from './bug.entity';
 import { AiProviderFactory } from '../ai/ai-provider.factory';
 

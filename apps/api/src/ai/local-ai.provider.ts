@@ -15,7 +15,7 @@ export class LocalAiProvider implements AiProvider {
     private readonly metricsService: AiMetricsService,
   ) { }
 
-  async analyzeRequirement(content: string, tenantId: string, apiKey?: string): Promise<{
+  async analyzeRequirement(content: string, tenantId: string, _apiKey?: string): Promise<{
     score: number;
     clarity: number;
     completeness: number;
@@ -72,7 +72,7 @@ export class LocalAiProvider implements AiProvider {
     }
   }
 
-  async triageBug(bugValues: { title: string; description: string }, tenantId: string, apiKey?: string): Promise<{
+  async triageBug(bugValues: { title: string; description: string }, tenantId: string, _apiKey?: string): Promise<{
     suggestedSeverity: string;
     suggestedPriority: string;
     duplicateCandidates: string[];
@@ -125,7 +125,7 @@ export class LocalAiProvider implements AiProvider {
     testCase: { title: string; steps: any[] },
     framework: string,
     tenantId: string,
-    apiKey?: string,
+    _apiKey?: string,
   ): Promise<string> {
     const prompt = `
         Generate ${framework} test code for the following test case.
@@ -156,7 +156,7 @@ export class LocalAiProvider implements AiProvider {
     }
   }
 
-  async callChat(prompt: string, tenantId: string, apiKey?: string): Promise<string> {
+  async callChat(prompt: string, tenantId: string, _apiKey?: string): Promise<string> {
     const startTime = Date.now();
     try {
       const result = await this.localModelGateway.complete({
