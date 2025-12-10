@@ -7,6 +7,12 @@ import { PROMPTS } from './prompts';
 import { PiiRedactionService } from './pii-redaction.service';
 import { AiMetricsService } from '../metrics/ai-metrics.service';
 
+interface AiTaskConfig {
+  model: string;
+  maxTokens: number;
+  temperature: number;
+}
+
 @Injectable()
 export class FoundryAiProvider implements AiProvider {
   private readonly logger = new Logger(FoundryAiProvider.name);
@@ -23,7 +29,7 @@ export class FoundryAiProvider implements AiProvider {
 
   async analyzeRequirement(content: string, tenantId: string, apiKey?: string): Promise<any> {
     const prompt = PROMPTS.ANALYZE_REQUIREMENT('Requirement', content, '');
-    return this.callLlmRaw(prompt, aiConfig.tasks.requirementAnalysis as any, 'ANALYZE_REQUIREMENT', tenantId, apiKey);
+    return this.callLlmRaw(prompt, aiConfig.tasks.requirementAnalysis as AiTaskConfig, 'ANALYZE_REQUIREMENT', tenantId, apiKey);
   }
 
   async triageBug(
@@ -39,7 +45,7 @@ export class FoundryAiProvider implements AiProvider {
       bugValues.description,
       '',
     );
-    return this.callLlm(prompt, aiConfig.tasks.bugTriage as any, 'TRIAGE_BUG', tenantId, apiKey);
+    return this.callLlm(prompt, aiConfig.tasks.bugTriage as AiTaskConfig, 'TRIAGE_BUG', tenantId, apiKey);
   }
 
   async generateTestCode(
@@ -135,10 +141,10 @@ export class FoundryAiProvider implements AiProvider {
     try {
       const sanitizedPrompt = this.piiService.redact(prompt);
       const payload = {
-        model: (config as any).model,
+        model: (config as AiTaskConfig).model,
         messages: [{ role: 'user', content: sanitizedPrompt }],
-        temperature: (config as any).temperature,
-        max_tokens: (config as any).maxTokens,
+        temperature: (config as AiTaskConfig).temperature,
+        max_tokens: (config as AiTaskConfig).maxTokens,
       };
 
       const response = await lastValueFrom(
@@ -164,18 +170,18 @@ export class FoundryAiProvider implements AiProvider {
         total: usage.total_tokens
       } : undefined;
 
-      await this.metricsService.logUsage(tenantId, action, 'FOUNDRY', (config as any).model, duration, tokens, true);
+      await this.metricsService.logUsage(tenantId, action, 'FOUNDRY', (config as AiTaskConfig).model, duration, tokens, true);
 
       return content;
     } catch (error) {
       success = false;
       const duration = Date.now() - startTime;
-      await this.metricsService.logUsage(tenantId, action, 'FOUNDRY', (config as any).model, duration, undefined, false);
+      await this.metricsService.logUsage(tenantId, action, 'FOUNDRY', (config as AiTaskConfig).model, duration, undefined, false);
 
       this.logger.error({
         action,
         duration,
-        model: (config as any).model,
+        model: (config as AiTaskConfig).model,
         success: false,
         error: (error as Error).message,
       });

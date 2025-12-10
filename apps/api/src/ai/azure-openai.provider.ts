@@ -6,6 +6,15 @@ import { AiProvider } from './ai.interface';
 import { PROMPTS } from './prompts';
 import { AiMetricsService } from '../metrics/ai-metrics.service';
 
+interface AzureResponse {
+  choices?: Array<{ message?: { content?: string } }>;
+  usage?: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
+}
+
 /**
  * Azure OpenAI Provider
  * Uses Azure's OpenAI service for AI capabilities
@@ -88,7 +97,7 @@ export class AzureOpenAiProvider implements AiProvider {
     apiKey?: string,
   ): Promise<string> {
     const stepsStr = testCase.steps
-      .map((s: any) => `- ${s.step} (Expect: ${s.expected})`)
+      .map((s: { step: string; expected: string }) => `- ${s.step} (Expect: ${s.expected})`)
       .join('\n');
     const prompt = PROMPTS.GENERATE_TEST_CODE(
       testCase.title,
@@ -203,7 +212,7 @@ export class AzureOpenAiProvider implements AiProvider {
         ),
       );
 
-      const data = response.data as any;
+      const data = response.data as AzureResponse;
       const content = data?.choices?.[0]?.message?.content;
       const usage = data?.usage;
       if (!content) throw new Error('Empty response from Azure OpenAI');

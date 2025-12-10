@@ -51,7 +51,7 @@ export class PgVectorRagAdapter implements RagBackend {
           model: this.configService.get(
             'LOCAL_EMBEDDING_MODEL',
             'nomic-embed-text',
-          ),
+          ) as string,
           inputs: [text],
         });
         return embeddings?.[0] || null;

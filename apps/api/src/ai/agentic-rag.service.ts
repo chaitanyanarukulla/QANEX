@@ -2,6 +2,13 @@ import { Injectable, Logger } from '@nestjs/common';
 import { AiProviderFactory } from './ai-provider.factory';
 import { RagService } from './rag.service';
 
+interface RagItem {
+    id: string;
+    type: string;
+    content: string;
+    metadata: { title?: string };
+}
+
 @Injectable()
 export class AgenticRagService {
     private readonly logger = new Logger(AgenticRagService.name);
@@ -43,7 +50,7 @@ export class AgenticRagService {
             // Attempt to parse JSON
             const jsonMatch = planResponse.match(/\[.*\]/s);
             if (jsonMatch) {
-                const parsed = JSON.parse(jsonMatch[0]) as any;
+                const parsed = JSON.parse(jsonMatch[0]) as unknown;
                 if (Array.isArray(parsed) && parsed.every(i => typeof i === 'string')) {
                     searchQueries = parsed as string[];
                 }
@@ -64,8 +71,8 @@ export class AgenticRagService {
         // Deduplicate by ID
         const uniqueResults = Array.from(new Map(allResults.map(item => [item.id, item])).values());
 
-        const context = uniqueResults.map(item =>
-            `[${(item as any).type}] ${(item as any).metadata.title}: ${(item as any).content}`
+        const context = uniqueResults.map((item: RagItem) =>
+            `[${item.type}] ${item.metadata.title}: ${item.content}`
         ).join('\n\n');
 
         // 4. Synthesize (Answer Step)
