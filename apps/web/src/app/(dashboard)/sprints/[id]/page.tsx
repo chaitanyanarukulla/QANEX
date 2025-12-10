@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
     ArrowLeft, Calendar, Users, CheckCircle, AlertCircle,
-    GripVertical, ChevronRight, MoreHorizontal, Plus
+    GripVertical, ChevronRight, MoreHorizontal, Plus, X, ChevronDown
 } from 'lucide-react';
 
 // SDLC Swimlane definitions
@@ -40,13 +40,24 @@ const MOCK_SPRINT_ITEMS: SprintItem[] = [
     { id: '7', title: 'User profile page', rqs: 87, status: 'done', priority: 'MEDIUM', type: 'feature', assignee: 'John' },
 ];
 
+// Mock backlog items
+const MOCK_BACKLOG_ITEMS: SprintItem[] = [
+    { id: '8', title: 'Payment Gateway Integration', rqs: 80, status: 'backlog', priority: 'HIGH', type: 'feature' },
+    { id: '9', title: 'Email Notifications', rqs: 85, status: 'backlog', priority: 'MEDIUM', type: 'feature' },
+    { id: '10', title: 'Database optimization', rqs: 92, status: 'backlog', priority: 'MEDIUM', type: 'task' },
+    { id: '11', title: 'Fix user avatar bug', rqs: 75, status: 'backlog', priority: 'HIGH', type: 'bug' },
+    { id: '12', title: 'Add two-factor auth', rqs: 88, status: 'backlog', priority: 'MEDIUM', type: 'feature' },
+];
+
 export default function SprintBoardPage() {
     const params = useParams();
     const router = useRouter();
     const sprintId = params?.id as string;
 
     const [items, setItems] = useState<SprintItem[]>(MOCK_SPRINT_ITEMS);
+    const [backlogItems, setBacklogItems] = useState<SprintItem[]>(MOCK_BACKLOG_ITEMS);
     const [draggedItem, setDraggedItem] = useState<SprintItem | null>(null);
+    const [showBacklog, setShowBacklog] = useState(false);
     const [sprintInfo] = useState({
         name: 'Sprint 1',
         startDate: 'Dec 9, 2024',
@@ -58,9 +69,10 @@ export default function SprintBoardPage() {
         return items.filter(item => item.status === status);
     };
 
-    const handleDragStart = (e: React.DragEvent, item: SprintItem) => {
-        setDraggedItem(item);
+    const handleDragStart = (e: React.DragEvent, item: SprintItem, source: 'sprint' | 'backlog') => {
+        setDraggedItem({ ...item, type: item.type });
         e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('source', source);
     };
 
     const handleDragOver = (e: React.DragEvent) => {
@@ -71,17 +83,49 @@ export default function SprintBoardPage() {
     const handleDrop = (e: React.DragEvent, newStatus: string) => {
         e.preventDefault();
         if (draggedItem) {
-            setItems(items.map(item =>
-                item.id === draggedItem.id
-                    ? { ...item, status: newStatus }
-                    : item
-            ));
+            const source = e.dataTransfer.getData('source');
+
+            if (source === 'backlog') {
+                // Moving from backlog to sprint
+                setBacklogItems(backlogItems.filter(item => item.id !== draggedItem.id));
+                setItems([...items, { ...draggedItem, status: newStatus }]);
+            } else {
+                // Moving within sprint
+                if (newStatus === 'backlog') {
+                    // Moving from sprint to backlog
+                    setItems(items.filter(item => item.id !== draggedItem.id));
+                    setBacklogItems([...backlogItems, { ...draggedItem, status: 'backlog' }]);
+                } else {
+                    // Moving between swimlanes
+                    setItems(items.map(item =>
+                        item.id === draggedItem.id
+                            ? { ...item, status: newStatus }
+                            : item
+                    ));
+                }
+            }
             setDraggedItem(null);
         }
     };
 
     const handleDragEnd = () => {
         setDraggedItem(null);
+    };
+
+    const handleRemoveFromSprint = (itemId: string) => {
+        const item = items.find(i => i.id === itemId);
+        if (item) {
+            setItems(items.filter(i => i.id !== itemId));
+            setBacklogItems([...backlogItems, { ...item, status: 'backlog' }]);
+        }
+    };
+
+    const handleAddToSprint = (itemId: string) => {
+        const item = backlogItems.find(i => i.id === itemId);
+        if (item) {
+            setBacklogItems(backlogItems.filter(i => i.id !== itemId));
+            setItems([...items, { ...item, status: 'todo' }]);
+        }
     };
 
     const getPriorityColor = (priority: string) => {
@@ -205,7 +249,7 @@ export default function SprintBoardPage() {
                                     <div
                                         key={item.id}
                                         draggable
-                                        onDragStart={(e) => handleDragStart(e, item)}
+                                        onDragStart={(e) => handleDragStart(e, item, 'sprint')}
                                         onDragEnd={handleDragEnd}
                                         className={`bg-background rounded-lg border p-3 cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-shadow ${draggedItem?.id === item.id ? 'opacity-50' : ''
                                             }`}
@@ -246,6 +290,71 @@ export default function SprintBoardPage() {
                         </div>
                     ))}
                 </div>
+            </div>
+
+            {/* Backlog Panel */}
+            <div className="border-t bg-card">
+                <button
+                    onClick={() => setShowBacklog(!showBacklog)}
+                    className="w-full px-4 py-3 flex items-center justify-between hover:bg-muted/50 transition-colors"
+                >
+                    <div className="flex items-center gap-2">
+                        <ChevronDown className={`h-4 w-4 transition-transform ${showBacklog ? 'rotate-180' : ''}`} />
+                        <span className="font-semibold text-sm">
+                            Product Backlog ({backlogItems.length} items)
+                        </span>
+                    </div>
+                </button>
+
+                {showBacklog && (
+                    <div
+                        className="border-t p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 max-h-64 overflow-y-auto"
+                        onDragOver={handleDragOver}
+                        onDrop={(e) => handleDrop(e, 'backlog')}
+                    >
+                        {backlogItems.map(item => (
+                            <div
+                                key={item.id}
+                                draggable
+                                onDragStart={(e) => handleDragStart(e, item, 'backlog')}
+                                onDragEnd={handleDragEnd}
+                                className={`bg-background rounded-lg border p-3 cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-shadow group relative ${draggedItem?.id === item.id ? 'opacity-50' : ''
+                                    }`}
+                            >
+                                <div className="flex items-start justify-between gap-2">
+                                    <div className="flex items-center gap-2">
+                                        <GripVertical className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                        <span className="text-sm">{getTypeIcon(item.type)}</span>
+                                    </div>
+                                    <button
+                                        onClick={() => handleAddToSprint(item.id)}
+                                        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-primary/10 rounded transition-all"
+                                        title="Add to Sprint"
+                                    >
+                                        <Plus className="h-3 w-3 text-primary" />
+                                    </button>
+                                </div>
+
+                                <h4 className="font-medium text-xs mt-2 line-clamp-2">
+                                    {item.title}
+                                </h4>
+
+                                <div className="flex items-center justify-between mt-2">
+                                    <div className={`w-1.5 h-1.5 rounded-full ${getPriorityColor(item.priority)}`} title={item.priority} />
+                                    <span className="text-xs text-muted-foreground bg-secondary px-1.5 py-0.5 rounded">
+                                        RQS: {item.rqs}
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
+
+                        {backlogItems.length === 0 && (
+                            <div className="col-span-full text-center py-8 text-muted-foreground text-sm">
+                                No backlog items available
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* Footer */}
