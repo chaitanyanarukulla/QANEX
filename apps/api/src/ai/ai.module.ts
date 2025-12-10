@@ -26,6 +26,7 @@ import { RagLifecycleService } from './rag-lifecycle.service';
 import { RequirementsModule } from '../requirements/requirements.module';
 import { BugsModule } from '../bugs/bugs.module';
 import { AgenticRagService } from './agentic-rag.service';
+import { MetricsModule } from '../metrics/metrics.module';
 
 @Global()
 @Module({
@@ -35,6 +36,7 @@ import { AgenticRagService } from './agentic-rag.service';
     TypeOrmModule.forFeature([Tenant]),
     forwardRef(() => RequirementsModule),
     forwardRef(() => BugsModule),
+    MetricsModule,
   ],
   controllers: [RagController],
   providers: [
