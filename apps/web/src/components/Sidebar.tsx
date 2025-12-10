@@ -9,7 +9,7 @@ const navigation = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
     { name: 'Requirements', href: '/requirements', icon: FileText },
     { name: 'Planning', href: '/planning', icon: Calendar },
-    { name: 'Testing', href: '/testing', icon: Beaker },
+    { name: 'Testing', href: '/tests', icon: Beaker },
     { name: 'Issues', href: '/issues', icon: Bug },
     { name: 'Releases', href: '/releases', icon: Rocket },
     { name: 'Automation', href: '/testing/automation', icon: GitPullRequest },

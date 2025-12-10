@@ -36,8 +36,7 @@ export function useOnboarding() {
                 headers['Authorization'] = `Bearer ${token}`;
             }
 
-            const res = await fetch('http://localhost:3000/onboarding/checklist', { headers }); // Direct to API temporarily if unknown
-            // Note: In real app, use environment variable for API URL
+            const res = await fetch('/api/onboarding/checklist', { headers });
 
             if (!res.ok) throw new Error('Failed to fetch onboarding status');
 

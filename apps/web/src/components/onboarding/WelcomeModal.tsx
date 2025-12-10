@@ -32,7 +32,7 @@ export function WelcomeModal() {
             if (token) headers['Authorization'] = `Bearer ${token}`;
 
             // Make API call
-            const res = await fetch('http://localhost:3000/demo/project', {
+            const res = await fetch('/api/demo/project', {
                 method: 'POST',
                 headers
             });
