@@ -3,6 +3,7 @@ import { TestKeysService } from './test-keys.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { TestResultStatus } from './test-result.entity';
+import { TestPriority } from './test-case.entity';
 import { Request as ExpressRequest } from 'express';
 
 interface AuthenticatedRequest extends ExpressRequest {
@@ -19,7 +20,7 @@ export class TestKeysController {
 
     // --- Test Cases ---
     @Post('cases')
-    createCase(@Body() dto: { title: string; description?: string; priority?: string; steps?: { step: string; expected: string }[] }, @Request() req: AuthenticatedRequest) {
+    createCase(@Body() dto: { title: string; description?: string; priority?: TestPriority; steps?: { step: string; expected: string }[] }, @Request() req: AuthenticatedRequest) {
         return this.testKeysService.createTestCase(dto, req.user.tenantId);
     }
 
@@ -34,7 +35,7 @@ export class TestKeysController {
     }
 
     @Patch('cases/:id')
-    updateCase(@Param('id') id: string, @Body() dto: { title?: string; description?: string; priority?: string; steps?: { step: string; expected: string }[] }, @Request() req: AuthenticatedRequest) {
+    updateCase(@Param('id') id: string, @Body() dto: { title?: string; description?: string; priority?: TestPriority; steps?: { step: string; expected: string }[] }, @Request() req: AuthenticatedRequest) {
         return this.testKeysService.updateTestCase(id, dto, req.user.tenantId);
     }
 
