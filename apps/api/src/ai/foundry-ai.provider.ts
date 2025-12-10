@@ -23,7 +23,7 @@ export class FoundryAiProvider implements AiProvider {
 
   async analyzeRequirement(content: string, tenantId: string, apiKey?: string): Promise<any> {
     const prompt = PROMPTS.ANALYZE_REQUIREMENT('Requirement', content, '');
-    return this.callLlmRaw(prompt, aiConfig.tasks.requirementAnalysis, 'ANALYZE_REQUIREMENT', tenantId, apiKey);
+    return this.callLlmRaw(prompt, aiConfig.tasks.requirementAnalysis as any, 'ANALYZE_REQUIREMENT', tenantId, apiKey);
   }
 
   async triageBug(
@@ -39,7 +39,7 @@ export class FoundryAiProvider implements AiProvider {
       bugValues.description,
       '',
     );
-    return this.callLlm(prompt, aiConfig.tasks.bugTriage, 'TRIAGE_BUG', tenantId, apiKey);
+    return this.callLlm(prompt, aiConfig.tasks.bugTriage as any, 'TRIAGE_BUG', tenantId, apiKey);
   }
 
   async generateTestCode(

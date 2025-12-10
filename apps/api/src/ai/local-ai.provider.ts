@@ -51,13 +51,11 @@ export class LocalAiProvider implements AiProvider {
       });
 
       const duration = Date.now() - startTime;
-      this.metricsService.logUsage(tenantId, 'ANALYZE_REQUIREMENT', 'LOCAL', 'llama3:instruct', duration, undefined, true);
-
-      return JSON.parse(result);
+      await this.metricsService.logUsage(tenantId, 'ANALYZE_REQUIREMENT', 'LOCAL', 'llama3:instruct', duration, undefined, true);
     } catch (error: unknown) {
       const err = error as Error;
       const duration = Date.now() - startTime;
-      this.metricsService.logUsage(tenantId, 'ANALYZE_REQUIREMENT', 'LOCAL', 'llama3:instruct', duration, undefined, false);
+      await this.metricsService.logUsage(tenantId, 'ANALYZE_REQUIREMENT', 'LOCAL', 'llama3:instruct', duration, undefined, false);
       this.logger.error('Failed to analyze requirement locally', err.stack);
       return {
         score: 0,
@@ -104,13 +102,13 @@ export class LocalAiProvider implements AiProvider {
       });
 
       const duration = Date.now() - startTime;
-      this.metricsService.logUsage(tenantId, 'TRIAGE_BUG', 'LOCAL', 'llama3:instruct', duration, undefined, true);
+      await this.metricsService.logUsage(tenantId, 'TRIAGE_BUG', 'LOCAL', 'llama3:instruct', duration, undefined, true);
 
       return JSON.parse(result);
     } catch (error: unknown) {
       const err = error as Error;
       const duration = Date.now() - startTime;
-      this.metricsService.logUsage(tenantId, 'TRIAGE_BUG', 'LOCAL', 'llama3:instruct', duration, undefined, false);
+      await this.metricsService.logUsage(tenantId, 'TRIAGE_BUG', 'LOCAL', 'llama3:instruct', duration, undefined, false);
       this.logger.error('Failed to triage bug locally', err.stack);
       return {
         suggestedSeverity: 'Medium',
@@ -145,12 +143,12 @@ export class LocalAiProvider implements AiProvider {
         temperature: aiConfig.tasks.codeGeneration.temperature,
       });
       const duration = Date.now() - startTime;
-      this.metricsService.logUsage(tenantId, 'CODE_GEN', 'LOCAL', 'llama3:instruct', duration, undefined, true);
+      await this.metricsService.logUsage(tenantId, 'CODE_GEN', 'LOCAL', 'llama3:instruct', duration, undefined, true);
       return result;
     } catch (error: unknown) {
       const err = error as Error;
       const duration = Date.now() - startTime;
-      this.metricsService.logUsage(tenantId, 'CODE_GEN', 'LOCAL', 'llama3:instruct', duration, undefined, false);
+      await this.metricsService.logUsage(tenantId, 'CODE_GEN', 'LOCAL', 'llama3:instruct', duration, undefined, false);
       this.logger.error('Failed to generate test code locally', err.stack);
       return '// Local AI generation failed.';
     }
@@ -166,11 +164,11 @@ export class LocalAiProvider implements AiProvider {
         temperature: 0.7,
       });
       const duration = Date.now() - startTime;
-      this.metricsService.logUsage(tenantId, 'CHAT', 'LOCAL', 'llama3:instruct', duration, undefined, true);
+      await this.metricsService.logUsage(tenantId, 'CHAT', 'LOCAL', 'llama3:instruct', duration, undefined, true);
       return result;
     } catch (error) {
       const duration = Date.now() - startTime;
-      this.metricsService.logUsage(tenantId, 'CHAT', 'LOCAL', 'llama3:instruct', duration, undefined, false);
+      await this.metricsService.logUsage(tenantId, 'CHAT', 'LOCAL', 'llama3:instruct', duration, undefined, false);
       throw error;
     }
   }

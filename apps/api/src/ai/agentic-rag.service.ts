@@ -43,7 +43,7 @@ export class AgenticRagService {
             // Attempt to parse JSON
             const jsonMatch = planResponse.match(/\[.*\]/s);
             if (jsonMatch) {
-                const parsed = JSON.parse(jsonMatch[0]);
+                const parsed = JSON.parse(jsonMatch[0]) as any;
                 if (Array.isArray(parsed) && parsed.every(i => typeof i === 'string')) {
                     searchQueries = parsed as string[];
                 }
@@ -65,7 +65,7 @@ export class AgenticRagService {
         const uniqueResults = Array.from(new Map(allResults.map(item => [item.id, item])).values());
 
         const context = uniqueResults.map(item =>
-            `[${item.type}] ${item.metadata.title}: ${item.content}`
+            `[${(item as any).type}] ${(item as any).metadata.title}: ${(item as any).content}`
         ).join('\n\n');
 
         // 4. Synthesize (Answer Step)

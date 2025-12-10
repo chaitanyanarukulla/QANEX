@@ -88,7 +88,7 @@ export class AzureOpenAiProvider implements AiProvider {
     apiKey?: string,
   ): Promise<string> {
     const stepsStr = testCase.steps
-      .map((s) => `- ${s.step} (Expect: ${s.expected})`)
+      .map((s: any) => `- ${s.step} (Expect: ${s.expected})`)
       .join('\n');
     const prompt = PROMPTS.GENERATE_TEST_CODE(
       testCase.title,
@@ -203,8 +203,9 @@ export class AzureOpenAiProvider implements AiProvider {
         ),
       );
 
-      const content = response.data?.choices?.[0]?.message?.content;
-      const usage = response.data?.usage;
+      const data = response.data as any;
+      const content = data?.choices?.[0]?.message?.content;
+      const usage = data?.usage;
       if (!content) throw new Error('Empty response from Azure OpenAI');
 
       const duration = Date.now() - startTime;
