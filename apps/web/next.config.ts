@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 // Get API URL from environment variable
-const API_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+// For production on Vercel, this should be set to the Railway API URL
+const API_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'https://qanex-production.up.railway.app';
 
 const nextConfig: NextConfig = {
   // Environment variables exposed to the browser
