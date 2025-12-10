@@ -8,12 +8,13 @@ import { AutomationCandidateService } from './automation-candidate.service';
 import { TestAutomationService } from './test-automation.service';
 import { GitIntegrationService } from './git-integration.service';
 import { TestCase } from '../test-keys/test-case.entity';
+import { TestResult } from '../test-keys/test-result.entity';
 import { AiModule } from '../ai/ai.module';
 import { TestAutomationController } from './test-automation.controller';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([TestAutomationSettings, AutomationCandidate, AutomationRun, TestCase]),
+        TypeOrmModule.forFeature([TestAutomationSettings, AutomationCandidate, AutomationRun, TestCase, TestResult]),
         AiModule
     ],
     controllers: [TestAutomationController],

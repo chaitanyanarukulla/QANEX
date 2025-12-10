@@ -335,6 +335,43 @@ export const sprintsApi = {
     }),
 };
 
+// Release Gates Types
+export interface ReleaseGate {
+  name: string;
+  type: 'rcs_score' | 'critical_bugs' | 'test_coverage' | 'requirements' | 'high_bugs';
+  passed: boolean;
+  required: boolean;
+  message: string;
+  score?: number;
+  count?: number;
+  percent?: number;
+  threshold: number;
+  details?: any[];
+}
+
+export interface ReleaseGatesEvaluation {
+  canRelease: boolean;
+  overrideApplied: boolean;
+  overrideReason?: string;
+  gates: ReleaseGate[];
+  summary: {
+    total: number;
+    passed: number;
+    failed: number;
+    requiredPassed: number;
+    requiredTotal: number;
+    optionalPassed: number;
+    optionalTotal: number;
+  };
+  rcsScore: number;
+  breakdown: {
+    rp: number;
+    qt: number;
+    b: number;
+    so: number;
+  };
+}
+
 // Releases API
 export const releasesApi = {
   list: () => api<Release[]>('/releases'),
@@ -343,6 +380,11 @@ export const releasesApi = {
   update: (id: string, data: Partial<Release>) =>
     api<Release>(`/releases/${id}`, { method: 'PATCH', body: data }),
   calculateRcs: (id: string) => api<Release>(`/releases/${id}/rcs`, { method: 'POST' }),
+  evaluateGates: (id: string, overrideReason?: string) =>
+    api<ReleaseGatesEvaluation>(`/releases/${id}/evaluate-gates`, {
+      method: 'POST',
+      body: { overrideReason },
+    }),
 };
 
 // Test Cases API
@@ -389,6 +431,48 @@ export const onboardingApi = {
 // Demo API
 export const demoApi = {
   createProject: () => api('/demo/project', { method: 'POST' }),
+};
+
+// Test Automation Types
+export interface AutomationCandidate {
+  id: string;
+  testCaseId: string;
+  testCaseTitle: string;
+  status: 'NOT_STARTED' | 'PR_OPEN' | 'MERGED' | 'REJECTED';
+  automationScore: number;
+  executionCount: number;
+  passRate: number;
+  aiRecommendation: string;
+  estimatedEffort: string;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface AutomationCoverage {
+  totalTests: number;
+  automatedTests: number;
+  automationRate: number;
+  candidates: number;
+  prOpen: number;
+  merged: number;
+  completionRate: number;
+}
+
+// Test Automation API
+export const automationApi = {
+  getCandidates: () => api<AutomationCandidate[]>('/automation/candidates'),
+  getAISuggestions: (limit?: number) =>
+    api<AutomationCandidate[]>(`/automation/candidates/ai-suggestions${limit ? `?limit=${limit}` : ''}`),
+  getCoverage: () => api<AutomationCoverage>('/automation/coverage'),
+  createCandidate: (testCaseId: string, notes?: string) =>
+    api<AutomationCandidate>('/automation/candidates', {
+      method: 'POST',
+      body: { testCaseId, notes },
+    }),
+  generatePR: (candidateId: string) =>
+    api<{ prUrl: string }>(`/automation/candidates/${candidateId}/generate-pr`, {
+      method: 'POST',
+    }),
 };
 
 // Search Result Interface

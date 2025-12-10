@@ -37,4 +37,14 @@ export class ReleasesController {
         // Recalculate on demand for now (in real app, might cache or trigger async)
         return this.rcsService.calculateRcs(id, tenantId);
     }
+
+    @Post(':id/evaluate-gates')
+    async evaluateGates(
+        @Param('id') id: string,
+        @Body() dto: { overrideReason?: string },
+        @Request() req: any
+    ) {
+        const tenantId = req.user.tenantId || 'mock-tenant-id';
+        return this.rcsService.evaluateReleaseGates(id, tenantId, dto.overrideReason);
+    }
 }
