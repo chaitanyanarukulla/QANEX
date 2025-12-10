@@ -51,9 +51,11 @@ export default function PlanningPage() {
         try {
             setIsStarting(true);
             // In a real app, this would call an API to create and start the sprint
-            // For now, we'll show success and navigate to runs page
+            // For now, we'll show success and navigate to sprint board
             await new Promise(resolve => setTimeout(resolve, 1000));
-            router.push('/runs');
+            // Navigate to the sprint board with a generated ID
+            const sprintId = 'sprint-' + Date.now();
+            router.push(`/sprints/${sprintId}`);
         } catch (err) {
             console.error('Failed to start sprint:', err);
             alert('Failed to start sprint. Please try again.');

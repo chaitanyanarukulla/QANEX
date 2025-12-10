@@ -2,14 +2,16 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, FileText, Calendar, Beaker, Rocket, Bug, Settings, BookOpen, Activity, GitPullRequest } from 'lucide-react';
+import { LayoutDashboard, FileText, Calendar, Beaker, Rocket, Bug, Settings, BookOpen, Activity, GitPullRequest, Kanban, Play } from 'lucide-react';
 import { clsx } from 'clsx';
 
 const navigation = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
     { name: 'Requirements', href: '/requirements', icon: FileText },
     { name: 'Planning', href: '/planning', icon: Calendar },
-    { name: 'Testing', href: '/tests', icon: Beaker },
+    { name: 'Sprint Board', href: '/sprints/current', icon: Kanban },
+    { name: 'Test Cases', href: '/tests', icon: Beaker },
+    { name: 'Test Runs', href: '/runs', icon: Play },
     { name: 'Issues', href: '/issues', icon: Bug },
     { name: 'Releases', href: '/releases', icon: Rocket },
     { name: 'Automation', href: '/testing/automation', icon: GitPullRequest },
