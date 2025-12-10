@@ -76,6 +76,8 @@ function AiSettings() {
     const [loading, setLoading] = useState(true);
     const [tenantId, setTenantId] = useState<string | null>(null);
 
+    const [saving, setSaving] = useState(false);
+
     useEffect(() => {
         loadSettings();
     }, []);
@@ -100,13 +102,14 @@ function AiSettings() {
         }
     };
 
-    const handleSave = async () => {
+    const saveAiSettings = async () => {
         if (!tenantId) {
             showToast('Tenant ID not found', 'error');
             return;
         }
 
         try {
+            setSaving(true);
             await tenantsApi.updateSettings(tenantId, {
                 aiConfig: {
                     provider,
@@ -117,6 +120,8 @@ function AiSettings() {
         } catch (error) {
             console.error('Failed to save settings', error);
             showToast('Failed to save settings', 'error');
+        } finally {
+            setSaving(false);
         }
     };
 
