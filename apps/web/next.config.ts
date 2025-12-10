@@ -7,21 +7,6 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_APP_VERSION: process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0',
   },
 
-  // API rewrites to backend (Railway/local)
-  async rewrites() {
-    let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-    // Ensure URL has a protocol
-    if (!apiUrl.startsWith('http://') && !apiUrl.startsWith('https://')) {
-      apiUrl = `https://${apiUrl}`;
-    }
-    return [
-      {
-        source: '/api/:path*',
-        destination: `${apiUrl}/api/:path*`,
-      },
-    ];
-  },
-
   // Security headers
   async headers() {
     return [
