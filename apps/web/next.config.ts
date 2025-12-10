@@ -1,25 +1,10 @@
 import type { NextConfig } from "next";
 
-// Get API URL from environment variable
-// For production on Vercel, this should be set to the Railway API URL
-const API_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'https://qanex-production.up.railway.app';
-
 const nextConfig: NextConfig = {
   // Environment variables exposed to the browser
   env: {
     NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME || 'QANexus',
     NEXT_PUBLIC_APP_VERSION: process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0',
-  },
-
-  // Rewrites to proxy API requests to the backend
-  async rewrites() {
-    console.log('[Next.js Config] API_URL:', API_URL);
-    return [
-      {
-        source: '/api/:path*',
-        destination: `${API_URL}/api/:path*`,
-      },
-    ];
   },
 
   // Security headers
