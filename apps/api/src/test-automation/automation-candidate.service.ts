@@ -7,8 +7,7 @@ import {
 } from './automation-candidate.entity';
 import { TestCase } from '../test-keys/test-case.entity';
 import { TestResult } from '../test-keys/test-result.entity';
-import type { AiProvider } from '../ai/ai.interface';
-import { AI_PROVIDER_TOKEN } from '../ai/ai.interface';
+import { AiProviderFactory } from '../ai/ai-provider.factory';
 
 export interface CandidateWithMetrics {
   id: string;
@@ -33,8 +32,8 @@ export class AutomationCandidateService {
     private testCaseRepo: Repository<TestCase>,
     @InjectRepository(TestResult)
     private testResultRepo: Repository<TestResult>,
-    @Inject(AI_PROVIDER_TOKEN) private aiProvider: AiProvider,
-  ) {}
+    private aiFactory: AiProviderFactory,
+  ) { }
 
   async getCandidates(
     tenantId: string,
@@ -155,6 +154,12 @@ export class AutomationCandidateService {
     }
 
     // Generate AI recommendation
+    // NOTE: In strict architecture, we should use aiFactory to get provider and ask AI
+    // For now, retaining static logic but preparing for dynamic provider usage if needed.
+    // To use AI here:
+    // const { provider } = await this.aiFactory.getProvider(tenantId);
+    // const analysis = await provider.analyzeCandidate(...) 
+
     let aiRecommendation = 'Good candidate';
     if (automationScore >= 80)
       aiRecommendation = 'Excellent candidate - High ROI';
