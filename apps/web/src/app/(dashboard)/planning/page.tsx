@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Calendar, Plus, ArrowRight, Bot, MoreHorizontal } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Calendar, Plus, ArrowRight, Bot, MoreHorizontal, Loader2 } from 'lucide-react';
 
 // Mock Data
 const MOCK_BACKLOG = [
@@ -17,8 +18,10 @@ const MOCK_SPRINT_ITEMS = [
 ];
 
 export default function PlanningPage() {
+    const router = useRouter();
     const [backlog, setBacklog] = useState(MOCK_BACKLOG);
     const [sprintItems, setSprintItems] = useState(MOCK_SPRINT_ITEMS);
+    const [isStarting, setIsStarting] = useState(false);
 
     const moveRight = (item: any) => {
         setBacklog(backlog.filter(i => i.id !== item.id));
@@ -39,6 +42,26 @@ export default function PlanningPage() {
         setBacklog(remainingReference);
     };
 
+    const handleStartSprint = async () => {
+        if (sprintItems.length === 0) {
+            alert('Please add items to the sprint before starting');
+            return;
+        }
+
+        try {
+            setIsStarting(true);
+            // In a real app, this would call an API to create and start the sprint
+            // For now, we'll show success and navigate to runs page
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            router.push('/runs');
+        } catch (err) {
+            console.error('Failed to start sprint:', err);
+            alert('Failed to start sprint. Please try again.');
+        } finally {
+            setIsStarting(false);
+        }
+    };
+
     return (
         <div className="h-[calc(100vh-4rem)] flex flex-col space-y-4">
             <div className="flex items-center justify-between">
@@ -53,8 +76,18 @@ export default function PlanningPage() {
                         <Bot className="mr-2 h-4 w-4" />
                         AI Auto-Plan
                     </button>
-                    <button className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90">
-                        Start Sprint
+                    <button
+                        onClick={handleStartSprint}
+                        disabled={isStarting}
+                        className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 disabled:opacity-50">
+                        {isStarting ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Starting...
+                            </>
+                        ) : (
+                            'Start Sprint'
+                        )}
                     </button>
                 </div>
             </div>
