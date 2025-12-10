@@ -216,11 +216,15 @@ jobs:
         run: npm install -g @railway/cli
 
       - name: Deploy to Railway
-        if: secrets.RAILWAY_TOKEN != ''
         working-directory: apps/api
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: railway up --service qanexus-api
+        run: |
+          if [ -z "$RAILWAY_TOKEN" ]; then
+            echo "RAILWAY_TOKEN not set, skipping deployment."
+            exit 0
+          fi
+          railway up --service qanexus-api
 
   # ============================================
   # Deploy to Vercel (Web)
@@ -239,9 +243,14 @@ jobs:
         run: npm install -g vercel
 
       - name: Deploy to Vercel
-        if: secrets.VERCEL_TOKEN != ''
         working-directory: apps/web
         env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: npx vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "VERCEL_TOKEN not set, skipping deployment."
+            exit 0
+          fi
+          npx vercel deploy --prod --token=$VERCEL_TOKEN --yes
