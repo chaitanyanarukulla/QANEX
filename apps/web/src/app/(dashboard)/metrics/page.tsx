@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Activity, Zap, CheckCircle, Bug } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { api } from '@/lib/api';
 
 export default function MetricsPage() {
     const [data, setData] = useState<any>(null);
@@ -12,11 +13,8 @@ export default function MetricsPage() {
     useEffect(() => {
         const fetchMetrics = async () => {
             try {
-                const res = await fetch('/api/metrics/dashboard');
-                if (res.ok) {
-                    const jsonData = await res.json();
-                    setData(jsonData);
-                }
+                const jsonData = await api<any>('/metrics/dashboard');
+                setData(jsonData);
             } catch (e) {
                 console.error('Failed to fetch metrics', e);
             } finally {
