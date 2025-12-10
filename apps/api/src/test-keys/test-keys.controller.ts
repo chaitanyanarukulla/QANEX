@@ -16,17 +16,10 @@ import { TestResultStatus } from './test-result.entity';
 import { TestPriority } from './test-case.entity';
 import { Request as ExpressRequest } from 'express';
 
-interface AuthenticatedRequest extends ExpressRequest {
-  user: {
-    tenantId: string;
-    userId: string;
-  };
-}
-
 @Controller('tests')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class TestKeysController {
-  constructor(private readonly testKeysService: TestKeysService) {}
+  constructor(private readonly testKeysService: TestKeysService) { }
 
   // --- Test Cases ---
   @Post('cases')
@@ -38,18 +31,18 @@ export class TestKeysController {
       priority?: TestPriority;
       steps?: { step: string; expected: string }[];
     },
-    @Request() req: AuthenticatedRequest,
+    @Request() req: any,
   ) {
     return this.testKeysService.createTestCase(dto, req.user.tenantId);
   }
 
   @Get('cases')
-  findAllCases(@Request() req: AuthenticatedRequest) {
+  findAllCases(@Request() req: any) {
     return this.testKeysService.findAllTestCases(req.user.tenantId);
   }
 
   @Get('cases/:id')
-  findOneCase(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
+  findOneCase(@Param('id') id: string, @Request() req: any) {
     return this.testKeysService.findOneTestCase(id, req.user.tenantId);
   }
 
@@ -63,13 +56,13 @@ export class TestKeysController {
       priority?: TestPriority;
       steps?: { step: string; expected: string }[];
     },
-    @Request() req: AuthenticatedRequest,
+    @Request() req: any,
   ) {
     return this.testKeysService.updateTestCase(id, dto, req.user.tenantId);
   }
 
   @Delete('cases/:id')
-  deleteCase(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
+  deleteCase(@Param('id') id: string, @Request() req: any) {
     return this.testKeysService.deleteTestCase(id, req.user.tenantId);
   }
 
@@ -77,33 +70,33 @@ export class TestKeysController {
   @Post('runs')
   createRun(
     @Body() dto: { name: string },
-    @Request() req: AuthenticatedRequest,
+    @Request() req: any,
   ) {
     return this.testKeysService.createTestRun(dto.name, req.user.tenantId);
   }
 
   @Get('runs')
-  findAllRuns(@Request() req: AuthenticatedRequest) {
+  findAllRuns(@Request() req: any) {
     return this.testKeysService.getTestRunsWithStats(req.user.tenantId);
   }
 
   @Get('runs/:id')
-  findOneRun(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
+  findOneRun(@Param('id') id: string, @Request() req: any) {
     return this.testKeysService.getTestRunWithStats(id, req.user.tenantId);
   }
 
   @Post('runs/:id/start')
-  startRun(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
+  startRun(@Param('id') id: string, @Request() req: any) {
     return this.testKeysService.startTestRun(id, req.user.tenantId);
   }
 
   @Post('runs/:id/complete')
-  completeRun(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
+  completeRun(@Param('id') id: string, @Request() req: any) {
     return this.testKeysService.completeTestRun(id, req.user.tenantId);
   }
 
   @Get('runs/:id/results')
-  getRunResults(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
+  getRunResults(@Param('id') id: string, @Request() req: any) {
     return this.testKeysService.getResultsForRun(id, req.user.tenantId);
   }
 
@@ -112,7 +105,7 @@ export class TestKeysController {
   recordResult(
     @Param('runId') runId: string,
     @Body() dto: { caseId: string; status: TestResultStatus; notes?: string },
-    @Request() req: AuthenticatedRequest,
+    @Request() req: any,
   ) {
     return this.testKeysService.recordResult(
       runId,
@@ -125,7 +118,7 @@ export class TestKeysController {
 
   // --- Metrics ---
   @Get('metrics/pass-rate')
-  getPassRate(@Request() req: AuthenticatedRequest) {
+  getPassRate(@Request() req: any) {
     return this.testKeysService.getLatestPassRate(req.user.tenantId);
   }
 }

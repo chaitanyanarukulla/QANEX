@@ -11,26 +11,19 @@ import { SecurityOpsService } from './security-ops.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Request as ExpressRequest } from 'express';
 
-interface AuthenticatedRequest extends ExpressRequest {
-  user: {
-    tenantId: string;
-    userId: string;
-  };
-}
-
 @Controller('security-ops')
 @UseGuards(JwtAuthGuard)
 export class SecurityOpsController {
-  constructor(private securityOpsService: SecurityOpsService) {}
+  constructor(private securityOpsService: SecurityOpsService) { }
 
   @Get()
-  async findAll(@Request() req: AuthenticatedRequest) {
+  async findAll(@Request() req: any) {
     return this.securityOpsService.findAll(req.user.tenantId);
   }
 
   @Get('score')
   async getScore(
-    @Request() req: AuthenticatedRequest,
+    @Request() req: any,
     @Query('releaseId') releaseId?: string,
   ) {
     return this.securityOpsService.calculateSoScore(
@@ -42,14 +35,14 @@ export class SecurityOpsController {
   @Get('release/:releaseId')
   async findByRelease(
     @Param('releaseId') releaseId: string,
-    @Request() req: AuthenticatedRequest,
+    @Request() req: any,
   ) {
     return this.securityOpsService.findByRelease(releaseId, req.user.tenantId);
   }
 
   @Post('scan')
   async runScan(
-    @Request() req: AuthenticatedRequest,
+    @Request() req: any,
     @Query('releaseId') releaseId?: string,
   ) {
     return this.securityOpsService.runMockScan(req.user.tenantId, releaseId);

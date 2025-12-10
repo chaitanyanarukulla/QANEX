@@ -13,7 +13,7 @@ export class LocalAiProvider implements AiProvider {
     private readonly localModelGateway: LocalModelGateway,
     private readonly ragService: RagService,
     private readonly metricsService: AiMetricsService,
-  ) {}
+  ) { }
 
   async analyzeRequirement(
     content: string,
@@ -47,7 +47,7 @@ export class LocalAiProvider implements AiProvider {
 
     const startTime = Date.now();
     try {
-      const _result = await this.localModelGateway.complete({
+      const result = await this.localModelGateway.complete({
         model: 'llama3:instruct',
         prompt: prompt,
         maxTokens: aiConfig.tasks.requirementAnalysis.maxTokens,
@@ -64,6 +64,8 @@ export class LocalAiProvider implements AiProvider {
         undefined,
         true,
       );
+
+      return JSON.parse(result);
     } catch (error: unknown) {
       const err = error as Error;
       const duration = Date.now() - startTime;
@@ -118,7 +120,7 @@ export class LocalAiProvider implements AiProvider {
 
     const startTime = Date.now();
     try {
-      const _result = await this.localModelGateway.complete({
+      const result = await this.localModelGateway.complete({
         model: 'llama3:instruct',
         prompt: prompt,
         maxTokens: aiConfig.tasks.bugTriage.maxTokens,
@@ -176,7 +178,7 @@ export class LocalAiProvider implements AiProvider {
 
     const startTime = Date.now();
     try {
-      const _result = await this.localModelGateway.complete({
+      const result = await this.localModelGateway.complete({
         model: 'llama3:instruct',
         prompt: prompt,
         maxTokens: aiConfig.tasks.codeGeneration.maxTokens,
@@ -217,7 +219,7 @@ export class LocalAiProvider implements AiProvider {
   ): Promise<string> {
     const startTime = Date.now();
     try {
-      const _result = await this.localModelGateway.complete({
+      const result = await this.localModelGateway.complete({
         model: 'llama3:instruct',
         prompt: prompt,
         maxTokens: 1000,
