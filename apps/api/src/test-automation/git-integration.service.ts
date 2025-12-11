@@ -6,17 +6,20 @@ import { Logger } from 'winston';
 export class GitIntegrationService {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-  ) { }
+  ) {}
 
   // Mock Git operations
 
   createBranch(repoOwner: string, repoName: string, branchName: string) {
-    this.logger.info(`[MockGit] Created branch ${branchName} on ${repoOwner}/${repoName}`, {
-      context: 'GitIntegrationService',
-      repoOwner,
-      repoName,
-      branchName,
-    });
+    this.logger.info(
+      `[MockGit] Created branch ${branchName} on ${repoOwner}/${repoName}`,
+      {
+        context: 'GitIntegrationService',
+        repoOwner,
+        repoName,
+        branchName,
+      },
+    );
     return Promise.resolve({ success: true });
   }
 

@@ -9,7 +9,7 @@ export class RequestLoggerMiddleware implements NestMiddleware {
   constructor(
     private readonly cls: ClsService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-  ) { }
+  ) {}
 
   use(req: Request, res: Response, next: NextFunction) {
     const { method, originalUrl, ip } = req;

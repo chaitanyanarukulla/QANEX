@@ -28,7 +28,7 @@ export class InMemoryRagAdapter implements RagBackend {
 
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-  ) { }
+  ) {}
 
   async indexItem(item: RagItem): Promise<void> {
     this.inMemoryStore = this.inMemoryStore.filter((i) => i.id !== item.id);
@@ -84,7 +84,7 @@ export class RagService {
   constructor(
     @Inject(RAG_BACKEND_TOKEN) private readonly backend: RagBackend,
     private readonly piiService: PiiRedactionService,
-  ) { }
+  ) {}
 
   async indexItem(item: RagItem): Promise<void> {
     // Redact content before indexing
