@@ -51,9 +51,9 @@ export class HealthController {
 
     // Check pgvector extension
     try {
-      const result = await this.dataSource.query(
+      const result = (await this.dataSource.query(
         "SELECT extversion FROM pg_extension WHERE extname = 'vector'",
-      );
+      )) as unknown as { extversion: string }[];
       if (result.length > 0) {
         checks.pgvector = { status: 'ok', message: `v${result[0].extversion}` };
       } else {

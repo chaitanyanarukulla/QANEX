@@ -6,7 +6,7 @@ export interface RagItem {
   tenantId: string;
   type: 'REQUIREMENT' | 'BUG' | 'TEST' | 'RELEASE';
   content: string;
-  metadata: any;
+  metadata: Record<string, any>;
   embeddings?: number[];
 }
 
@@ -30,6 +30,7 @@ export class InMemoryRagAdapter implements RagBackend {
     console.log(
       `[InMemoryRAG] Indexed ${item.type} ${item.id} (Tenant: ${item.tenantId})`,
     );
+    return Promise.resolve();
   }
 
   async search(
@@ -41,26 +42,31 @@ export class InMemoryRagAdapter implements RagBackend {
     // Simple keyword search mock
     const results = this.inMemoryStore.filter((item) => {
       if (item.tenantId !== tenantId) return false;
+      const title = (item.metadata.title as string) || '';
       return (
         item.content.toLowerCase().includes(lowerQuery) ||
-        item.metadata?.title?.toLowerCase().includes(lowerQuery)
+        title.toLowerCase().includes(lowerQuery)
       );
     });
-    return results.slice(0, topK);
+    return Promise.resolve(results.slice(0, topK));
   }
 
   async listItems(tenantId: string): Promise<RagItem[]> {
-    return this.inMemoryStore.filter((i) => i.tenantId === tenantId);
+    return Promise.resolve(
+      this.inMemoryStore.filter((i) => i.tenantId === tenantId),
+    );
   }
 
   async deleteItem(id: string, tenantId: string): Promise<void> {
     this.inMemoryStore = this.inMemoryStore.filter(
       (i) => !(i.id === id && i.tenantId === tenantId),
     );
+    return Promise.resolve();
   }
 
   async clear(): Promise<void> {
     this.inMemoryStore = [];
+    return Promise.resolve();
   }
 }
 
@@ -178,7 +184,7 @@ export class RagService {
 
     return filtered
       .map((i) => {
-        const title = i.metadata?.title || 'Unknown';
+        const title = (i.metadata?.title as string) || 'Unknown';
         const chunkInfo = i.metadata?.isChunk
           ? ` (Chunk ${i.metadata.chunkIndex + 1}/${i.metadata.totalChunks})`
           : '';

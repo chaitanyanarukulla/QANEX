@@ -7,6 +7,7 @@ import {
 } from './automation-candidate.entity';
 import { TestCase } from '../test-keys/test-case.entity';
 import { TestResult } from '../test-keys/test-result.entity';
+import { TestResultStatus } from '../test-keys/test-result.entity';
 
 export interface CandidateWithMetrics {
   id: string;
@@ -122,7 +123,10 @@ export class AutomationCandidateService {
     });
 
     const executionCount = results.length;
-    const passCount = results.filter((r) => r.status === 'PASS').length;
+
+    const passCount = results.filter(
+      (r) => r.status === TestResultStatus.PASS,
+    ).length;
     const passRate =
       executionCount > 0 ? Math.round((passCount / executionCount) * 100) : 0;
 

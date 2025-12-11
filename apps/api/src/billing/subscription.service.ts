@@ -149,7 +149,7 @@ export class SubscriptionService implements OnModuleInit {
   async getPlanLimits(tenantId: string): Promise<{
     maxUsers: number | null;
     maxProjects: number | null;
-    flags: any;
+    flags: { [key: string]: boolean };
   }> {
     const sub = await this.getSubscription(tenantId);
     // If expired/canceled, maybe return 0 limits?

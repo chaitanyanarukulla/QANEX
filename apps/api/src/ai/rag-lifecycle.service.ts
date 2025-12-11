@@ -15,7 +15,7 @@ export class RagLifecycleService {
     const retentionDays = 90; // Default retention
 
     try {
-      const _result = await this.dataSource.query(
+      await this.dataSource.query(
         `DELETE FROM rag_documents WHERE created_at < NOW() - INTERVAL '${retentionDays} days'`,
       );
 

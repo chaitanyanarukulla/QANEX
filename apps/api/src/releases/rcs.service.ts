@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common';
+import { BugSeverity, BugStatus } from '../bugs/bug.entity';
+import { RequirementState } from '../requirements/requirement.entity';
 import { ReleasesService } from './releases.service';
 import { RequirementsService } from '../requirements/requirements.service';
 import { TestKeysService } from '../test-keys/test-keys.service';
@@ -37,7 +39,9 @@ export class RcsService {
     // Pillar 1: RP (Requirements & Planning)
     // Rule: % of Requirements in "READY" state.
     const totalReqs = requirements.length || 1;
-    const readyReqs = requirements.filter((r) => r.state === 'READY').length;
+    const readyReqs = requirements.filter(
+      (r) => r.state === RequirementState.READY,
+    ).length;
     const rpScore = (readyReqs / totalReqs) * 100;
 
     // Pillar 2: QT (Quality & Testing)
@@ -49,12 +53,12 @@ export class RcsService {
     // Critical: -40, High: -20, Medium: -10, Low: -2
     let bScore = 100;
     const openBugs = bugs.filter(
-      (b) => b.status !== 'RESOLVED' && b.status !== 'CLOSED',
+      (b) => b.status !== BugStatus.RESOLVED && b.status !== BugStatus.CLOSED,
     );
     for (const bug of openBugs) {
-      if (bug.severity === 'CRITICAL') bScore -= 40;
-      else if (bug.severity === 'HIGH') bScore -= 20;
-      else if (bug.severity === 'MEDIUM') bScore -= 10;
+      if (bug.severity === BugSeverity.CRITICAL) bScore -= 40;
+      else if (bug.severity === BugSeverity.HIGH) bScore -= 20;
+      else if (bug.severity === BugSeverity.MEDIUM) bScore -= 10;
       else bScore -= 2;
     }
     bScore = Math.max(0, bScore); // Floor at 0
@@ -107,7 +111,7 @@ export class RcsService {
     releaseId: string,
     tenantId: string,
     score: number,
-    breakdown: any,
+    breakdown: Record<string, any>,
   ) {
     try {
       const { provider } = await this.aiFactory.getProvider(tenantId);
@@ -153,9 +157,9 @@ export class RcsService {
     // Gate 2: Critical Bugs (must be 0 to pass)
     const criticalBugs = bugs.filter(
       (b) =>
-        b.severity === 'CRITICAL' &&
-        b.status !== 'RESOLVED' &&
-        b.status !== 'CLOSED',
+        b.severity === BugSeverity.CRITICAL &&
+        b.status !== BugStatus.RESOLVED &&
+        b.status !== BugStatus.CLOSED,
     );
     const criticalBugsGate = {
       name: 'Critical Bugs',
@@ -193,7 +197,9 @@ export class RcsService {
 
     // Gate 4: Requirements Readiness (must be >= 90% ready)
     const totalReqs = requirements.length || 1;
-    const readyReqs = requirements.filter((r) => r.state === 'READY').length;
+    const readyReqs = requirements.filter(
+      (r) => r.state === RequirementState.READY,
+    ).length;
     const readinessPercent = Math.round((readyReqs / totalReqs) * 100);
     const requirementsGate = {
       name: 'Requirements Readiness',
@@ -212,9 +218,9 @@ export class RcsService {
     // Gate 5: High Priority Bugs (must be <= 2 to pass)
     const highBugs = bugs.filter(
       (b) =>
-        b.severity === 'HIGH' &&
-        b.status !== 'RESOLVED' &&
-        b.status !== 'CLOSED',
+        b.severity === BugSeverity.HIGH &&
+        b.status !== BugStatus.RESOLVED &&
+        b.status !== BugStatus.CLOSED,
     );
     const highBugsGate = {
       name: 'High Priority Bugs',

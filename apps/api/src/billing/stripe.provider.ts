@@ -5,7 +5,7 @@ import { BillingProvider } from './billing-provider.interface';
 export class StripeBillingProvider implements BillingProvider {
   private readonly logger = new Logger(StripeBillingProvider.name);
 
-  async createCustomer(params: {
+  createCustomer(params: {
     tenantId: string;
     email: string;
     name: string;
@@ -13,10 +13,10 @@ export class StripeBillingProvider implements BillingProvider {
     this.logger.log(
       `[Stripe] Creating customer for tenant ${params.tenantId} (${params.email})`,
     );
-    return { customerId: `cus_mock_${Date.now()}` };
+    return Promise.resolve({ customerId: `cus_mock_${Date.now()}` });
   }
 
-  async createSubscription(params: {
+  createSubscription(params: {
     tenantId: string;
     customerId: string;
     planKey: string;
@@ -29,23 +29,25 @@ export class StripeBillingProvider implements BillingProvider {
     this.logger.log(
       `[Stripe] Creating sub for ${params.customerId}, plan=${params.planKey}, seats=${params.seatCount}`,
     );
-    return {
+    return Promise.resolve({
       subscriptionId: `sub_mock_${Date.now()}`,
       status: 'active',
       clientSecret: 'seti_mock_secret',
-    };
+    });
   }
 
-  async updateSubscriptionSeats(params: {
+  updateSubscriptionSeats(params: {
     subscriptionId: string;
     seatCount: number;
   }): Promise<void> {
     this.logger.log(
       `[Stripe] Updating sub ${params.subscriptionId} to ${params.seatCount} seats`,
     );
+    return Promise.resolve();
   }
 
-  async cancelSubscription(params: { subscriptionId: string }): Promise<void> {
+  cancelSubscription(params: { subscriptionId: string }): Promise<void> {
     this.logger.log(`[Stripe] Cancelling sub ${params.subscriptionId}`);
+    return Promise.resolve();
   }
 }

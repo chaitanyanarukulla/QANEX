@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, IsNull } from 'typeorm';
 import { Sprint, SprintStatus } from './sprint.entity';
 import {
   SprintItem,
@@ -138,7 +138,7 @@ export class SprintsService {
     return this.sprintItemsRepository.find({
       where: {
         tenantId,
-        sprintId: null as any, // Items not in any sprint
+        sprintId: IsNull(), // Items not in any sprint
       },
       order: { priority: 'DESC', createdAt: 'DESC' },
     });

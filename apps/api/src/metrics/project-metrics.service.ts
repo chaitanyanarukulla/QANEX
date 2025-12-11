@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { RequirementsService } from '../requirements/requirements.service';
 import { BugsService } from '../bugs/bugs.service';
+import { BugStatus } from '../bugs/bug.entity';
 import { TestKeysService } from '../test-keys/test-keys.service';
 
 @Injectable()
@@ -38,7 +39,7 @@ export class ProjectMetricsService {
       totalBugs: bugs.length,
       bugDensity,
       openBugs: bugs.filter(
-        (b) => b.status !== 'RESOLVED' && b.status !== 'CLOSED',
+        (b) => b.status !== BugStatus.RESOLVED && b.status !== BugStatus.CLOSED,
       ).length,
       testPassRate,
     };

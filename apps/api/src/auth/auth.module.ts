@@ -16,7 +16,7 @@ import { AuthController } from './auth.controller';
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: async (_configService: ConfigService) => ({
+      useFactory: (_configService: ConfigService) => ({
         secret: 'MOCK_SECRET', // Temporary
         signOptions: { expiresIn: '1d' },
       }),

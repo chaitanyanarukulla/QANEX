@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
+import { AxiosError } from 'axios';
 import { firstValueFrom } from 'rxjs';
 import { BaseAiProvider } from './base.provider';
 import {
@@ -146,9 +147,10 @@ export class AnthropicProvider extends BaseAiProvider {
         },
         finishReason: this.mapStopReason(data.stop_reason),
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as AxiosError<{ error?: { message?: string } }>;
       const errorMessage =
-        error.response?.data?.error?.message || error.message;
+        err.response?.data?.error?.message || err.message || 'Unknown error';
       this.logger.error(`Anthropic chat failed: ${errorMessage}`);
       throw new Error(`Anthropic API error: ${errorMessage}`);
     }
@@ -162,8 +164,10 @@ export class AnthropicProvider extends BaseAiProvider {
     _texts: string[],
     _options?: EmbeddingOptions,
   ): Promise<EmbeddingResult> {
-    throw new Error(
-      'Anthropic does not support embeddings. Use OpenAI or Foundry Local for RAG embeddings.',
+    return Promise.reject(
+      new Error(
+        'Anthropic does not support embeddings. Use OpenAI or Foundry Local for RAG embeddings.',
+      ),
     );
   }
 
@@ -214,11 +218,12 @@ export class AnthropicProvider extends BaseAiProvider {
           name: 'Claude 3.5 Haiku',
         },
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as AxiosError<{ error?: { message?: string } }>;
       const errorMessage =
-        error.response?.data?.error?.message || error.message;
+        err.response?.data?.error?.message || err.message || 'Unknown error';
 
-      if (error.response?.status === 401 || error.response?.status === 403) {
+      if (err.response?.status === 401 || err.response?.status === 403) {
         return {
           success: false,
           message: 'Invalid API key or insufficient permissions',

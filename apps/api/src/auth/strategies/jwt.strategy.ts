@@ -20,7 +20,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(req: Request, payload: any): Promise<IAuthUser> {
+  async validate(
+    req: Request,
+    payload: { sub: string; email: string },
+  ): Promise<IAuthUser> {
     // Mock token fallback
     if (payload.sub === 'mock-user-id') {
       return {

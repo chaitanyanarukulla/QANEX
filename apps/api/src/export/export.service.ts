@@ -16,7 +16,12 @@ export class ExportService {
     private bugsRepo: Repository<Bug>,
   ) {}
 
-  async exportAllJson(tenantId: string): Promise<any> {
+  async exportAllJson(tenantId: string): Promise<{
+    tenantId: string;
+    exportedAt: Date;
+    requirements: Requirement[];
+    bugs: Bug[];
+  }> {
     const requirements = await this.requirementsRepo.find({
       where: { tenantId },
     });

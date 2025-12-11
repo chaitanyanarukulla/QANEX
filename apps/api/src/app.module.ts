@@ -37,7 +37,7 @@ import { RequestLoggerMiddleware } from './common/middleware/request-logger.midd
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {
         // Support both DATABASE_URL (Neon) and individual params (local)
-        const databaseUrl = configService.get('DATABASE_URL');
+        const databaseUrl = configService.get<string>('DATABASE_URL');
 
         if (databaseUrl) {
           // Neon / Production - use connection string
@@ -61,14 +61,17 @@ import { RequestLoggerMiddleware } from './common/middleware/request-logger.midd
         // Local development - use individual params
         return {
           type: 'postgres',
-          host: configService.get('DB_HOST', 'localhost'),
-          port: configService.get('DB_PORT', 5432),
-          username: configService.get('DB_USER', 'qanexus'),
-          password: configService.get('DB_PASSWORD', 'qanexus_dev_password'),
-          database: configService.get('DB_NAME', 'qanexus'),
+          host: configService.get<string>('DB_HOST', 'localhost'),
+          port: configService.get<number>('DB_PORT', 5432),
+          username: configService.get<string>('DB_USER', 'qanexus'),
+          password: configService.get<string>(
+            'DB_PASSWORD',
+            'qanexus_dev_password',
+          ),
+          database: configService.get<string>('DB_NAME', 'qanexus'),
           autoLoadEntities: true,
           synchronize: true, // OK for local dev
-          ssl: configService.get('DB_SSL') === 'true',
+          ssl: configService.get<string>('DB_SSL') === 'true',
         };
       },
       inject: [ConfigService],

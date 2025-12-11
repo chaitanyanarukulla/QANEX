@@ -203,7 +203,7 @@ export class AiSettingsController {
     try {
       const provider = this.aiProviderFactory.getProviderInstance(
         'foundry_local',
-      ) as any;
+      ) as unknown as { getLoadedModels: () => Promise<any[]> };
       const loadedModels = await provider.getLoadedModels();
       const availableModels = FOUNDRY_LOCAL_MODELS;
 

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
+import { AxiosError } from 'axios';
 import { firstValueFrom } from 'rxjs';
 import { BaseAiProvider } from './base.provider';
 import {
@@ -159,9 +160,10 @@ export class GeminiProvider extends BaseAiProvider {
           : undefined,
         finishReason: this.mapFinishReason(data.candidates[0]?.finishReason),
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as AxiosError<{ error?: { message?: string } }>;
       const errorMessage =
-        error.response?.data?.error?.message || error.message;
+        err.response?.data?.error?.message || err.message || 'Unknown error';
       this.logger.error(`Gemini chat failed: ${errorMessage}`);
       throw new Error(`Gemini API error: ${errorMessage}`);
     }
@@ -186,13 +188,14 @@ export class GeminiProvider extends BaseAiProvider {
     try {
       // Gemini supports batch embedding
       if (texts.length === 1) {
-        return this.embedSingle(texts[0], model, key);
+        return await this.embedSingle(texts[0], model, key);
       }
 
-      return this.embedBatch(texts, model, key);
-    } catch (error: any) {
+      return await this.embedBatch(texts, model, key);
+    } catch (error: unknown) {
+      const err = error as AxiosError<{ error?: { message?: string } }>;
       const errorMessage =
-        error.response?.data?.error?.message || error.message;
+        err.response?.data?.error?.message || err.message || 'Unknown error';
       this.logger.error(`Gemini embedding failed: ${errorMessage}`);
       throw new Error(`Gemini embedding error: ${errorMessage}`);
     }
@@ -302,7 +305,8 @@ export class GeminiProvider extends BaseAiProvider {
 
       const latency = Date.now() - startTime;
 
-      const models = response.data.models || [];
+      const data = response.data as { models?: { name: string }[] };
+      const models = data.models || [];
       const hasFlash = models.some(
         (m: { name: string }) =>
           m.name.includes('gemini-1.5-flash') || m.name.includes('gemini-2.0'),
@@ -319,11 +323,12 @@ export class GeminiProvider extends BaseAiProvider {
           name: 'Gemini 1.5 Flash',
         },
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as AxiosError<{ error?: { message?: string } }>;
       const errorMessage =
-        error.response?.data?.error?.message || error.message;
+        err.response?.data?.error?.message || err.message || 'Unknown error';
 
-      if (error.response?.status === 400 || error.response?.status === 403) {
+      if (err.response?.status === 400 || err.response?.status === 403) {
         return {
           success: false,
           message: 'Invalid API key or insufficient permissions',

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
+import { AxiosError } from 'axios';
 import { firstValueFrom } from 'rxjs';
 import { BaseAiProvider } from './base.provider';
 import {
@@ -148,11 +149,14 @@ export class FoundryLocalProvider extends BaseAiProvider {
           : undefined,
         finishReason: data.choices[0]?.finish_reason as 'stop' | 'length',
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as AxiosError<{
+        error?: { message?: string; code?: string };
+      }>;
       const errorMessage =
-        error.response?.data?.error?.message || error.message;
+        err.response?.data?.error?.message || err.message || 'Unknown error';
 
-      if (error.code === 'ECONNREFUSED') {
+      if (err.code === 'ECONNREFUSED') {
         this.logger.error('Foundry Local service is not running');
         throw new Error(
           'Foundry Local service is not running. Please start it with "foundry service start" or install from https://github.com/microsoft/Foundry-Local',
@@ -211,11 +215,14 @@ export class FoundryLocalProvider extends BaseAiProvider {
           totalTokens: data.usage.total_tokens,
         },
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as AxiosError<{
+        error?: { message?: string; code?: string };
+      }>;
       const errorMessage =
-        error.response?.data?.error?.message || error.message;
+        err.response?.data?.error?.message || err.message || 'Unknown error';
 
-      if (error.code === 'ECONNREFUSED') {
+      if (err.code === 'ECONNREFUSED') {
         throw new Error(
           'Foundry Local service is not running. Please start it with "foundry service start"',
         );
@@ -276,8 +283,10 @@ export class FoundryLocalProvider extends BaseAiProvider {
           name: firstModel.alias || firstModel.id,
         },
       };
-    } catch (error: any) {
-      if (error.code === 'ECONNREFUSED') {
+    } catch (error: unknown) {
+      const axiosErr = error as AxiosError<{ error?: { message?: string } }>;
+
+      if (axiosErr.code === 'ECONNREFUSED') {
         return {
           success: false,
           message:
@@ -287,7 +296,7 @@ export class FoundryLocalProvider extends BaseAiProvider {
 
       return {
         success: false,
-        message: `Connection failed: ${error.message}`,
+        message: `Connection failed: ${axiosErr.message}`,
       };
     }
   }
@@ -312,8 +321,9 @@ export class FoundryLocalProvider extends BaseAiProvider {
         endpoint: url,
         loadedModels: models,
       };
-    } catch (error: any) {
-      if (error.code === 'ECONNREFUSED') {
+    } catch (error: unknown) {
+      const err = error as AxiosError<{ error?: { message?: string } }>;
+      if (err.code === 'ECONNREFUSED') {
         return {
           running: false,
         };

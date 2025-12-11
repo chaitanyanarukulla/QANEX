@@ -10,7 +10,7 @@ import { RequirementState } from '../requirements/requirement.entity';
 
 interface AiRisk {
   risk: string;
-  severity: string;
+  severity: 'LOW' | 'MEDIUM' | 'HIGH';
   mitigation: string;
 }
 
@@ -136,7 +136,7 @@ export class DocumentsAiService {
 
       review.score = result.score;
       review.summary = result.summary;
-      review.risks = result.risks as any;
+      review.risks = result.risks;
       review.gaps = result.gaps;
 
       let reqCount = 0;
@@ -158,7 +158,11 @@ export class DocumentsAiService {
               priority: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].includes(
                 req.priority?.toUpperCase(),
               )
-                ? (req.priority.toUpperCase() as any)
+                ? (req.priority.toUpperCase() as
+                    | 'LOW'
+                    | 'MEDIUM'
+                    | 'HIGH'
+                    | 'CRITICAL')
                 : 'MEDIUM',
               type: [
                 'FUNCTIONAL',
@@ -167,7 +171,12 @@ export class DocumentsAiService {
                 'FEATURE',
                 'ENHANCEMENT',
               ].includes(req.type?.toUpperCase())
-                ? (req.type.toUpperCase() as any)
+                ? (req.type.toUpperCase() as
+                    | 'FUNCTIONAL'
+                    | 'NON_FUNCTIONAL'
+                    | 'BUG'
+                    | 'FEATURE'
+                    | 'ENHANCEMENT')
                 : 'FUNCTIONAL',
               acceptanceCriteria: req.acceptanceCriteria || [],
               sourceDocumentId: document.id,
@@ -175,7 +184,7 @@ export class DocumentsAiService {
             },
             {
               tenantId,
-              userId: 'system-ai', // System actor
+              userId: 'system-ai',
               email: 'ai@system.local',
               roles: ['system'],
               sub: 'system',

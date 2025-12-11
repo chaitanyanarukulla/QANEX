@@ -41,6 +41,14 @@ const MODEL_PRICING: Record<string, { input: number; output: number }> = {
   'all-minilm-l6-v2': { input: 0, output: 0 },
 };
 
+interface RawAiLog {
+  date: Date;
+  provider: string;
+  tokens: number | string;
+  cost: number | string;
+  requests: number | string;
+}
+
 @Injectable()
 export class AiMetricsService {
   constructor(
@@ -228,7 +236,7 @@ export class AiMetricsService {
       .groupBy('DATE(log.timestamp)')
       .orderBy('date', 'ASC');
 
-    const results = await query.getRawMany();
+    const results = await query.getRawMany<RawAiLog>();
 
     // Check if results are empty to avoid frontend crashing on empty array
     if (!results) return [];
@@ -258,7 +266,7 @@ export class AiMetricsService {
       .addGroupBy('log.provider')
       .orderBy('date', 'ASC');
 
-    const results = await query.getRawMany();
+    const results = await query.getRawMany<RawAiLog>();
 
     if (!results) return [];
 

@@ -51,7 +51,17 @@ export class ReleasesService {
   }
 
   // Helper to save RCS calculation
-  async updateScore(id: string, score: number, breakdown: any): Promise<void> {
+  async updateScore(
+    id: string,
+    score: number,
+    breakdown: {
+      rp: number;
+      qt: number;
+      b: number;
+      so: number;
+      details: any;
+    },
+  ): Promise<void> {
     await this.releasesRepository.update(id, {
       rcsScore: score,
       rcsBreakdown: breakdown,

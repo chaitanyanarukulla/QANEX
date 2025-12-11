@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { Project } from './project.entity';
 import type { AuthenticatedRequest } from '../auth/interfaces/authenticated-request.interface';
 
 @Controller('projects')
@@ -23,7 +24,7 @@ export class ProjectsController {
   }
 
   @Post()
-  create(@Body() body: any, @Request() req: AuthenticatedRequest) {
+  create(@Body() body: Partial<Project>, @Request() req: AuthenticatedRequest) {
     return this.projectsService.create({
       ...body,
       tenantId: req.user.tenantId,

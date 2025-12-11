@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
+import { AxiosError } from 'axios';
 import { firstValueFrom } from 'rxjs';
 import { BaseAiProvider } from './base.provider';
 import {
@@ -125,9 +126,10 @@ export class OpenAIProvider extends BaseAiProvider {
           | 'length'
           | 'content_filter',
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as AxiosError<{ error?: { message?: string } }>;
       const errorMessage =
-        error.response?.data?.error?.message || error.message;
+        err.response?.data?.error?.message || err.message || 'Unknown error';
       this.logger.error(`OpenAI chat failed: ${errorMessage}`);
       throw new Error(`OpenAI API error: ${errorMessage}`);
     }
@@ -184,9 +186,10 @@ export class OpenAIProvider extends BaseAiProvider {
           totalTokens: data.usage.total_tokens,
         },
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as AxiosError<{ error?: { message?: string } }>;
       const errorMessage =
-        error.response?.data?.error?.message || error.message;
+        err.response?.data?.error?.message || err.message || 'Unknown error';
       this.logger.error(`OpenAI embedding failed: ${errorMessage}`);
       throw new Error(`OpenAI embedding error: ${errorMessage}`);
     }
@@ -221,10 +224,9 @@ export class OpenAIProvider extends BaseAiProvider {
       const latency = Date.now() - startTime;
 
       // Check if gpt-4o-mini is available (common model)
-      const models = response.data.data || [];
-      const hasGpt4oMini = models.some(
-        (m: { id: string }) => m.id === 'gpt-4o-mini',
-      );
+      const data = response.data as { data?: { id: string }[] };
+      const models = (data as { data?: { id: string }[] })?.data || [];
+      const hasGpt4oMini = models.some((m) => m.id === 'gpt-4o-mini');
 
       return {
         success: true,
@@ -237,11 +239,12 @@ export class OpenAIProvider extends BaseAiProvider {
           name: 'GPT-4o Mini',
         },
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as AxiosError<{ error?: { message?: string } }>;
       const errorMessage =
-        error.response?.data?.error?.message || error.message;
+        err.response?.data?.error?.message || err.message || 'Unknown error';
 
-      if (error.response?.status === 401) {
+      if (err.response?.status === 401) {
         return {
           success: false,
           message: 'Invalid API key',

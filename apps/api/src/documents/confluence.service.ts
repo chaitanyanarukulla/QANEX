@@ -1,5 +1,5 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 @Injectable()
 export class ConfluenceService {
@@ -21,18 +21,18 @@ export class ConfluenceService {
     const auth = Buffer.from(`${email}:${apiToken}`).toString('base64');
 
     try {
-      const response = await axios.get(
-        `${siteUrl}/wiki/rest/api/content/${pageId}`,
-        {
-          headers: {
-            Authorization: `Basic ${auth}`,
-            Accept: 'application/json',
-          },
-          params: {
-            expand: 'body.storage',
-          },
+      const response = await axios.get<{
+        title: string;
+        body: { storage: { value: string } };
+      }>(`${siteUrl}/wiki/rest/api/content/${pageId}`, {
+        headers: {
+          Authorization: `Basic ${auth}`,
+          Accept: 'application/json',
         },
-      );
+        params: {
+          expand: 'body.storage',
+        },
+      });
 
       const data = response.data;
       const title = data.title;
@@ -42,10 +42,11 @@ export class ConfluenceService {
       const content = this.cleanHtml(data.body.storage.value);
 
       return { title, content };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as AxiosError;
       this.logger.error(
-        `Confluence fetch failed: ${error.message}`,
-        error.response?.data,
+        `Confluence fetch failed: ${err.message}`,
+        err.response?.data,
       );
       throw new BadRequestException('Failed to fetch from Confluence');
     }

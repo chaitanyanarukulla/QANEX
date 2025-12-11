@@ -2,7 +2,9 @@ import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import * as mammoth from 'mammoth';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const pdf = require('pdf-parse');
+const pdf = require('pdf-parse') as (
+  buffer: Buffer,
+) => Promise<{ text: string }>;
 
 @Injectable()
 export class FileUploadService {
@@ -37,7 +39,7 @@ export class FileUploadService {
   }
 
   private async extractPdf(buffer: Buffer): Promise<string> {
-    const data = await pdf(buffer);
+    const data = (await pdf(buffer)) as { text: string };
     return data.text;
   }
 

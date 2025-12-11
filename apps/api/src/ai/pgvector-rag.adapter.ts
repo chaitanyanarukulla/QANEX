@@ -98,6 +98,10 @@ export class PgVectorRagAdapter implements RagBackend {
    * Normalize embedding to target dimensions (1536)
    * Zero-pads shorter embeddings or truncates longer ones
    */
+  /**
+   * Normalize embedding to target dimensions (1536)
+   * Zero-pads shorter embeddings or truncates longer ones
+   */
   private normalizeEmbedding(embedding: number[], targetDim = 1536): number[] {
     if (embedding.length === targetDim) {
       return embedding;
@@ -105,7 +109,10 @@ export class PgVectorRagAdapter implements RagBackend {
 
     if (embedding.length < targetDim) {
       // Zero-pad shorter embeddings
-      return [...embedding, ...Array(targetDim - embedding.length).fill(0)];
+      const padding = new Array(targetDim - embedding.length).fill(
+        0,
+      ) as number[];
+      return [...embedding, ...padding];
     }
 
     // Truncate longer embeddings (rare case)
@@ -185,7 +192,7 @@ export class PgVectorRagAdapter implements RagBackend {
     const normalizedQuery = this.normalizeEmbedding(queryEmbedding);
     const embeddingString = `[${normalizedQuery.join(',')}]`;
 
-    const results = await this.dataSource.query(
+    const rawResults = (await this.dataSource.query(
       `
       SELECT
         id,
@@ -201,8 +208,8 @@ export class PgVectorRagAdapter implements RagBackend {
       LIMIT $3
     `,
       [tenantId, embeddingString, topK],
-    );
-
+    )) as unknown;
+    const results = rawResults as RagItem[];
     return results;
   }
 
@@ -228,10 +235,11 @@ export class PgVectorRagAdapter implements RagBackend {
 
     // Check if hybrid_search function exists
     try {
-      const results = await this.dataSource.query(
+      const rawResults = (await this.dataSource.query(
         `SELECT * FROM hybrid_search($1, $2::vector, $3::uuid, $4, $5)`,
         [query, embeddingString, tenantId, options?.type || null, topK],
-      );
+      )) as unknown;
+      const results = rawResults as RagItem[];
       return results;
     } catch {
       // Fall back to vector-only search
@@ -247,7 +255,7 @@ export class PgVectorRagAdapter implements RagBackend {
     tenantId: string,
     topK: number,
   ): Promise<RagItem[]> {
-    const results = await this.dataSource.query(
+    const rawResults = (await this.dataSource.query(
       `
       SELECT
         id,
@@ -261,8 +269,8 @@ export class PgVectorRagAdapter implements RagBackend {
       LIMIT $3
     `,
       [tenantId, query, topK],
-    );
-
+    )) as unknown;
+    const results = rawResults as RagItem[];
     return results;
   }
 
@@ -278,10 +286,9 @@ export class PgVectorRagAdapter implements RagBackend {
    * Delete items by tenant
    */
   async clearTenant(tenantId: string): Promise<void> {
-    await this.dataSource.query(
-      'DELETE FROM rag_documents WHERE tenant_id = $1::uuid',
-      [tenantId],
-    );
+    const deleteQuery = 'DELETE FROM rag_documents WHERE tenant_id = $1::uuid';
+    const params = [tenantId];
+    await this.dataSource.query(deleteQuery, params);
     this.logger.log(`RAG documents cleared for tenant ${tenantId}`);
   }
 
@@ -290,7 +297,7 @@ export class PgVectorRagAdapter implements RagBackend {
    */
   async listItems(tenantId: string): Promise<RagItem[]> {
     await this.ensureTable();
-    return this.dataSource.query(
+    const rawResults = (await this.dataSource.query(
       `
       SELECT id, tenant_id as "tenantId", type, content, metadata, created_at
       FROM rag_documents
@@ -299,7 +306,8 @@ export class PgVectorRagAdapter implements RagBackend {
       LIMIT 100
       `,
       [tenantId],
-    );
+    )) as unknown;
+    return rawResults as RagItem[];
   }
 
   /**

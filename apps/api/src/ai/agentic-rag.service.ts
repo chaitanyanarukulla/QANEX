@@ -1,7 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { AiProviderFactory } from './providers';
+import {
+  AiProviderFactory,
+  OpenAIProvider,
+  GeminiProvider,
+  AnthropicProvider,
+  FoundryLocalProvider,
+} from './providers';
 import { RagService } from './rag.service';
-import { ChatMessage } from './providers/ai-provider.types';
+import { ChatMessage, AiProvider } from './providers/ai-provider.types';
 
 interface RagItem {
   id: string;
@@ -61,8 +67,13 @@ export class AgenticRagService {
    */
   private async generateSearchQueries(
     query: string,
-    provider: any,
-    config: any,
+    provider: AiProvider,
+    config: {
+      apiKey?: string;
+      model?: string;
+      embeddingModel?: string;
+      endpoint?: string;
+    },
   ): Promise<string[]> {
     const planPrompt = `You are an expert QA technical assistant.
 User Query: "${query}"
@@ -85,30 +96,42 @@ Return strictly a JSON array of strings. Example: ["query1", "query2"]`;
       let result: string;
 
       if (provider.providerType === 'openai') {
-        const response = await provider.chatWithKey(messages, config.apiKey, {
-          temperature: 0.3,
-          maxTokens: 200,
-        });
+        const response = await (provider as OpenAIProvider).chatWithKey(
+          messages,
+          config.apiKey!,
+          {
+            temperature: 0.3,
+            maxTokens: 200,
+          },
+        );
         result = response.content;
       } else if (provider.providerType === 'gemini') {
-        const response = await provider.chatWithKey(messages, config.apiKey, {
-          temperature: 0.3,
-          maxTokens: 200,
-        });
+        const response = await (provider as GeminiProvider).chatWithKey(
+          messages,
+          config.apiKey!,
+          {
+            temperature: 0.3,
+            maxTokens: 200,
+          },
+        );
         result = response.content;
       } else if (provider.providerType === 'anthropic') {
-        const response = await provider.chatWithKey(messages, config.apiKey, {
+        const response = await (provider as AnthropicProvider).chatWithKey(
+          messages,
+          config.apiKey!,
+          {
+            temperature: 0.3,
+            maxTokens: 200,
+          },
+        );
+        result = response.content;
+      } else if (provider.providerType === 'foundry_local') {
+        const response = await (
+          provider as FoundryLocalProvider
+        ).chatWithEndpoint(messages, config.endpoint!, config.model!, {
           temperature: 0.3,
           maxTokens: 200,
         });
-        result = response.content;
-      } else if (provider.providerType === 'foundry_local') {
-        const response = await provider.chatWithEndpoint(
-          messages,
-          config.endpoint,
-          config.model,
-          { temperature: 0.3, maxTokens: 200 },
-        );
         result = response.content;
       } else {
         // Fallback to generic complete
@@ -121,7 +144,7 @@ Return strictly a JSON array of strings. Example: ["query1", "query2"]`;
       // Parse JSON array from response
       const jsonMatch = result.match(/\[.*\]/s);
       if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
+        const parsed = JSON.parse(jsonMatch[0]) as unknown;
         if (
           Array.isArray(parsed) &&
           parsed.every((i) => typeof i === 'string')
@@ -176,8 +199,13 @@ Return strictly a JSON array of strings. Example: ["query1", "query2"]`;
   private async synthesizeAnswer(
     query: string,
     context: string,
-    provider: any,
-    config: any,
+    provider: AiProvider,
+    config: {
+      apiKey?: string;
+      model?: string;
+      embeddingModel?: string;
+      endpoint?: string;
+    },
   ): Promise<string> {
     const synthesisPrompt = `You are an expert QA technical assistant.
 User Query: "${query}"
@@ -200,30 +228,42 @@ Cite the specific [Type] Title if possible.`;
 
     try {
       if (provider.providerType === 'openai') {
-        const response = await provider.chatWithKey(messages, config.apiKey, {
-          temperature: 0.7,
-          maxTokens: 1000,
-        });
+        const response = await (provider as OpenAIProvider).chatWithKey(
+          messages,
+          config.apiKey!,
+          {
+            temperature: 0.7,
+            maxTokens: 1000,
+          },
+        );
         return response.content;
       } else if (provider.providerType === 'gemini') {
-        const response = await provider.chatWithKey(messages, config.apiKey, {
-          temperature: 0.7,
-          maxTokens: 1000,
-        });
+        const response = await (provider as GeminiProvider).chatWithKey(
+          messages,
+          config.apiKey!,
+          {
+            temperature: 0.7,
+            maxTokens: 1000,
+          },
+        );
         return response.content;
       } else if (provider.providerType === 'anthropic') {
-        const response = await provider.chatWithKey(messages, config.apiKey, {
+        const response = await (provider as AnthropicProvider).chatWithKey(
+          messages,
+          config.apiKey!,
+          {
+            temperature: 0.7,
+            maxTokens: 1000,
+          },
+        );
+        return response.content;
+      } else if (provider.providerType === 'foundry_local') {
+        const response = await (
+          provider as FoundryLocalProvider
+        ).chatWithEndpoint(messages, config.endpoint!, config.model!, {
           temperature: 0.7,
           maxTokens: 1000,
         });
-        return response.content;
-      } else if (provider.providerType === 'foundry_local') {
-        const response = await provider.chatWithEndpoint(
-          messages,
-          config.endpoint,
-          config.model,
-          { temperature: 0.7, maxTokens: 1000 },
-        );
         return response.content;
       } else {
         return await provider.complete(synthesisPrompt, {

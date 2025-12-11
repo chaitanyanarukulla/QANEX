@@ -2,12 +2,26 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Requirement } from './requirement.entity';
-import { SprintItem, SprintItemStatus } from '../sprints/sprint-item.entity';
+import {
+  SprintItem,
+  SprintItemStatus,
+  SprintItemType,
+  SprintItemPriority,
+} from '../sprints/sprint-item.entity';
 import { RagService } from '../ai/rag.service';
 import { AiProviderFactory } from '../ai/providers';
 import { CreateRequirementDto } from './dto/create-requirement.dto';
 import { UpdateRequirementDto } from './dto/update-requirement.dto';
 import { IAuthUser } from '../auth/interfaces/auth-user.interface';
+
+interface TaskDto {
+  title: string;
+  description: string;
+  type?: string;
+  priority?: string;
+  suggestedRole?: string;
+  estimatedHours?: number;
+}
 
 @Injectable()
 export class RequirementsService {
@@ -36,20 +50,26 @@ export class RequirementsService {
 
     // Create Tasks if any
     if (tasks && tasks.length > 0) {
-      for (const task of tasks) {
+      for (const task of tasks as TaskDto[]) {
+        const typeStr = (task.type || 'task').toLowerCase();
+        const priorityStr = (task.priority || 'MEDIUM').toUpperCase();
+
+        const itemType = ['feature', 'bug', 'task'].includes(typeStr)
+          ? typeStr
+          : 'task';
+        const itemPriority = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].includes(
+          priorityStr,
+        )
+          ? priorityStr
+          : 'MEDIUM';
+
         await this.sprintItemRepo.save(
           this.sprintItemRepo.create({
             title: task.title,
-            description: task.description,
-            type: ['feature', 'bug', 'task'].includes(task.type?.toLowerCase())
-              ? task.type.toLowerCase()
-              : 'task',
-            status: 'todo' as SprintItemStatus,
-            priority: ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].includes(
-              task.priority?.toUpperCase(),
-            )
-              ? task.priority.toUpperCase()
-              : 'MEDIUM',
+            description: task.description || '',
+            type: itemType as SprintItemType,
+            status: SprintItemStatus.TODO,
+            priority: itemPriority as SprintItemPriority,
             suggestedRole: task.suggestedRole,
             estimatedHours: task.estimatedHours,
             requirementId: saved.id,
