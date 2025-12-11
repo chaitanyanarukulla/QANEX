@@ -21,4 +21,8 @@ export class ProjectsService {
   async count(tenantId: string): Promise<number> {
     return this.projectsRepository.count({ where: { tenantId } });
   }
+
+  async findOne(id: string, tenantId: string): Promise<Project | null> {
+    return this.projectsRepository.findOne({ where: { id, tenantId } });
+  }
 }

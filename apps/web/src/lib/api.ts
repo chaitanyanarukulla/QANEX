@@ -1,4 +1,4 @@
-const API_BASE = '/api';
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL || '') + '/api';
 
 interface ApiOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
@@ -488,6 +488,24 @@ export const onboardingApi = {
   }>('/onboarding/checklist'),
 };
 
+// Projects API
+export interface Project {
+  id: string;
+  name: string;
+  key: string;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const projectsApi = {
+  list: () => api<Project[]>('/projects'),
+  get: (id: string) => api<Project>(`/projects/${id}`),
+  create: (data: Partial<Project>) => api<Project>('/projects', { method: 'POST', body: data }),
+  update: (id: string, data: Partial<Project>) => api<Project>(`/projects/${id}`, { method: 'PATCH', body: data }),
+  delete: (id: string) => api(`/projects/${id}`, { method: 'DELETE' }),
+};
+
 // Demo API
 export const demoApi = {
   createProject: () => api('/demo/project', { method: 'POST' }),
@@ -698,4 +716,78 @@ export const aiApi = {
   listDocuments: () => api<SearchResult[]>('/ai/documents'),
   deleteDocument: (id: string) => api<{ status: string; id: string }>(`/ai/documents/${id}`, { method: 'DELETE' }),
   reindex: () => api<{ status: string; indexed: { total: number } }>('/ai/reindex', { method: 'POST' }),
+};
+
+// Users API
+export interface TenantUser {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  joinedAt: string;
+}
+
+export const usersApi = {
+  list: () => api<TenantUser[]>('/users'),
+  invite: (data: { email: string; firstName: string; lastName: string; role: string }) =>
+    api<TenantUser>('/users', { method: 'POST', body: data }),
+  updateRole: (userId: string, role: string) =>
+    api<TenantUser>(`/users/${userId}/role`, { method: 'PATCH', body: { role } }),
+  delete: (userId: string) => api(`/users/${userId}`, { method: 'DELETE' }),
+  update: (userId: string, data: Partial<TenantUser>) =>
+    api<TenantUser>(`/users/${userId}`, { method: 'PATCH', body: data }),
+};
+
+// Documents API
+export interface Document {
+  id: string;
+  title: string;
+  content: string;
+  source: 'MANUAL' | 'UPLOAD' | 'CONFLUENCE';
+  status: 'DRAFT' | 'IN_REVIEW' | 'FINAL' | 'ARCHIVED';
+  aiReview?: DocumentAIReview;
+  updatedAt: string;
+}
+
+export interface DocumentAIReview {
+  id: string;
+  score?: number;
+  summary?: string;
+  risks?: { risk: string; severity: 'LOW' | 'MEDIUM' | 'HIGH'; mitigation: string }[];
+  gaps?: { gap: string; suggestion: string }[];
+  analyzedAt: string;
+}
+
+export const documentsApi = {
+  list: () => api<Document[]>('/documents'),
+  get: (id: string) => api<Document>(`/documents/${id}`),
+  create: (data: { title: string; content: string; source?: string }) =>
+    api<Document>('/documents', { method: 'POST', body: data }),
+  update: (id: string, data: Partial<Document>) =>
+    api<Document>(`/documents/${id}`, { method: 'PATCH', body: data }),
+  delete: (id: string) => api(`/documents/${id}`, { method: 'DELETE' }),
+  analyze: (id: string) => api<DocumentAIReview>(`/documents/${id}/analyze`, { method: 'POST' }),
+  snapshot: (id: string) => api(`/documents/${id}/snapshot`, { method: 'POST' }),
+  upload: async (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+
+    const response = await fetch(`${API_BASE}/documents/upload`, {
+      method: 'POST',
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Upload failed' }));
+      throw new Error(error.message || 'Upload failed');
+    }
+    return response.json() as Promise<Document>;
+  },
+  importConfluence: (data: { siteUrl: string; email: string; apiToken: string; pageId: string }) =>
+    api<Document>('/documents/import/confluence', { method: 'POST', body: data }),
 };

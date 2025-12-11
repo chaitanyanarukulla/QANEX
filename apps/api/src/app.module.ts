@@ -24,6 +24,7 @@ import { ExportModule } from './export/export.module';
 import { AiModule } from './ai/ai.module';
 import { HealthModule } from './health/health.module';
 import { SecurityOpsModule } from './security-ops/security-ops.module';
+import { DocumentsModule } from './documents/documents.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TenantMiddleware } from './tenants/tenant.middleware';
@@ -93,6 +94,7 @@ import { RequestLoggerMiddleware } from './common/middleware/request-logger.midd
     AuditModule,
     ExportModule,
     SecurityOpsModule,
+    DocumentsModule,
     ThrottlerModule.forRoot([
       {
         ttl: 60000,

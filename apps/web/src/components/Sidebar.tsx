@@ -2,11 +2,12 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, FileText, Calendar, Beaker, Rocket, Bug, Settings, BookOpen, Activity, GitPullRequest, Kanban, Play } from 'lucide-react';
+import { LayoutDashboard, FileText, Calendar, Beaker, Rocket, Bug, Settings, BookOpen, Activity, GitPullRequest, Kanban, Play, Files } from 'lucide-react';
 import { clsx } from 'clsx';
 
 const navigation = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+    { name: 'Documents', href: '/documents', icon: Files },
     { name: 'Requirements', href: '/requirements', icon: FileText },
     { name: 'Planning', href: '/planning', icon: Calendar },
     { name: 'Sprint Board', href: '/sprints/current', icon: Kanban },

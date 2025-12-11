@@ -5,6 +5,9 @@ import {
   Body,
   UseGuards,
   Request,
+  Patch,
+  Param,
+  Delete,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { User } from './user.entity';
@@ -19,7 +22,7 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
-  findAll(@Request() req: any): Promise<User[]> {
+  findAll(@Request() req: any): Promise<any[]> {
     const tenantId = req.user.tenantId || 'mock-tenant-id';
     return this.usersService.findAll(tenantId);
   }
@@ -39,5 +42,29 @@ export class UsersController {
       tenantId,
       dto.role,
     );
+  }
+
+  @Patch(':id/role')
+  @Roles('ORG_ADMIN')
+  updateRole(
+    @Param('id') userId: string,
+    @Body('role') role: OrgRole,
+    @Request() req: any,
+  ) {
+    const tenantId = req.user.tenantId || 'mock-tenant-id';
+    return this.usersService.updateRole(userId, tenantId, role);
+  }
+
+  @Delete(':id')
+  @Roles('ORG_ADMIN')
+  removeMember(@Param('id') userId: string, @Request() req: any) {
+    const tenantId = req.user.tenantId || 'mock-tenant-id';
+    return this.usersService.removeMember(userId, tenantId);
+  }
+
+  @Patch(':id')
+  @Roles('ORG_ADMIN')
+  update(@Param('id') userId: string, @Body() dto: Partial<User>) {
+    return this.usersService.update(userId, dto);
   }
 }

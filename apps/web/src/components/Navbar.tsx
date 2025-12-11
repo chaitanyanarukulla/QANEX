@@ -139,14 +139,14 @@ export function Navbar() {
             </div>
 
             <div className="flex items-center gap-4">
-                {/* Org Switcher (Mock) */}
-                <div className="hidden md:flex items-center gap-2 text-sm">
+                {/* Org Switcher (Hidden until multi-tenant is ready) */}
+                {/* <div className="hidden md:flex items-center gap-2 text-sm">
                     <span className="text-muted-foreground">Org:</span>
                     <select className="bg-transparent font-medium outline-none">
                         <option>Acme Corp</option>
                         <option>Beta Inc</option>
                     </select>
-                </div>
+                </div> */}
 
                 <AiStatusIndicator />
 

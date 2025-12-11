@@ -35,6 +35,7 @@ export abstract class BaseAiProvider implements AiProvider {
   abstract chat(
     messages: ChatMessage[],
     options?: ChatCompletionOptions,
+    apiKey?: string,
   ): Promise<ChatCompletionResult>;
 
   abstract embed(

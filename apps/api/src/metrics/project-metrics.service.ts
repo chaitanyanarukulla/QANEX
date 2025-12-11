@@ -1,12 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { RequirementsService } from '../requirements/requirements.service';
 import { BugsService } from '../bugs/bugs.service';
+import { TestKeysService } from '../test-keys/test-keys.service';
 
 @Injectable()
 export class ProjectMetricsService {
   constructor(
     private requirementsService: RequirementsService,
     private bugsService: BugsService,
+    private testKeysService: TestKeysService,
   ) {}
 
   async getProjectStats(tenantId: string) {
@@ -27,6 +29,9 @@ export class ProjectMetricsService {
     const bugDensity =
       reqs.length > 0 ? (bugs.length / reqs.length).toFixed(2) : 0;
 
+    // Test Pass Rate
+    const testPassRate = await this.testKeysService.getLatestPassRate(tenantId);
+
     return {
       totalRequirements: reqs.length,
       avgRqs: Math.round(avgRqs),
@@ -35,6 +40,7 @@ export class ProjectMetricsService {
       openBugs: bugs.filter(
         (b) => b.status !== 'RESOLVED' && b.status !== 'CLOSED',
       ).length,
+      testPassRate,
     };
   }
 }

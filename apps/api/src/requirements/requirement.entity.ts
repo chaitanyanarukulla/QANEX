@@ -45,6 +45,9 @@ export class Requirement {
   tenantId!: string; // In real app, this would be a ManyToOne relation
 
   @Column({ nullable: true })
+  sourceDocumentId?: string;
+
+  @Column({ nullable: true })
   sprintId?: string;
 
   @CreateDateColumn()

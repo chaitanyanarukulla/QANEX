@@ -13,4 +13,8 @@ export class CreateRequirementDto {
   @IsEnum(RequirementState)
   @IsOptional()
   state?: RequirementState;
+
+  @IsString()
+  @IsOptional()
+  sourceDocumentId?: string;
 }

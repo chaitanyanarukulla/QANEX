@@ -6,12 +6,14 @@ import { ProjectMetricsService } from './project-metrics.service';
 import { MetricsController } from './metrics.controller';
 import { RequirementsModule } from '../requirements/requirements.module';
 import { BugsModule } from '../bugs/bugs.module';
+import { TestKeysModule } from '../test-keys/test-keys.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([AiLog]),
     forwardRef(() => RequirementsModule),
     forwardRef(() => BugsModule),
+    forwardRef(() => TestKeysModule),
   ],
   providers: [AiMetricsService, ProjectMetricsService],
   controllers: [MetricsController],

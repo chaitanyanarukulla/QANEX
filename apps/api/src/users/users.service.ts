@@ -60,8 +60,37 @@ export class UsersService {
     });
   }
 
-  async findAll(tenantId: string): Promise<User[]> {
-    return this.usersRepository.find({ where: { tenantId } });
+  async findAll(tenantId: string): Promise<any[]> {
+    const memberships = await this.userTenantRepository.find({
+      where: { tenantId },
+      relations: ['user'],
+    });
+
+    return memberships.map((m) => ({
+      id: m.userId,
+      email: m.user.email,
+      firstName: m.user.firstName,
+      lastName: m.user.lastName,
+      role: m.role,
+      joinedAt: m.createdAt,
+    }));
+  }
+
+  async updateRole(
+    userId: string,
+    tenantId: string,
+    role: OrgRole,
+  ): Promise<UserTenant> {
+    const membership = await this.userTenantRepository.findOne({
+      where: { userId, tenantId },
+    });
+
+    if (!membership) {
+      throw new NotFoundException('User is not a member of this tenant');
+    }
+
+    membership.role = role;
+    return this.userTenantRepository.save(membership);
   }
 
   async findOne(id: string): Promise<User> {
@@ -70,5 +99,23 @@ export class UsersService {
       throw new NotFoundException(`User ${id} not found`);
     }
     return user;
+  }
+
+  async removeMember(userId: string, tenantId: string): Promise<void> {
+    const membership = await this.userTenantRepository.findOne({
+      where: { userId, tenantId },
+    });
+
+    if (!membership) {
+      throw new NotFoundException('User is not a member of this tenant');
+    }
+
+    await this.userTenantRepository.remove(membership);
+  }
+
+  async update(id: string, updateData: Partial<User>): Promise<User> {
+    const user = await this.findOne(id);
+    Object.assign(user, updateData);
+    return this.usersRepository.save(user);
   }
 }

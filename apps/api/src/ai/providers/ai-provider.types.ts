@@ -454,6 +454,7 @@ export interface AiProvider {
   chat(
     messages: ChatMessage[],
     options?: ChatCompletionOptions,
+    apiKey?: string,
   ): Promise<ChatCompletionResult>;
 
   // Simple prompt completion (convenience method)

@@ -73,8 +73,58 @@ export class RagService {
 
   async indexItem(item: RagItem): Promise<void> {
     // Redact content before indexing
-    item.content = this.piiService.redact(item.content);
-    return this.backend.indexItem(item);
+    const redactedContent = this.piiService.redact(item.content);
+
+    // Chunking Logic
+    const chunks = this.chunkText(redactedContent, 1000, 200); // 1000 chars, 200 overlap
+
+    // If small enough, index as is
+    if (chunks.length <= 1) {
+      item.content = redactedContent;
+      return this.backend.indexItem(item);
+    }
+
+    // Index individual chunks
+    for (let i = 0; i < chunks.length; i++) {
+      const chunkItem: RagItem = {
+        ...item,
+        id: `${item.id}-chunk-${i}`,
+        content: chunks[i],
+        metadata: {
+          ...item.metadata,
+          isChunk: true,
+          chunkIndex: i,
+          totalChunks: chunks.length,
+          originalId: item.id,
+        },
+      };
+      await this.backend.indexItem(chunkItem);
+    }
+  }
+
+  private chunkText(
+    text: string,
+    chunkSize: number,
+    overlap: number,
+  ): string[] {
+    if (!text) return [];
+    if (text.length <= chunkSize) return [text];
+
+    const chunks: string[] = [];
+    let start = 0;
+    while (start < text.length) {
+      let end = start + chunkSize;
+      // Try to break at a newline or space if possible
+      if (end < text.length) {
+        const lastSpace = text.lastIndexOf(' ', end);
+        if (lastSpace > start) {
+          end = lastSpace;
+        }
+      }
+      chunks.push(text.slice(start, end));
+      start = end - overlap;
+    }
+    return chunks;
   }
 
   async indexRequirement(
@@ -121,13 +171,19 @@ export class RagService {
     tenantId: string,
     type?: string,
   ): Promise<string> {
-    const items = await this.search(query, tenantId);
+    const items = await this.search(query, tenantId, 5); // Get top 5 chunks
     const filtered = type ? items.filter((i) => i.type === type) : items;
+
+    if (filtered.length === 0) return '';
+
     return filtered
-      .map(
-        (i) =>
-          `[${i.type}] ${i.metadata.title}: ${i.content.substring(0, 200)}...`,
-      )
+      .map((i) => {
+        const title = i.metadata?.title || 'Unknown';
+        const chunkInfo = i.metadata?.isChunk
+          ? ` (Chunk ${i.metadata.chunkIndex + 1}/${i.metadata.totalChunks})`
+          : '';
+        return `[${i.type}] ${title}${chunkInfo}:\n${i.content.trim()}`;
+      })
       .join('\n\n');
   }
 

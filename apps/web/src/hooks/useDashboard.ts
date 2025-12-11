@@ -46,6 +46,7 @@ export function useDashboard() {
             totalBugs: number;
             openBugs: number;
             bugDensity: string | number;
+            testPassRate?: number;
           };
           ai: {
             totalInteractions: number;
@@ -72,7 +73,7 @@ export function useDashboard() {
       setState({
         stats: {
           ...projectStats,
-          testPassRate: 85, // Will need a test runs endpoint
+          testPassRate: projectStats.testPassRate || 0, // Real data
           latestRcs,
           recentReleases: sortedReleases.slice(0, 3),
         },

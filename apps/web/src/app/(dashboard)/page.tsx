@@ -1,8 +1,6 @@
 'use client';
 
 import { ArrowUpRight, CheckCircle2, AlertCircle, Clock, FileText, Bug, Loader2 } from 'lucide-react';
-import { GettingStartedPanel } from '@/components/onboarding/GettingStartedPanel';
-import { WelcomeModal } from '@/components/onboarding/WelcomeModal';
 import { useDashboard } from '@/hooks/useDashboard';
 import Link from 'next/link';
 
@@ -47,8 +45,6 @@ export default function Home() {
         <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
       </div>
 
-      <WelcomeModal />
-      <GettingStartedPanel />
 
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
@@ -68,9 +64,8 @@ export default function Home() {
               <Link
                 key={stat.name}
                 href={stat.href}
-                className={`overflow-hidden rounded-xl border bg-card p-6 shadow-sm transition-colors hover:bg-card/80 ${
-                  stat.highlight ? 'ring-2 ring-primary/20' : ''
-                }`}
+                className={`overflow-hidden rounded-xl border bg-card p-6 shadow-sm transition-colors hover:bg-card/80 ${stat.highlight ? 'ring-2 ring-primary/20' : ''
+                  }`}
               >
                 <div className="flex items-center gap-4">
                   <div className={`rounded-lg p-2 ${stat.highlight ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary'}`}>
@@ -104,11 +99,10 @@ export default function Home() {
                         <p className="text-sm text-muted-foreground">v{release.version}</p>
                       </div>
                       <div className="flex items-center gap-4">
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${
-                          release.status === 'RELEASED' ? 'bg-green-500/20 text-green-500' :
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${release.status === 'RELEASED' ? 'bg-green-500/20 text-green-500' :
                           release.status === 'ACTIVE' ? 'bg-blue-500/20 text-blue-500' :
-                          'bg-yellow-500/20 text-yellow-500'
-                        }`}>
+                            'bg-yellow-500/20 text-yellow-500'
+                          }`}>
                           {release.status}
                         </span>
                         {release.rcsScore !== undefined && (
