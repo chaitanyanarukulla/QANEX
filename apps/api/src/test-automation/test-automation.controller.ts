@@ -11,6 +11,7 @@ import {
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TestAutomationService } from './test-automation.service';
 import { AutomationCandidateService } from './automation-candidate.service';
+import type { AuthenticatedRequest } from '../auth/interfaces/authenticated-request.interface';
 
 @Controller('automation')
 @UseGuards(JwtAuthGuard)
@@ -21,14 +22,17 @@ export class TestAutomationController {
   ) {}
 
   @Get('candidates')
-  async getCandidates(@Request() req: any) {
+  async getCandidates(@Request() req: AuthenticatedRequest) {
     // Mock projectId for now, in real app get from query or header
     const projectId = 'default-project';
     return this.candidateService.getCandidates(req.user.tenantId, projectId);
   }
 
   @Get('candidates/ai-suggestions')
-  async getAISuggestions(@Request() req: any, @Query('limit') limit?: string) {
+  async getAISuggestions(
+    @Request() req: AuthenticatedRequest,
+    @Query('limit') limit?: string,
+  ) {
     const projectId = 'default-project';
     const limitNum = limit ? parseInt(limit, 10) : 10;
     return this.candidateService.getAutomationCandidatesWithAI(
@@ -39,7 +43,7 @@ export class TestAutomationController {
   }
 
   @Get('coverage')
-  async getCoverage(@Request() req: any) {
+  async getCoverage(@Request() req: AuthenticatedRequest) {
     const projectId = 'default-project';
     return this.candidateService.getAutomationCoverage(
       req.user.tenantId,
@@ -49,7 +53,7 @@ export class TestAutomationController {
 
   @Post('candidates')
   async createCandidate(
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
     @Body() body: { testCaseId: string; notes?: string },
   ) {
     const projectId = 'default-project';
@@ -62,7 +66,10 @@ export class TestAutomationController {
   }
 
   @Post('candidates/:id/generate-pr')
-  async generatePr(@Request() req: any, @Param('id') id: string) {
+  async generatePr(
+    @Request() req: AuthenticatedRequest,
+    @Param('id') id: string,
+  ) {
     const projectId = 'default-project';
     return this.automationService.generatePr(req.user.tenantId, projectId, id);
   }

@@ -4,7 +4,7 @@ import {
   Get,
   Body,
   UseGuards,
-  Req,
+  Param,
   BadRequestException,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -134,10 +134,12 @@ export class AiSettingsController {
         apiKey,
         endpoint,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : 'Connection test failed';
       return {
         success: false,
-        message: error.message || 'Connection test failed',
+        message,
       };
     }
   }
@@ -147,8 +149,8 @@ export class AiSettingsController {
    */
   @Get('models/:provider')
   @Roles('ORG_ADMIN', 'ADMIN')
-  getModelsForProvider(@Req() req: any): any[] {
-    const provider = req.params.provider as ProviderType;
+  getModelsForProvider(@Param('provider') providerStr: string): any[] {
+    const provider = providerStr as ProviderType;
 
     switch (provider) {
       case 'openai':
@@ -184,10 +186,10 @@ export class AiSettingsController {
         ...status,
         hardwareInfo: hardware,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         running: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
@@ -209,11 +211,11 @@ export class AiSettingsController {
         loaded: loadedModels,
         available: availableModels,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         loaded: [],
         available: FOUNDRY_LOCAL_MODELS,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
@@ -224,8 +226,8 @@ export class AiSettingsController {
    */
   @Get('embedding-options/:provider')
   @Roles('ORG_ADMIN', 'ADMIN')
-  getEmbeddingOptions(@Req() req: any) {
-    const provider = req.params.provider as ProviderType;
+  getEmbeddingOptions(@Param('provider') providerStr: string) {
+    const provider = providerStr as ProviderType;
 
     if (provider === 'anthropic') {
       return {

@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { tenantsApi, TenantSettings } from '@/lib/api';
-import { ShieldCheck, Cloud, AlertCircle, RefreshCw } from 'lucide-react';
+import { tenantsApi } from '@/lib/api';
+import { ShieldCheck, Cloud } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 export function AiStatusIndicator() {
@@ -10,22 +10,22 @@ export function AiStatusIndicator() {
     const [provider, setProvider] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    const fetchSettings = async () => {
-        if (!user?.defaultTenantId) return;
-        try {
-            // We might need a lightweight "get public settings" endpoint if we want this to be super fast/cached
-            // But for now, using the existing get is fine.
-            const tenant = await tenantsApi.get(user.defaultTenantId);
-            setProvider(tenant.settings?.aiConfig?.provider || 'foundry');
-        } catch (err) {
-            console.error('Failed to fetch AI settings for indicator', err);
-            // Fallback or keep null
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
     useEffect(() => {
+        const fetchSettings = async () => {
+            if (!user?.defaultTenantId) return;
+            try {
+                // We might need a lightweight "get public settings" endpoint if we want this to be super fast/cached
+                // But for now, using the existing get is fine.
+                const tenant = await tenantsApi.get(user.defaultTenantId);
+                setProvider(tenant.settings?.aiConfig?.provider || 'foundry');
+            } catch (err) {
+                console.error('Failed to fetch AI settings for indicator', err);
+                // Fallback or keep null
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
         fetchSettings();
     }, [user?.defaultTenantId]);
 

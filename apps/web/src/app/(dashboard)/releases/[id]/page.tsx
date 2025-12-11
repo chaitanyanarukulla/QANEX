@@ -1,7 +1,7 @@
 'use client';
 
-import { useParams, useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
+import { useState, useEffect, useCallback } from 'react';
 import { RcsGauge } from '@/components/releases/RcsGauge';
 import { PillarCard } from '@/components/releases/PillarCard';
 import { FileText, Beaker, Bug, Shield, Loader2, ArrowLeft, RefreshCw, AlertTriangle, CheckCircle2, Sparkles, Lock, Unlock, XCircle } from 'lucide-react';
@@ -18,7 +18,6 @@ const statusColors: Record<string, string> = {
 
 export default function ReleaseDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const id = params?.id as string;
 
   const [release, setRelease] = useState<Release | null>(null);
@@ -30,13 +29,7 @@ export default function ReleaseDetailPage() {
   const [showOverrideModal, setShowOverrideModal] = useState(false);
   const [overrideReason, setOverrideReason] = useState('');
 
-  useEffect(() => {
-    if (id) {
-      loadRelease();
-    }
-  }, [id]);
-
-  const loadRelease = async () => {
+  const loadRelease = useCallback(async () => {
     try {
       setIsLoading(true);
       const data = await releasesApi.get(id);
@@ -48,7 +41,13 @@ export default function ReleaseDetailPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    if (id) {
+      loadRelease();
+    }
+  }, [id, loadRelease]);
 
   const handleCalculateRcs = async () => {
     setIsCalculating(true);
@@ -185,8 +184,8 @@ export default function ReleaseDetailPage() {
             {rcsScore >= 80
               ? 'This release has a high probability of success based on current metrics.'
               : rcsScore >= 50
-              ? 'This release needs attention before it can be approved.'
-              : 'This release has significant issues that must be addressed.'}
+                ? 'This release needs attention before it can be approved.'
+                : 'This release has significant issues that must be addressed.'}
           </p>
           <div className="mt-4 text-xs font-mono text-muted-foreground">
             Threshold: 80
@@ -328,18 +327,17 @@ export default function ReleaseDetailPage() {
         {!gatesEvaluation && (
           <div className="text-center py-12 text-muted-foreground">
             <Lock className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Click "Evaluate Gates" to check if this release is ready for deployment</p>
+            <p>Click &quot;Evaluate Gates&quot; to check if this release is ready for deployment</p>
           </div>
         )}
 
         {gatesEvaluation && (
           <div className="space-y-6">
             {/* Release Status Banner */}
-            <div className={`rounded-lg p-4 flex items-center justify-between ${
-              gatesEvaluation.canRelease
-                ? 'bg-green-50 border border-green-200 dark:bg-green-900/20 dark:border-green-900'
-                : 'bg-red-50 border border-red-200 dark:bg-red-900/20 dark:border-red-900'
-            }`}>
+            <div className={`rounded-lg p-4 flex items-center justify-between ${gatesEvaluation.canRelease
+              ? 'bg-green-50 border border-green-200 dark:bg-green-900/20 dark:border-green-900'
+              : 'bg-red-50 border border-red-200 dark:bg-red-900/20 dark:border-red-900'
+              }`}>
               <div className="flex items-center gap-3">
                 {gatesEvaluation.canRelease ? (
                   <Unlock className="h-8 w-8 text-green-600" />
@@ -347,9 +345,8 @@ export default function ReleaseDetailPage() {
                   <Lock className="h-8 w-8 text-red-600" />
                 )}
                 <div>
-                  <div className={`text-lg font-semibold ${
-                    gatesEvaluation.canRelease ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'
-                  }`}>
+                  <div className={`text-lg font-semibold ${gatesEvaluation.canRelease ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'
+                    }`}>
                     {gatesEvaluation.canRelease ? 'Ready to Release' : 'Blocked'}
                   </div>
                   <div className="text-sm text-muted-foreground">
@@ -386,11 +383,10 @@ export default function ReleaseDetailPage() {
               {gatesEvaluation.gates.map((gate, idx) => (
                 <div
                   key={idx}
-                  className={`rounded-lg border p-4 ${
-                    gate.passed
-                      ? 'bg-green-50/50 border-green-200 dark:bg-green-900/10 dark:border-green-900'
-                      : 'bg-red-50/50 border-red-200 dark:bg-red-900/10 dark:border-red-900'
-                  }`}
+                  className={`rounded-lg border p-4 ${gate.passed
+                    ? 'bg-green-50/50 border-green-200 dark:bg-green-900/10 dark:border-green-900'
+                    : 'bg-red-50/50 border-red-200 dark:bg-red-900/10 dark:border-red-900'
+                    }`}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3 flex-1">
@@ -411,11 +407,14 @@ export default function ReleaseDetailPage() {
                         <div className="text-sm text-muted-foreground mt-1">{gate.message}</div>
                         {gate.details && gate.details.length > 0 && (
                           <div className="mt-2 text-xs space-y-1">
-                            {gate.details.slice(0, 3).map((detail: any, i: number) => (
-                              <div key={i} className="text-muted-foreground">
-                                • {detail.title} ({detail.priority})
-                              </div>
-                            ))}
+                            {gate.details.slice(0, 3).map((item: unknown, i: number) => {
+                              const detail = item as { title: string; priority: string };
+                              return (
+                                <div key={i} className="text-muted-foreground">
+                                  • {detail.title} ({detail.priority})
+                                </div>
+                              );
+                            })}
                             {gate.details.length > 3 && (
                               <div className="text-muted-foreground">
                                 ... and {gate.details.length - 3} more

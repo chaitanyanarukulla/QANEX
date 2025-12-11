@@ -16,28 +16,28 @@ export default function SprintAnalyticsPage() {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        const loadAnalytics = async () => {
+            try {
+                setIsLoading(true);
+                setError(null);
+                const [burndownData, velocityData] = await Promise.all([
+                    sprintsApi.getBurndown(sprintId),
+                    sprintsApi.getVelocityTrend(),
+                ]);
+                setBurndown(burndownData);
+                setVelocityTrend(velocityData);
+            } catch (err) {
+                console.error('Failed to load analytics:', err);
+                setError('Failed to load analytics data');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
         if (sprintId) {
             loadAnalytics();
         }
     }, [sprintId]);
-
-    const loadAnalytics = async () => {
-        try {
-            setIsLoading(true);
-            setError(null);
-            const [burndownData, velocityData] = await Promise.all([
-                sprintsApi.getBurndown(sprintId),
-                sprintsApi.getVelocityTrend(),
-            ]);
-            setBurndown(burndownData);
-            setVelocityTrend(velocityData);
-        } catch (err) {
-            console.error('Failed to load analytics:', err);
-            setError('Failed to load analytics data');
-        } finally {
-            setIsLoading(false);
-        }
-    };
 
     if (isLoading) {
         return (

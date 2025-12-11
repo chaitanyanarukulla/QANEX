@@ -6,14 +6,29 @@ import { Activity, Zap, CheckCircle, Bug } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { api } from '@/lib/api';
 
+interface DashboardMetrics {
+    project: {
+        avgRqs: number;
+        bugDensity: number;
+    };
+    ai: {
+        totalCalls: number;
+        avgLatency: number;
+        breakdown: {
+            analyze: number;
+            triage: number;
+        };
+    };
+}
+
 export default function MetricsPage() {
-    const [data, setData] = useState<any>(null);
+    const [data, setData] = useState<DashboardMetrics | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchMetrics = async () => {
             try {
-                const jsonData = await api<any>('/metrics/dashboard');
+                const jsonData = await api<DashboardMetrics>('/metrics/dashboard');
                 setData(jsonData);
             } catch (e) {
                 console.error('Failed to fetch metrics', e);

@@ -100,7 +100,7 @@ export class OpenAIProvider extends BaseAiProvider {
             Authorization: `Bearer ${key}`,
             'Content-Type': 'application/json',
           },
-          timeout: 60000,
+          timeout: 120000,
         }),
       );
 

@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { FeatureFlagsService } from './feature-flags.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import type { AuthenticatedRequest } from '../auth/interfaces/authenticated-request.interface';
 
 @Controller('feature-flags')
 @UseGuards(JwtAuthGuard)
@@ -16,12 +17,12 @@ export class FeatureFlagsController {
   constructor(private readonly flagsService: FeatureFlagsService) {}
 
   @Get()
-  getAll(@Request() req: any) {
+  getAll(@Request() req: AuthenticatedRequest) {
     return this.flagsService.getAll(req.user.tenantId);
   }
 
   @Get(':key')
-  async check(@Request() req: any, @Param('key') key: string) {
+  async check(@Request() req: AuthenticatedRequest, @Param('key') key: string) {
     const enabled = await this.flagsService.isEnabled(req.user.tenantId, key);
     return { key, enabled };
   }
@@ -30,7 +31,7 @@ export class FeatureFlagsController {
   @Post()
   setFlag(
     @Body() body: { key: string; enabled: boolean },
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
   ) {
     return this.flagsService.setFlag(req.user.tenantId, body.key, body.enabled);
   }

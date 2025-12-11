@@ -17,4 +17,18 @@ export class CreateRequirementDto {
   @IsString()
   @IsOptional()
   sourceDocumentId?: string;
+
+  @IsString()
+  @IsOptional()
+  priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+
+  @IsString()
+  @IsOptional()
+  type?: 'FUNCTIONAL' | 'NON_FUNCTIONAL' | 'BUG' | 'FEATURE' | 'ENHANCEMENT';
+
+  @IsOptional()
+  acceptanceCriteria?: string[];
+
+  @IsOptional()
+  tasks?: any[];
 }

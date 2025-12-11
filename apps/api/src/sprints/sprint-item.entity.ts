@@ -8,6 +8,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Sprint } from './sprint.entity';
+import { Requirement } from '../requirements/requirement.entity';
 
 export enum SprintItemStatus {
   TODO = 'todo',
@@ -46,6 +47,13 @@ export class SprintItem {
 
   @Column({ nullable: true })
   requirementId?: string;
+
+  @ManyToOne(() => Requirement, (req) => req.sprintItems, { nullable: true })
+  @JoinColumn({ name: 'requirementId' })
+  requirement?: Requirement;
+
+  @Column({ nullable: true })
+  suggestedRole?: string;
 
   @Column()
   title!: string;

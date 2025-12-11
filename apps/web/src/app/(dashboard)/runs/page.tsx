@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Play, CheckCircle, XCircle, AlertCircle, Clock, Plus, Loader2, BarChart3 } from 'lucide-react';
-import { testRunsApi, testCasesApi, TestRun, TestCase } from '@/lib/api';
+import { useState, useEffect, useCallback } from 'react';
+import { Play, CheckCircle, Clock, Plus, Loader2, BarChart3 } from 'lucide-react';
+import { testRunsApi, TestRun } from '@/lib/api';
 import Link from 'next/link';
 
 export default function TestRunnerPage() {
@@ -12,11 +12,7 @@ export default function TestRunnerPage() {
     const [newRunName, setNewRunName] = useState('');
     const [showCreateModal, setShowCreateModal] = useState(false);
 
-    useEffect(() => {
-        loadRuns();
-    }, []);
-
-    const loadRuns = async () => {
+    const loadRuns = useCallback(async () => {
         try {
             setIsLoading(true);
             const data = await testRunsApi.list();
@@ -26,7 +22,11 @@ export default function TestRunnerPage() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        loadRuns();
+    }, [loadRuns]);
 
     const handleCreateRun = async () => {
         if (!newRunName.trim()) return;
@@ -85,10 +85,6 @@ export default function TestRunnerPage() {
         }
     };
 
-    const calculateProgress = (stats: TestRun['stats'], totalCases: number) => {
-        if (totalCases === 0) return 0;
-        return Math.round((stats.total / totalCases) * 100);
-    };
 
     return (
         <div className="space-y-6">

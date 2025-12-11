@@ -4,14 +4,14 @@ import { Injectable } from '@nestjs/common';
 export class GitIntegrationService {
   // Mock Git operations
 
-  async createBranch(repoOwner: string, repoName: string, branchName: string) {
+  createBranch(repoOwner: string, repoName: string, branchName: string) {
     console.log(
       `[MockGit] Created branch ${branchName} on ${repoOwner}/${repoName}`,
     );
-    return { success: true };
+    return Promise.resolve({ success: true });
   }
 
-  async commitFile(
+  commitFile(
     repoOwner: string,
     repoName: string,
     branchName: string,
@@ -22,10 +22,10 @@ export class GitIntegrationService {
     console.log(
       `[MockGit] Committed to ${filePath} on ${branchName} with message: "${message}"`,
     );
-    return { sha: 'mock-sha-123' };
+    return Promise.resolve({ sha: 'mock-sha-123' });
   }
 
-  async createPullRequest(
+  createPullRequest(
     repoOwner: string,
     repoName: string,
     branchName: string,
@@ -33,9 +33,9 @@ export class GitIntegrationService {
     _body: string,
   ) {
     console.log(`[MockGit] Created PR "${title}" for ${branchName}`);
-    return {
+    return Promise.resolve({
       prNumber: Math.floor(Math.random() * 1000),
       url: `https://github.com/${repoOwner}/${repoName}/pull/${Math.floor(Math.random() * 1000)}`,
-    };
+    });
   }
 }

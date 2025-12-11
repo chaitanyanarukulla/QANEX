@@ -1,15 +1,16 @@
 import { Controller, Get, Res, Request } from '@nestjs/common';
 import type { Response } from 'express';
 import { ExportService } from './export.service';
+import type { AuthenticatedRequest } from '../auth/interfaces/authenticated-request.interface';
 
 @Controller('export')
 export class ExportController {
   constructor(private readonly exportService: ExportService) {}
 
   @Get('json')
-  async exportJson(@Request() req: any, @Res() res: Response) {
+  async exportJson(@Request() req: AuthenticatedRequest, @Res() res: Response) {
     // Enforce tenant isolation via req.user.tenantId
-    const tenantId = req.user?.tenantId || req.tenantId;
+    const tenantId = req.user.tenantId;
     if (!tenantId) {
       return res.status(403).json({ error: 'Tenant context required' });
     }

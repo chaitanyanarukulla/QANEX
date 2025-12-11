@@ -50,8 +50,8 @@ export default function NewRequirementPage() {
                     <span className="text-sm font-medium">AI Insights Simulator</span>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                    Enter text above and click "Analyze with AI" to see the RQS Score.
-                    (Try entering "TODO" or very short text to see warnings).
+                    Enter text above and click &quot;Analyze with AI&quot; to see the RQS Score.
+                    (Try entering &quot;TODO&quot; or very short text to see warnings).
                 </p>
             </div>
         </div>

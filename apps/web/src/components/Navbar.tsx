@@ -69,7 +69,7 @@ export function Navbar() {
                 return `/tests`;
             case 'RELEASE':
                 return `/releases/${result.id}`;
-            // @ts-ignore
+            // @ts-expect-error - ANSWER type not yet in SearchResult union
             case 'ANSWER':
                 return '#';
             default:
@@ -102,7 +102,7 @@ export function Navbar() {
                     {showResults && (
                         <div className="absolute top-full mt-1 w-full rounded-md border bg-popover p-2 shadow-md z-50 max-h-[80vh] overflow-y-auto">
                             {results.map(res => {
-                                // @ts-ignore
+                                // @ts-expect-error - ANSWER type not yet in SearchResult union
                                 if (res.type === 'ANSWER') {
                                     return (
                                         <div key={res.id} className="p-3 mb-2 bg-primary/5 rounded-md border border-primary/20">

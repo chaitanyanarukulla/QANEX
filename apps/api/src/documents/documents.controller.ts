@@ -18,6 +18,7 @@ import { FileUploadService } from './file-upload.service';
 import { ConfluenceService } from './confluence.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { DocumentSource, DocumentStatus } from './entities/document.entity';
+import type { AuthenticatedRequest } from '../auth/interfaces/authenticated-request.interface';
 
 @Controller('documents')
 @UseGuards(JwtAuthGuard)
@@ -37,7 +38,7 @@ export class DocumentsController {
       source?: DocumentSource;
       sourceUrl?: string;
     },
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
   ) {
     return this.documentsService.create(
       dto,
@@ -47,12 +48,12 @@ export class DocumentsController {
   }
 
   @Get()
-  findAll(@Request() req: any) {
+  findAll(@Request() req: AuthenticatedRequest) {
     return this.documentsService.findAll(req.user.tenantId);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string, @Request() req: any) {
+  findOne(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
     return this.documentsService.findOne(id, req.user.tenantId);
   }
 
@@ -60,23 +61,23 @@ export class DocumentsController {
   update(
     @Param('id') id: string,
     @Body() dto: { title?: string; content?: string; status?: DocumentStatus },
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
   ) {
     return this.documentsService.update(id, dto, req.user.tenantId);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string, @Request() req: any) {
+  remove(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
     return this.documentsService.remove(id, req.user.tenantId);
   }
 
   @Post(':id/snapshot')
-  createVersion(@Param('id') id: string, @Request() req: any) {
+  createVersion(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
     return this.documentsService.createVersion(id, req.user.tenantId);
   }
 
   @Post(':id/analyze')
-  analyze(@Param('id') id: string, @Request() req: any) {
+  analyze(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
     return this.documentsService.analyze(id, req.user.tenantId);
   }
 
@@ -84,7 +85,7 @@ export class DocumentsController {
   @UseInterceptors(FileInterceptor('file'))
   async uploadFile(
     @UploadedFile() file: Express.Multer.File,
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
   ) {
     if (!file) {
       throw new BadRequestException('File is required');
@@ -113,7 +114,7 @@ export class DocumentsController {
       apiToken: string;
       pageId: string;
     },
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
   ) {
     const { title, content } = await this.confluenceService.getPage(
       dto.siteUrl,

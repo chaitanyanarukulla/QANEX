@@ -70,9 +70,13 @@ export interface Requirement {
   title: string;
   description: string;
   state: 'DRAFT' | 'PUBLISHED' | 'NEEDS_REVISION' | 'READY';
+  priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  type?: 'FUNCTIONAL' | 'NON_FUNCTIONAL' | 'BUG' | 'FEATURE' | 'ENHANCEMENT';
+  acceptanceCriteria?: string[];
   rqsScore?: number;
   rqsBreakdown?: Record<string, number>;
   sprintId?: string;
+  sprintItems?: SprintItem[];
   createdAt: string;
   updatedAt: string;
 }

@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback } from 'react';
+import { useParams } from 'next/navigation';
 import {
     ArrowLeft, CheckCircle, XCircle, AlertTriangle, SkipForward,
-    Play, Loader2, FileText
+    Loader2, FileText
 } from 'lucide-react';
 import { testRunsApi, testCasesApi, TestRun, TestCase, TestResult } from '@/lib/api';
 import Link from 'next/link';
@@ -17,22 +17,14 @@ interface TestCaseWithResult extends TestCase {
 
 export default function TestRunDetailPage() {
     const params = useParams();
-    const router = useRouter();
     const id = params?.id as string;
 
     const [run, setRun] = useState<TestRun | null>(null);
     const [testCases, setTestCases] = useState<TestCaseWithResult[]>([]);
-    const [results, setResults] = useState<TestResult[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [recordingId, setRecordingId] = useState<string | null>(null);
 
-    useEffect(() => {
-        if (id) {
-            loadData();
-        }
-    }, [id]);
-
-    const loadData = async () => {
+    const loadData = useCallback(async () => {
         try {
             setIsLoading(true);
             const [runData, casesData, resultsData] = await Promise.all([
@@ -42,7 +34,6 @@ export default function TestRunDetailPage() {
             ]);
 
             setRun(runData);
-            setResults(resultsData);
 
             // Merge test cases with their results
             const casesWithResults = casesData.map((tc) => ({
@@ -55,7 +46,13 @@ export default function TestRunDetailPage() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [id]);
+
+    useEffect(() => {
+        if (id) {
+            loadData();
+        }
+    }, [id, loadData]);
 
     const handleRecordResult = async (caseId: string, status: ResultStatus) => {
         try {

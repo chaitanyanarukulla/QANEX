@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Play, GitPullRequest, Search, Loader2, CheckCircle, Clock, AlertCircle, Sparkles, TrendingUp, Target } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { automationApi, AutomationCandidate, AutomationCoverage } from '@/lib/api';
@@ -15,11 +15,7 @@ export default function AutomationPage() {
     const [activeTab, setActiveTab] = useState<'candidates' | 'suggestions'>('suggestions');
     const { showToast } = useToast();
 
-    useEffect(() => {
-        loadData();
-    }, []);
-
-    const loadData = async () => {
+    const loadData = useCallback(async () => {
         try {
             setIsLoading(true);
             const [candidatesData, suggestionsData, coverageData] = await Promise.all([
@@ -36,7 +32,11 @@ export default function AutomationPage() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [showToast]);
+
+    useEffect(() => {
+        loadData();
+    }, [loadData]);
 
     const handleGeneratePr = async (candidate: AutomationCandidate) => {
         setGeneratingId(candidate.id);
@@ -153,11 +153,10 @@ export default function AutomationPage() {
             <div className="flex gap-2 border-b">
                 <button
                     onClick={() => setActiveTab('suggestions')}
-                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                        activeTab === 'suggestions'
-                            ? 'border-primary text-primary'
-                            : 'border-transparent text-muted-foreground hover:text-foreground'
-                    }`}
+                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'suggestions'
+                        ? 'border-primary text-primary'
+                        : 'border-transparent text-muted-foreground hover:text-foreground'
+                        }`}
                 >
                     <div className="flex items-center gap-2">
                         <Sparkles className="h-4 w-4" />
@@ -166,11 +165,10 @@ export default function AutomationPage() {
                 </button>
                 <button
                     onClick={() => setActiveTab('candidates')}
-                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                        activeTab === 'candidates'
-                            ? 'border-primary text-primary'
-                            : 'border-transparent text-muted-foreground hover:text-foreground'
-                    }`}
+                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'candidates'
+                        ? 'border-primary text-primary'
+                        : 'border-transparent text-muted-foreground hover:text-foreground'
+                        }`}
                 >
                     <div className="flex items-center gap-2">
                         <GitPullRequest className="h-4 w-4" />

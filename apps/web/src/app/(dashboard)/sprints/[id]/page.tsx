@@ -1,13 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback } from 'react';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import {
-    ArrowLeft, Calendar, Users, CheckCircle, AlertCircle,
-    GripVertical, ChevronRight, MoreHorizontal, Plus, X, ChevronDown, Loader2, BarChart3
+    ArrowLeft, Calendar, Users, GripVertical, MoreHorizontal, Plus, ChevronDown, Loader2, BarChart3
 } from 'lucide-react';
-import { sprintsApi } from '@/lib/api';
+import { sprintsApi, Sprint, SprintMetrics, SprintItem } from '@/lib/api';
 
 // SDLC Swimlane definitions
 const SWIMLANES = [
@@ -19,20 +18,10 @@ const SWIMLANES = [
     { id: 'done', name: 'Done', color: 'bg-green-50 dark:bg-green-900/20', borderColor: 'border-green-300 dark:border-green-800' },
 ];
 
-interface SprintItem {
-    id: string;
-    title: string;
-    description?: string;
-    rqsScore?: number;
-    status: string;
-    priority: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
-    assigneeName?: string;
-    type: 'feature' | 'bug' | 'task';
-}
+// Local SprintItem interface removed in favor of API type
 
 export default function SprintBoardPage() {
     const params = useParams();
-    const router = useRouter();
     const sprintId = params?.id as string;
 
     const [items, setItems] = useState<SprintItem[]>([]);
@@ -42,16 +31,10 @@ export default function SprintBoardPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [sprintInfo, setSprintInfo] = useState<any>(null);
-    const [metrics, setMetrics] = useState<any>(null);
+    const [sprintInfo, setSprintInfo] = useState<Sprint | null>(null);
+    const [metrics, setMetrics] = useState<SprintMetrics | null>(null);
 
-    useEffect(() => {
-        if (sprintId) {
-            loadSprintData();
-        }
-    }, [sprintId]);
-
-    const loadSprintData = async () => {
+    const loadSprintData = useCallback(async () => {
         try {
             setIsLoading(true);
             setError(null);
@@ -71,12 +54,17 @@ export default function SprintBoardPage() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [sprintId]);
 
     const getItemsByStatus = (status: string) => {
         return items.filter(item => item.status === status);
     };
 
+    useEffect(() => {
+        if (sprintId) {
+            loadSprintData();
+        }
+    }, [sprintId, loadSprintData]);
     const handleDragStart = (e: React.DragEvent, item: SprintItem, source: 'sprint' | 'backlog') => {
         setDraggedItem({ ...item, type: item.type });
         e.dataTransfer.effectAllowed = 'move';
@@ -100,15 +88,15 @@ export default function SprintBoardPage() {
 
             if (source === 'backlog') {
                 // Moving from backlog to sprint
-                await sprintsApi.moveItem(draggedItem.id, sprintId, newStatus as any);
+                await sprintsApi.moveItem(draggedItem.id, sprintId, newStatus as SprintItem['status']);
             } else {
                 // Moving within sprint or to backlog
                 if (newStatus === 'backlog') {
                     // Moving from sprint to backlog
-                    await sprintsApi.moveItem(draggedItem.id, null as any, 'backlog');
+                    await sprintsApi.moveItem(draggedItem.id, undefined, 'backlog');
                 } else {
                     // Moving between swimlanes within sprint
-                    await sprintsApi.moveItem(draggedItem.id, sprintId, newStatus as any);
+                    await sprintsApi.moveItem(draggedItem.id, sprintId, newStatus as SprintItem['status']);
                 }
             }
 
@@ -127,19 +115,7 @@ export default function SprintBoardPage() {
         setDraggedItem(null);
     };
 
-    const handleRemoveFromSprint = async (itemId: string) => {
-        try {
-            setIsSaving(true);
-            setError(null);
-            await sprintsApi.moveItem(itemId, null as any, 'backlog');
-            await loadSprintData();
-        } catch (err) {
-            console.error('Failed to remove item:', err);
-            setError('Failed to remove item from sprint');
-        } finally {
-            setIsSaving(false);
-        }
-    };
+    // handleRemoveFromSprint removed as unused
 
     const handleAddToSprint = async (itemId: string) => {
         try {

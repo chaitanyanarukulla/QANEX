@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { ChevronDown, Book, Zap, BarChart3, FileText, Calendar, Beaker, Rocket, Bug, Settings } from 'lucide-react';
+import Link from 'next/link';
 
 interface DocSection {
     id: string;
@@ -287,9 +288,8 @@ export default function DocsPage() {
                                     <h2 className="text-lg font-semibold">{section.title}</h2>
                                 </div>
                                 <ChevronDown
-                                    className={`h-5 w-5 text-muted-foreground transition-transform ${
-                                        isExpanded ? 'rotate-180' : ''
-                                    }`}
+                                    className={`h-5 w-5 text-muted-foreground transition-transform ${isExpanded ? 'rotate-180' : ''
+                                        }`}
                                 />
                             </button>
 
@@ -338,34 +338,34 @@ export default function DocsPage() {
 
             {/* Quick Links */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <a
+                <Link
                     href="/requirements"
-                    className="p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors text-center"
+                    className="p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors text-center block"
                 >
                     <FileText className="h-5 w-5 text-primary mx-auto mb-2" />
                     <p className="text-sm font-semibold">Requirements</p>
-                </a>
-                <a
+                </Link>
+                <Link
                     href="/planning"
-                    className="p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors text-center"
+                    className="p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors text-center block"
                 >
                     <Calendar className="h-5 w-5 text-primary mx-auto mb-2" />
                     <p className="text-sm font-semibold">Sprint Planning</p>
-                </a>
-                <a
+                </Link>
+                <Link
                     href="/sprints/current"
-                    className="p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors text-center"
+                    className="p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors text-center block"
                 >
                     <Beaker className="h-5 w-5 text-primary mx-auto mb-2" />
                     <p className="text-sm font-semibold">Sprint Board</p>
-                </a>
-                <a
+                </Link>
+                <Link
                     href="/metrics"
-                    className="p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors text-center"
+                    className="p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors text-center block"
                 >
                     <BarChart3 className="h-5 w-5 text-primary mx-auto mb-2" />
                     <p className="text-sm font-semibold">Metrics</p>
-                </a>
+                </Link>
             </div>
         </div>
     );

@@ -15,6 +15,7 @@ import { OrgRole } from './user-tenant.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/auth.decorators';
+import type { AuthenticatedRequest } from '../auth/interfaces/authenticated-request.interface';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -22,7 +23,7 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
-  findAll(@Request() req: any): Promise<any[]> {
+  findAll(@Request() req: AuthenticatedRequest): Promise<any[]> {
     const tenantId = req.user.tenantId || 'mock-tenant-id';
     return this.usersService.findAll(tenantId);
   }
@@ -32,7 +33,7 @@ export class UsersController {
   create(
     @Body()
     dto: { email: string; firstName: string; lastName: string; role?: OrgRole },
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
   ): Promise<User> {
     const tenantId = req.user.tenantId || 'mock-tenant-id';
     return this.usersService.create(
@@ -49,7 +50,7 @@ export class UsersController {
   updateRole(
     @Param('id') userId: string,
     @Body('role') role: OrgRole,
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
   ) {
     const tenantId = req.user.tenantId || 'mock-tenant-id';
     return this.usersService.updateRole(userId, tenantId, role);
@@ -57,7 +58,10 @@ export class UsersController {
 
   @Delete(':id')
   @Roles('ORG_ADMIN')
-  removeMember(@Param('id') userId: string, @Request() req: any) {
+  removeMember(
+    @Param('id') userId: string,
+    @Request() req: AuthenticatedRequest,
+  ) {
     const tenantId = req.user.tenantId || 'mock-tenant-id';
     return this.usersService.removeMember(userId, tenantId);
   }

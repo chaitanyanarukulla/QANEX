@@ -569,7 +569,7 @@ export class SprintsService {
     return createdItems;
   }
 
-  async generateTaskBreakdown(
+  generateTaskBreakdown(
     requirementId: string,
     requirementTitle: string,
     requirementDescription: string,
@@ -607,9 +607,9 @@ export class SprintsService {
 
     const totalEstimate = tasks.reduce((sum, t) => sum + t.estimatedHours, 0);
 
-    return {
+    return Promise.resolve({
       suggestedTasks: tasks,
       totalEstimate,
-    };
+    });
   }
 }

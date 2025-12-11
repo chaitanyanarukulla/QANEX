@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowUpRight, CheckCircle2, AlertCircle, Clock, FileText, Bug, Loader2 } from 'lucide-react';
+import { ArrowUpRight, CheckCircle2, Clock, FileText, Bug, Loader2 } from 'lucide-react';
 import { useDashboard } from '@/hooks/useDashboard';
 import Link from 'next/link';
 
@@ -54,7 +54,7 @@ export default function Home() {
         <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-6 text-center">
           <p className="text-red-500">{error}</p>
           <p className="text-sm text-muted-foreground mt-2">
-            Make sure the API is running and you're logged in.
+            Make sure the API is running and you&apos;re logged in.
           </p>
         </div>
       ) : (

@@ -7,6 +7,8 @@ import {
   OneToMany,
 } from 'typeorm';
 
+import { UserTenant } from '../users/user-tenant.entity';
+
 export enum TenantPlan {
   STARTER = 'STARTER',
   PRO = 'PRO',
@@ -77,6 +79,6 @@ export class Tenant {
   @UpdateDateColumn()
   updatedAt!: Date;
 
-  @OneToMany('UserTenant', 'tenant')
-  memberships!: any[]; // specific type import circular dependency avoidance if needed, or import UserTenant
+  @OneToMany(() => UserTenant, (userTenant) => userTenant.tenant)
+  memberships!: UserTenant[];
 }

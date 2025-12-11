@@ -16,11 +16,10 @@ import {
 // Provider icons/badges
 const ProviderBadge = ({ category }: { category: 'cloud' | 'local' }) => (
   <span
-    className={`px-2 py-0.5 text-xs rounded-full ${
-      category === 'cloud'
-        ? 'bg-blue-100 text-blue-800'
-        : 'bg-green-100 text-green-800'
-    }`}
+    className={`px-2 py-0.5 text-xs rounded-full ${category === 'cloud'
+      ? 'bg-blue-100 text-blue-800'
+      : 'bg-green-100 text-green-800'
+      }`}
   >
     {category === 'cloud' ? 'Cloud API' : 'On-Device'}
   </span>
@@ -38,26 +37,23 @@ const StepIndicator = ({
     {steps.map((step, index) => (
       <div key={step} className="flex items-center">
         <div
-          className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-            index <= currentStep
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-200 text-gray-600'
-          }`}
+          className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${index <= currentStep
+            ? 'bg-blue-600 text-white'
+            : 'bg-gray-200 text-gray-600'
+            }`}
         >
           {index + 1}
         </div>
         <span
-          className={`ml-2 text-sm ${
-            index <= currentStep ? 'text-blue-600 font-medium' : 'text-gray-500'
-          }`}
+          className={`ml-2 text-sm ${index <= currentStep ? 'text-blue-600 font-medium' : 'text-gray-500'
+            }`}
         >
           {step}
         </span>
         {index < steps.length - 1 && (
           <div
-            className={`w-12 h-0.5 mx-4 ${
-              index < currentStep ? 'bg-blue-600' : 'bg-gray-200'
-            }`}
+            className={`w-12 h-0.5 mx-4 ${index < currentStep ? 'bg-blue-600' : 'bg-gray-200'
+              }`}
           />
         )}
       </div>
@@ -138,7 +134,7 @@ export default function AISettingsPage() {
             setFoundryModel(config.foundryLocalConfig.model || 'phi-3.5-mini');
           }
         }
-      } catch (err) {
+      } catch (_err) {
         setError('Failed to load AI settings');
       } finally {
         setLoading(false);
@@ -150,7 +146,7 @@ export default function AISettingsPage() {
   // Load Foundry Local status when selected
   useEffect(() => {
     if (selectedProvider === 'foundry_local') {
-      aiSettingsApi.getFoundryLocalStatus().then(setFoundryStatus).catch(() => {});
+      aiSettingsApi.getFoundryLocalStatus().then(setFoundryStatus).catch(() => { });
     }
   }, [selectedProvider]);
 
@@ -164,51 +160,53 @@ export default function AISettingsPage() {
     // For cloud providers, set default chat and embedding models
     if (selectedProviderInfo.category === 'cloud') {
       const providerChatModels = selectedProviderInfo.models.filter(
-        (m: any) => m.category !== 'embedding'
+        (m: AIModelInfo) => m.category !== 'embedding'
       );
       const providerEmbeddingModels = selectedProviderInfo.models.filter(
-        (m: any) => m.category === 'embedding'
+        (m: AIModelInfo) => m.category === 'embedding'
       );
 
       // Set recommended or first chat model if not already set
       if (!selectedModel) {
-        const recommendedChat = providerChatModels.find((m: any) => m.recommended);
+        const recommendedChat = providerChatModels.find((m: AIModelInfo) => m.recommended);
         const defaultChat = recommendedChat || providerChatModels[0];
         if (defaultChat) {
-          // Cloud models use 'id', cast to any to access it safely
-          setSelectedModel((defaultChat as any).id || (defaultChat as any).alias);
+          // Cloud models use 'id'
+          setSelectedModel(defaultChat.id);
         }
       }
 
       // Set recommended or first embedding model if not already set
       if (!selectedEmbeddingModel && selectedProvider !== 'anthropic') {
-        const recommendedEmbed = providerEmbeddingModels.find((m: any) => m.recommended);
+        const recommendedEmbed = providerEmbeddingModels.find((m: AIModelInfo) => m.recommended);
         const defaultEmbed = recommendedEmbed || providerEmbeddingModels[0];
         if (defaultEmbed) {
-          setSelectedEmbeddingModel((defaultEmbed as any).id || (defaultEmbed as any).alias);
+          setSelectedEmbeddingModel(defaultEmbed.id);
         }
       }
     }
     // For Foundry Local, set default model
     else if (selectedProvider === 'foundry_local') {
       const foundryModels = selectedProviderInfo.models.filter(
-        (m: any) => m.task === 'chat-completions'
+        (m: AIModelInfo) => m.category === 'chat' || (m as unknown as { task: string }).task === 'chat-completions'
       );
       if (!foundryModel && foundryModels.length > 0) {
-        // Foundry models use 'alias'
-        setFoundryModel((foundryModels[0] as any).alias || (foundryModels[0] as any).id);
+        // Foundry models use 'alias' but mapped to id/name in recent changes, checking strict props
+        // If interface says id/name, we use id. But Foundry might use alias.
+        // Let's assume AIModelInfo normalized it, or cast if specific Foundry property
+        setFoundryModel(foundryModels[0].id);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProviderInfo, selectedProvider]);
 
   // Get models for selected provider
-  // Cloud providers use 'category', Foundry Local uses 'task'
+  // Cloud providers use 'category', Foundry Local uses 'task' (mapped to category 'chat')
   const chatModels = selectedProviderInfo?.models.filter(
-    (m: any) => m.category !== 'embedding' && m.task !== 'embeddings'
+    (m: AIModelInfo) => m.category !== 'embedding'
   ) || [];
   const embeddingModels = selectedProviderInfo?.models.filter(
-    (m: any) => m.category === 'embedding' || m.task === 'embeddings'
+    (m: AIModelInfo) => m.category === 'embedding'
   ) || [];
 
   // Test connection
@@ -224,10 +222,10 @@ export default function AISettingsPage() {
         endpoint: selectedProvider === 'foundry_local' ? foundryEndpoint : undefined,
       });
       setTestResult(result);
-    } catch (err: any) {
+    } catch (err) {
       setTestResult({
         success: false,
-        message: err.message || 'Connection test failed',
+        message: (err as Error).message || 'Connection test failed',
       });
     } finally {
       setTestLoading(false);
@@ -283,8 +281,8 @@ export default function AISettingsPage() {
       setCurrentConfig(aiConfig);
       setStep(0);
       alert('AI configuration saved successfully!');
-    } catch (err: any) {
-      setError(err.message || 'Failed to save configuration');
+    } catch (err) {
+      setError((err as Error).message || 'Failed to save configuration');
     } finally {
       setSaving(false);
     }
@@ -356,11 +354,10 @@ export default function AISettingsPage() {
               .map((provider) => (
                 <div
                   key={provider.type}
-                  className={`p-4 border rounded-lg cursor-pointer transition-all ${
-                    selectedProvider === provider.type
-                      ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
+                  className={`p-4 border rounded-lg cursor-pointer transition-all ${selectedProvider === provider.type
+                    ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200'
+                    : 'border-gray-200 hover:border-gray-300'
+                    }`}
                   onClick={() => {
                     if (selectedProvider !== provider.type) {
                       setSelectedProvider(provider.type);
@@ -393,11 +390,10 @@ export default function AISettingsPage() {
               .map((provider) => (
                 <div
                   key={provider.type}
-                  className={`p-4 border rounded-lg cursor-pointer transition-all col-span-2 ${
-                    selectedProvider === provider.type
-                      ? 'border-green-500 bg-green-50 ring-2 ring-green-200'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
+                  className={`p-4 border rounded-lg cursor-pointer transition-all col-span-2 ${selectedProvider === provider.type
+                    ? 'border-green-500 bg-green-50 ring-2 ring-green-200'
+                    : 'border-gray-200 hover:border-gray-300'
+                    }`}
                   onClick={() => {
                     if (selectedProvider !== provider.type) {
                       setSelectedProvider(provider.type);
@@ -475,8 +471,8 @@ export default function AISettingsPage() {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Select a model</option>
-                  {chatModels.map((model: any) => {
-                    const modelId = model.id || model.alias;
+                  {chatModels.map((model: AIModelInfo) => {
+                    const modelId = model.id;
                     return (
                       <option key={modelId} value={modelId}>
                         {model.name} {model.recommended ? '(Recommended)' : ''} - {model.description}
@@ -497,8 +493,8 @@ export default function AISettingsPage() {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Select an embedding model</option>
-                    {embeddingModels.map((model: any) => {
-                      const modelId = model.id || model.alias;
+                    {embeddingModels.map((model: AIModelInfo) => {
+                      const modelId = model.id;
                       return (
                         <option key={modelId} value={modelId}>
                           {model.name} {model.recommended ? '(Recommended)' : ''}
@@ -559,17 +555,15 @@ export default function AISettingsPage() {
               {/* Service status */}
               {foundryStatus && (
                 <div
-                  className={`p-4 rounded-lg ${
-                    foundryStatus.running
-                      ? 'bg-green-50 border border-green-200'
-                      : 'bg-red-50 border border-red-200'
-                  }`}
+                  className={`p-4 rounded-lg ${foundryStatus.running
+                    ? 'bg-green-50 border border-green-200'
+                    : 'bg-red-50 border border-red-200'
+                    }`}
                 >
                   <div className="flex items-center gap-2">
                     <div
-                      className={`w-3 h-3 rounded-full ${
-                        foundryStatus.running ? 'bg-green-500' : 'bg-red-500'
-                      }`}
+                      className={`w-3 h-3 rounded-full ${foundryStatus.running ? 'bg-green-500' : 'bg-red-500'
+                        }`}
                     />
                     <span className={foundryStatus.running ? 'text-green-800' : 'text-red-800'}>
                       {foundryStatus.running
@@ -615,9 +609,9 @@ export default function AISettingsPage() {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg"
                 >
                   {selectedProviderInfo?.models
-                    .filter((m: any) => m.task === 'chat-completions')
-                    .map((model: any) => (
-                      <option key={model.alias} value={model.alias}>
+                    .filter((m: AIModelInfo) => m.category === 'chat')
+                    .map((model: AIModelInfo) => (
+                      <option key={model.id} value={model.id}>
                         {model.name} - {model.description}
                       </option>
                     ))}
@@ -697,9 +691,8 @@ export default function AISettingsPage() {
 
             {testResult && (
               <div
-                className={`flex items-center gap-2 ${
-                  testResult.success ? 'text-green-600' : 'text-red-600'
-                }`}
+                className={`flex items-center gap-2 ${testResult.success ? 'text-green-600' : 'text-red-600'
+                  }`}
               >
                 {testResult.success ? '✓' : '✗'} {testResult.message}
                 {testResult.latencyMs && (

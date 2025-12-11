@@ -49,7 +49,7 @@ export class TenantsController {
   @Roles('ORG_ADMIN')
   async updateSettings(
     @Param('id') id: string,
-    @Body() settings: any,
+    @Body() settings: Partial<Tenant['settings']>,
   ): Promise<Tenant> {
     const tenant = await this.tenantsService.findOne(id);
     if (!tenant) throw new NotFoundException('Tenant not found');
@@ -60,7 +60,7 @@ export class TenantsController {
     };
 
     // Profile Enforcement: Ensure Local Provider uses Local Embeddings (Implicitly enforced in Adapter, but explicit in config is good)
-    if (updatedSettings.aiConfig?.provider === 'local') {
+    if (updatedSettings.aiConfig?.provider === 'foundry_local') {
       // We could force specific embedding config here if we had explicit embedding configuration fields
       // For now, we rely on the adapter logic I just wrote.
       // But let's log it or just ensure we don't have conflicting setup if we expand this later.

@@ -1,6 +1,7 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import * as mammoth from 'mammoth';
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const pdf = require('pdf-parse');
 
 @Injectable()
@@ -27,11 +28,10 @@ export class FileUploadService {
       } else {
         throw new BadRequestException('Unsupported file type');
       }
-    } catch (error: any) {
-      this.logger.error(
-        `Failed to extract text: ${error.message} `,
-        error.stack,
-      );
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : String(error);
+      const stack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(`Failed to extract text: ${msg} `, stack);
       throw new BadRequestException('Failed to process file');
     }
   }

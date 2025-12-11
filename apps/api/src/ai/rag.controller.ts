@@ -19,10 +19,7 @@ import { RequirementsService } from '../requirements/requirements.service';
 import { BugsService } from '../bugs/bugs.service';
 
 import { AgenticRagService } from './agentic-rag.service';
-
-interface UserPayload {
-  tenantId: string;
-}
+import type { AuthenticatedRequest } from '../auth/interfaces/authenticated-request.interface';
 
 @Controller('ai')
 @UseGuards(JwtAuthGuard, AiRateLimitGuard)
@@ -38,8 +35,8 @@ export class RagController {
   ) {}
 
   @Post('reindex')
-  async reindex(@Request() req: any) {
-    const tenantId = (req.user as UserPayload)?.tenantId;
+  async reindex(@Request() req: AuthenticatedRequest) {
+    const tenantId = req.user.tenantId;
     if (!tenantId) {
       throw new ForbiddenException('Tenant ID is required');
     }
@@ -83,9 +80,9 @@ export class RagController {
   @Post('search')
   async search(
     @Body() body: { query: string; mode?: 'simple' | 'agentic' },
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
   ) {
-    const tenantId = (req.user as UserPayload)?.tenantId;
+    const tenantId = req.user.tenantId;
     if (!tenantId) throw new ForbiddenException();
 
     if (body.mode === 'agentic') {
@@ -129,9 +126,12 @@ export class RagController {
   }
 
   @Post('index/test')
-  async testIndex(@Body() body: { content: string }, @Request() req: any) {
+  async testIndex(
+    @Body() body: { content: string },
+    @Request() req: AuthenticatedRequest,
+  ) {
     // Manual trigger for testing
-    const tenantId = (req.user as UserPayload)?.tenantId;
+    const tenantId = req.user.tenantId;
     if (!tenantId) {
       throw new ForbiddenException('Tenant ID is required');
     }
@@ -145,8 +145,8 @@ export class RagController {
     return { status: 'indexed' };
   }
   @Get('documents')
-  async listDocuments(@Request() req: any) {
-    const tenantId = (req.user as UserPayload)?.tenantId;
+  async listDocuments(@Request() req: AuthenticatedRequest) {
+    const tenantId = req.user.tenantId;
     if (!tenantId) {
       throw new ForbiddenException('Tenant ID is required');
     }
@@ -154,8 +154,11 @@ export class RagController {
   }
 
   @Delete('documents/:id')
-  async deleteDocument(@Param('id') id: string, @Request() req: any) {
-    const tenantId = (req.user as UserPayload)?.tenantId;
+  async deleteDocument(
+    @Param('id') id: string,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    const tenantId = req.user.tenantId;
     if (!tenantId) {
       throw new ForbiddenException('Tenant ID is required');
     }

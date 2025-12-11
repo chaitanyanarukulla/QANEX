@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { KnowledgeBaseSettings } from '@/components/settings/knowledge-base-settings';
 import { AiUsageChart } from '@/components/settings/AiUsageChart';
@@ -190,11 +190,7 @@ function UsersSettings() {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editForm, setEditForm] = useState({ firstName: '', lastName: '' });
 
-    useEffect(() => {
-        loadUsers();
-    }, []);
-
-    const loadUsers = async () => {
+    const loadUsers = useCallback(async () => {
         try {
             const data = await usersApi.list();
             setUsers(data);
@@ -204,7 +200,11 @@ function UsersSettings() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [showToast]);
+
+    useEffect(() => {
+        loadUsers();
+    }, [loadUsers]);
 
     const handleInvite = async (e: React.FormEvent) => {
         e.preventDefault();

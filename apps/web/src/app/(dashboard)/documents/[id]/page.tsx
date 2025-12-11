@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { documentsApi, Document } from '@/lib/api';
-import { Loader2, Save, ArrowLeft, Trash2, Check } from 'lucide-react';
+import { Loader2, Save, ArrowLeft, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { AiReviewPanel } from '@/components/documents/AiReviewPanel';
 import { useToast } from '@/components/ui/use-toast';
@@ -66,10 +66,10 @@ export default function DocumentDetailPage() {
         try {
             const review = await documentsApi.analyze(document.id);
             setDocument(prev => prev ? { ...prev, aiReview: review } : null);
-            showToast("Analysis Complete: AI review generated.", 'success');
-        } catch (error: any) {
+            showToast("Analysis Complete. Requirements and Tasks generated.", 'success');
+        } catch (error: unknown) {
             console.error('Failed to analyze document:', error);
-            showToast(error.message || "Failed to analyze document. Please try again.", 'error');
+            showToast((error as Error).message || "Failed to analyze document. Please try again.", 'error');
         } finally {
             setIsAnalyzing(false);
         }

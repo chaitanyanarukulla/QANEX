@@ -1,5 +1,5 @@
 import { DocumentAIReview } from '@/lib/api';
-import { AlertTriangle, CheckCircle, Info, Brain } from 'lucide-react';
+import { AlertTriangle, Info, Brain } from 'lucide-react';
 
 interface AiReviewPanelProps {
     review?: DocumentAIReview;

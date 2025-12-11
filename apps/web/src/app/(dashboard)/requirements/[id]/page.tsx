@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Loader2, Bot, Save, Trash2 } from 'lucide-react';
 import Link from 'next/link';
-import { requirementsApi, Requirement } from '@/lib/api';
+import { requirementsApi, sprintsApi, Requirement, Sprint } from '@/lib/api';
 
 export default function RequirementDetailPage() {
     const params = useParams();
@@ -19,13 +19,9 @@ export default function RequirementDetailPage() {
     const [description, setDescription] = useState('');
     const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        if (id) {
-            loadRequirement();
-        }
-    }, [id]);
+    const [sprints, setSprints] = useState<Sprint[]>([]);
 
-    const loadRequirement = async () => {
+    const loadRequirement = useCallback(async () => {
         try {
             setIsLoading(true);
             const data = await requirementsApi.get(id);
@@ -39,7 +35,35 @@ export default function RequirementDetailPage() {
         } finally {
             setIsLoading(false);
         }
+    }, [id]);
+
+    const loadSprints = useCallback(async () => {
+        try {
+            const data = await sprintsApi.list();
+            setSprints(data);
+        } catch (error) {
+            console.error('Failed to load sprints', error);
+        } finally {
+        }
+    }, []);
+
+    useEffect(() => {
+        if (id) {
+            loadRequirement();
+            loadSprints();
+        }
+    }, [id, loadRequirement, loadSprints]);
+
+    const handleTaskSprintChange = async (taskId: string, sprintId: string) => {
+        try {
+            await sprintsApi.moveItem(taskId, sprintId);
+            // Reload requirement to refresh tasks (or update locally)
+            loadRequirement();
+        } catch (error) {
+            console.error('Failed to assign task to sprint', error);
+        }
     };
+
 
     const handleSave = async () => {
         if (!requirement) return;
@@ -174,10 +198,27 @@ export default function RequirementDetailPage() {
                 </div>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-4">
                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${stateColors[requirement.state]}`}>
                     {requirement.state}
                 </span>
+
+                {requirement.priority && (
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${requirement.priority === 'CRITICAL' ? 'bg-red-500/20 text-red-600' :
+                        requirement.priority === 'HIGH' ? 'bg-orange-500/20 text-orange-600' :
+                            requirement.priority === 'MEDIUM' ? 'bg-blue-500/20 text-blue-600' :
+                                'bg-gray-500/20 text-gray-600'
+                        }`}>
+                        {requirement.priority}
+                    </span>
+                )}
+
+                {requirement.type && (
+                    <span className="px-3 py-1 rounded-full text-sm font-medium bg-purple-500/20 text-purple-600">
+                        {requirement.type}
+                    </span>
+                )}
+
                 {requirement.rqsScore !== undefined ? (
                     <div className="flex items-center gap-2">
                         <span className={`text-xl font-bold ${rqsColor(requirement.rqsScore)}`}>
@@ -189,31 +230,86 @@ export default function RequirementDetailPage() {
                 )}
             </div>
 
-            <div className="min-h-[500px] rounded-lg border bg-card p-4">
-                <textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    className="w-full h-full min-h-[500px] resize-none bg-transparent p-4 focus:outline-none"
-                    placeholder="Describe the requirement in detail..."
-                />
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="md:col-span-2 space-y-6">
+                    <div className="min-h-[200px] rounded-lg border bg-card p-4">
+                        <h3 className="text-sm font-semibold text-muted-foreground mb-2">Description</h3>
+                        <textarea
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            className="w-full h-full min-h-[200px] resize-none bg-transparent focus:outline-none"
+                            placeholder="Describe the requirement in detail..."
+                        />
+                    </div>
 
-            {requirement.rqsBreakdown && (
-                <div className="rounded-lg border border-purple-200 bg-purple-50/50 p-4 dark:border-purple-900/50 dark:bg-purple-900/10">
-                    <div className="flex items-center gap-2 text-purple-700 dark:text-purple-400 mb-3">
-                        <Bot className="h-4 w-4" />
-                        <span className="text-sm font-medium">RQS Breakdown</span>
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                        {Object.entries(requirement.rqsBreakdown).map(([key, value]) => (
-                            <div key={key}>
-                                <span className="text-muted-foreground">{key}</span>
-                                <p className="text-lg font-semibold">{value}</p>
-                            </div>
-                        ))}
-                    </div>
+                    {requirement.acceptanceCriteria && requirement.acceptanceCriteria.length > 0 && (
+                        <div className="rounded-lg border bg-card p-4">
+                            <h3 className="text-sm font-semibold text-muted-foreground mb-4">Acceptance Criteria</h3>
+                            <ul className="list-disc pl-5 space-y-2">
+                                {requirement.acceptanceCriteria.map((ac, idx) => (
+                                    <li key={idx} className="text-sm">{ac}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
                 </div>
-            )}
+
+                <div className="space-y-6">
+                    {/* Tasks Section */}
+                    <div className="rounded-lg border bg-card p-4">
+                        <h3 className="text-sm font-semibold text-muted-foreground mb-4">Implementation Tasks ({requirement.sprintItems?.length || 0})</h3>
+                        <div className="space-y-3">
+                            {requirement.sprintItems?.map((task) => (
+                                <div key={task.id} className="p-3 rounded-md border bg-background/50 hover:bg-accent transition-colors">
+                                    <div className="flex items-start justify-between mb-2">
+                                        <span className={`text-xs px-2 py-0.5 rounded-full ${task.type === 'bug' ? 'bg-red-500/10 text-red-500' : 'bg-blue-500/10 text-blue-500'
+                                            }`}>
+                                            {task.type}
+                                        </span>
+                                        <span className="text-xs text-muted-foreground">{task.estimatedHours}h</span>
+                                    </div>
+                                    <p className="font-medium text-sm mb-2">{task.title}</p>
+
+                                    <div className="flex flex-col gap-2 mt-2">
+                                        <select
+                                            className="text-xs bg-muted/50 border rounded px-2 py-1 w-full"
+                                            value={task.sprintId || ''}
+                                            onChange={(e) => handleTaskSprintChange(task.id, e.target.value)}
+                                        >
+                                            <option value="">Unassigned (Backlog)</option>
+                                            {sprints.map(s => (
+                                                <option key={s.id} value={s.id}>
+                                                    {s.name} ({s.status})
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                            ))}
+                            {(!requirement.sprintItems || requirement.sprintItems.length === 0) && (
+                                <p className="text-sm text-muted-foreground italic">No tasks generated yet. Run analysis to generate tasks.</p>
+                            )}
+                        </div>
+                    </div>
+
+                    {requirement.rqsBreakdown && (
+                        <div className="rounded-lg border border-purple-200 bg-purple-50/50 p-4 dark:border-purple-900/50 dark:bg-purple-900/10">
+                            <div className="flex items-center gap-2 text-purple-700 dark:text-purple-400 mb-3">
+                                <Bot className="h-4 w-4" />
+                                <span className="text-sm font-medium">RQS Breakdown</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                                {Object.entries(requirement.rqsBreakdown).map(([key, value]) => (
+                                    <div key={key}>
+                                        <span className="text-muted-foreground capitalize">{key}</span>
+                                        <p className="text-lg font-semibold">{value}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
 
             <div className="text-xs text-muted-foreground">
                 <p>Created: {new Date(requirement.createdAt).toLocaleDateString()}</p>

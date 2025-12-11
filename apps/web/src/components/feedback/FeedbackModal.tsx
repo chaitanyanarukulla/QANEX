@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, MessageSquare, ThumbsUp, AlertTriangle, Lightbulb } from 'lucide-react';
+import { X, MessageSquare, ThumbsUp } from 'lucide-react';
 
 export function FeedbackModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
     const [category, setCategory] = useState('UX');

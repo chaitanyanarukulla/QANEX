@@ -21,7 +21,7 @@ export default function LoginPage() {
     try {
       await login(email, name || undefined);
       router.push('/');
-    } catch (err) {
+    } catch (_err) {
       setError('Failed to sign in. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -35,7 +35,7 @@ export default function LoginPage() {
     try {
       await login('demo@qanexus.io', 'Demo User');
       router.push('/');
-    } catch (err) {
+    } catch (_err) {
       setError('Failed to sign in with demo account.');
     } finally {
       setIsSubmitting(false);

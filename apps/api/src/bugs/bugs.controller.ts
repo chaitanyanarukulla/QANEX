@@ -14,6 +14,7 @@ import { BugTriageService } from './bug-triage.service';
 import { Bug } from './bug.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import type { AuthenticatedRequest } from '../auth/interfaces/authenticated-request.interface';
 
 @Controller('bugs')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -24,19 +25,25 @@ export class BugsController {
   ) {}
 
   @Post()
-  create(@Body() dto: Partial<Bug>, @Request() req: any): Promise<Bug> {
+  create(
+    @Body() dto: Partial<Bug>,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<Bug> {
     const tenantId = req.user.tenantId || 'mock-tenant-id';
     return this.bugsService.create(dto, tenantId);
   }
 
   @Get()
-  findAll(@Request() req: any): Promise<Bug[]> {
+  findAll(@Request() req: AuthenticatedRequest): Promise<Bug[]> {
     const tenantId = req.user.tenantId || 'mock-tenant-id';
     return this.bugsService.findAll(tenantId);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string, @Request() req: any): Promise<Bug> {
+  findOne(
+    @Param('id') id: string,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<Bug> {
     const tenantId = req.user.tenantId || 'mock-tenant-id';
     return this.bugsService.findOne(id, tenantId);
   }
@@ -45,20 +52,23 @@ export class BugsController {
   update(
     @Param('id') id: string,
     @Body() dto: Partial<Bug>,
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
   ): Promise<Bug> {
     const tenantId = req.user.tenantId || 'mock-tenant-id';
     return this.bugsService.update(id, dto, tenantId);
   }
 
   @Delete(':id')
-  delete(@Param('id') id: string, @Request() req: any): Promise<void> {
+  delete(
+    @Param('id') id: string,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<void> {
     const tenantId = req.user.tenantId || 'mock-tenant-id';
     return this.bugsService.delete(id, tenantId);
   }
 
   @Post(':id/triage')
-  async triage(@Param('id') id: string, @Request() req: any) {
+  async triage(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
     const tenantId = req.user.tenantId || 'mock-tenant-id';
     const bug = await this.bugsService.findOne(id, tenantId);
     return this.triageService.analyzeBug(bug);

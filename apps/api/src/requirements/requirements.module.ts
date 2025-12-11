@@ -3,11 +3,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { RequirementsService } from './requirements.service';
 import { RequirementsController } from './requirements.controller';
 import { Requirement } from './requirement.entity';
+import { SprintItem } from '../sprints/sprint-item.entity';
 import { AiModule } from '../ai/ai.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Requirement]),
+    TypeOrmModule.forFeature([Requirement, SprintItem]),
     forwardRef(() => AiModule),
   ],
   providers: [RequirementsService],

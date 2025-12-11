@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Document } from './entities/document.entity';
@@ -7,6 +7,42 @@ import { AiProviderFactory } from '../ai/providers/ai-provider.factory';
 import { RagService } from '../ai/rag.service';
 import { RequirementsService } from '../requirements/requirements.service';
 import { RequirementState } from '../requirements/requirement.entity';
+
+interface AiRisk {
+  risk: string;
+  severity: string;
+  mitigation: string;
+}
+
+interface AiGap {
+  gap: string;
+  suggestion: string;
+}
+
+interface AiTask {
+  title: string;
+  description: string;
+  type: string;
+  suggestedRole: string;
+  estimatedHours: number;
+}
+
+interface AiRequirement {
+  title: string;
+  description: string;
+  priority: string;
+  type: string;
+  acceptanceCriteria: string[];
+  tasks: AiTask[];
+}
+
+interface AiAnalysisResult {
+  score: number;
+  summary: string;
+  risks: AiRisk[];
+  gaps: AiGap[];
+  requirements: AiRequirement[];
+}
 
 @Injectable()
 export class DocumentsAiService {
@@ -48,7 +84,22 @@ export class DocumentsAiService {
           { "gap": "Description", "suggestion": "What to add" }
         ],
         "requirements": [
-          { "title": "Requirement Title", "description": "Detailed description" }
+          { 
+            "title": "Requirement Title", 
+            "description": "Detailed description of functionality",
+            "priority": "LOW" | "MEDIUM" | "HIGH" | "CRITICAL",
+            "type": "FUNCTIONAL" | "NON_FUNCTIONAL" | "BUG" | "FEATURE" | "ENHANCEMENT",
+            "acceptanceCriteria": ["Criteria 1", "Criteria 2"],
+            "tasks": [
+                {
+                    "title": "Task title",
+                    "description": "Task description",
+                    "type": "task" | "feature" | "bug",
+                    "suggestedRole": "Backend" | "Frontend" | "QA" | "DevOps",
+                    "estimatedHours": number
+                }
+            ]
+          }
         ]
       }
     `;
@@ -60,11 +111,20 @@ export class DocumentsAiService {
           model: config.model,
           temperature: 0.1,
           responseFormat: 'json',
+          maxTokens: 4000,
         },
         config.apiKey,
       );
 
-      const result = JSON.parse(response.content);
+      let result: AiAnalysisResult;
+      try {
+        result = JSON.parse(response.content) as AiAnalysisResult;
+      } catch (jsonError) {
+        this.logger.error('Failed to parse AI response JSON', jsonError);
+        throw new Error(
+          'AI response was invalid or truncated. Try reducing document size.',
+        );
+      }
 
       // Create or update review
       let review = await this.reviewRepo.findOne({
@@ -76,27 +136,58 @@ export class DocumentsAiService {
 
       review.score = result.score;
       review.summary = result.summary;
-      review.risks = result.risks;
+      review.risks = result.risks as any;
       review.gaps = result.gaps;
 
-      await this.reviewRepo.save(review);
+      let reqCount = 0;
+      let taskCount = 0;
 
       // Sync Requirements
       if (result.requirements && Array.isArray(result.requirements)) {
+        reqCount = result.requirements.length;
         for (const req of result.requirements) {
-          // Check if exists (fuzzy match by title for MVP, or track by sourceDocumentId)
-          // Ideally we should track relations. For now, creating new ones.
+          taskCount += req.tasks?.length || 0;
+
+          // Note: In real world we would update existing ones if we can match them.
+          // For now, we create new ones as per initial simple logic, but with more fields.
           await this.requirementsService.create(
             {
               title: req.title,
               content: req.description,
               state: RequirementState.DRAFT,
+              priority: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].includes(
+                req.priority?.toUpperCase(),
+              )
+                ? (req.priority.toUpperCase() as any)
+                : 'MEDIUM',
+              type: [
+                'FUNCTIONAL',
+                'NON_FUNCTIONAL',
+                'BUG',
+                'FEATURE',
+                'ENHANCEMENT',
+              ].includes(req.type?.toUpperCase())
+                ? (req.type.toUpperCase() as any)
+                : 'FUNCTIONAL',
+              acceptanceCriteria: req.acceptanceCriteria || [],
               sourceDocumentId: document.id,
+              tasks: req.tasks || [],
             },
-            { tenantId },
+            {
+              tenantId,
+              userId: 'system-ai', // System actor
+              email: 'ai@system.local',
+              roles: ['system'],
+              sub: 'system',
+            },
           );
         }
       }
+
+      review.summary =
+        (result.summary || '') +
+        `\n\nGenerated ${reqCount} requirements and ${taskCount} tasks.`;
+      await this.reviewRepo.save(review);
 
       // Also index in RAG
       await this.ragService.indexItem({
@@ -108,15 +199,15 @@ export class DocumentsAiService {
       });
 
       return review;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : String(error);
       this.logger.error(`Failed to analyze document ${document.id}`, error);
 
       if (
-        error.message.includes('No AI provider configured') ||
-        error.message.includes('API key not configured')
+        msg.includes('No AI provider configured') ||
+        msg.includes('API key not configured')
       ) {
-        const { BadRequestException } = require('@nestjs/common');
-        throw new BadRequestException(error.message);
+        throw new BadRequestException(msg);
       }
       throw error;
     }

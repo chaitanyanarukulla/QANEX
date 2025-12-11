@@ -2,7 +2,9 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Request } from 'express';
 import { UsersService } from '../../users/users.service';
+import { IAuthUser } from '../interfaces/auth-user.interface';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -18,14 +20,17 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(req: any, payload: any) {
+  async validate(req: Request, payload: any): Promise<IAuthUser> {
     // Mock token fallback
     if (payload.sub === 'mock-user-id') {
       return {
         userId: 'mock-user-id',
         email: 'mock@example.com',
         roles: ['ORG_ADMIN'], // Mock as admin
-        tenantId: req.tenantId || 'mock-tenant-id',
+        tenantId: (req.headers['x-tenant-id'] as string) || 'mock-tenant-id',
+        // id alias for compatibility
+        id: 'mock-user-id',
+        sub: 'mock-user-id',
       };
     }
 
@@ -35,7 +40,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException();
     }
 
-    const tenantId = req.tenantId || user.tenantId; // Use header tenant or default
+    const tenantId = (req.headers['x-tenant-id'] as string) || user.tenantId; // Use header tenant or default
     let roles = ['VIEWER']; // Default role
 
     if (tenantId) {
@@ -62,6 +67,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       roles: roles,
       tenantId: tenantId,
       defaultTenantId: user.tenantId,
+      sub: user.id,
     };
   }
 }

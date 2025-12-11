@@ -3,11 +3,9 @@
 import { Plus, Box, Folder, ArrowRight, Clock, Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { projectsApi, demoApi, Project } from '@/lib/api';
 
 export default function ProjectsPage() {
-    const router = useRouter();
     const [isLoading, setIsLoading] = useState(true);
     const [projects, setProjects] = useState<Project[]>([]);
     const [isCreatingDemo, setIsCreatingDemo] = useState(false);

@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Plus, Bot, Loader2, Save } from 'lucide-react';
-import { bugsApi, Bug, BugAnalysisResult } from '@/lib/api';
+import { useState, useEffect, useCallback } from 'react';
+import { Plus, Bot, Loader2 } from 'lucide-react';
+import { bugsApi, Bug } from '@/lib/api';
 import { useToast } from '@/components/ui/use-toast';
 
 const COLUMNS = [
@@ -19,22 +19,22 @@ export default function IssuesPage() {
     const [isTriaging, setIsTriaging] = useState(false);
     const { showToast } = useToast();
 
-    useEffect(() => {
-        loadBugs();
-    }, []);
-
-    const loadBugs = async () => {
+    const loadBugs = useCallback(async () => {
         try {
             setIsLoading(true);
             const data = await bugsApi.list();
             setBugs(data);
-        } catch (err) {
-            console.error('Failed to load bugs:', err);
+        } catch (_err) {
+            console.error('Failed to load bugs:', _err);
             showToast('Failed to load issues', 'error');
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [showToast]);
+
+    useEffect(() => {
+        loadBugs();
+    }, [loadBugs]);
 
     const handleCreate = async () => {
         const title = prompt('Bug Title:');
@@ -49,7 +49,7 @@ export default function IssuesPage() {
                 });
                 setBugs([newBug, ...bugs]);
                 showToast('Issue created', 'success');
-            } catch (err) {
+            } catch (_err) {
                 showToast('Failed to create issue', 'error');
             }
         }
@@ -89,7 +89,7 @@ export default function IssuesPage() {
         }
     };
 
-    const handleUpdateStatus = async (bugId: string, newStatus: any) => {
+    const handleUpdateStatus = async (bugId: string, newStatus: Bug['status']) => {
         try {
             // Optimistic update
             setBugs(bugs.map(b => b.id === bugId ? { ...b, status: newStatus } : b));
@@ -97,7 +97,7 @@ export default function IssuesPage() {
                 setSelectedBug({ ...selectedBug, status: newStatus });
             }
             await bugsApi.update(bugId, { status: newStatus });
-        } catch (err) {
+        } catch (_err) {
             showToast('Failed to update status', 'error');
             loadBugs(); // Revert
         }
@@ -185,7 +185,7 @@ export default function IssuesPage() {
                             <select
                                 className="mt-1 w-full p-2 rounded-md border bg-transparent"
                                 value={selectedBug.status}
-                                onChange={(e) => handleUpdateStatus(selectedBug.id, e.target.value)}
+                                onChange={(e) => handleUpdateStatus(selectedBug.id, e.target.value as Bug['status'])}
                             >
                                 {COLUMNS.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
                             </select>
@@ -222,7 +222,7 @@ export default function IssuesPage() {
                             </div>
                             <div className="space-y-2 text-sm">
                                 <p className="text-muted-foreground text-xs leading-relaxed">
-                                    Click "Run Analysis" to let AI analyze the bug description and suggest Severity and Priority levels automatically.
+                                    Click &quot;Run Analysis&quot; to let AI analyze the bug description and suggest Severity and Priority levels automatically.
                                 </p>
                                 <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-purple-200/50">
                                     <div>

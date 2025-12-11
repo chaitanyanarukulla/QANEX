@@ -151,7 +151,7 @@ export default function PlanningPage() {
             setError(null);
 
             // Import requirements as sprint items (to backlog)
-            const createdItems = await sprintsApi.createItemsFromRequirements(
+            await sprintsApi.createItemsFromRequirements(
                 Array.from(selectedRequirements)
             );
 
@@ -198,7 +198,7 @@ export default function PlanningPage() {
                                     {aiRecommendation.reasoning}
                                 </p>
                                 <div className="space-y-2">
-                                    {aiRecommendation.recommendedItems.slice(0, 3).map((rec, idx) => (
+                                    {aiRecommendation.recommendedItems.slice(0, 3).map((rec, _idx) => (
                                         <div key={rec.item.id} className="text-xs text-purple-600 dark:text-purple-400">
                                             <span className="font-medium">{rec.item.title}</span>
                                             <span className="text-purple-500 dark:text-purple-500"> ({rec.score} pts)</span>
