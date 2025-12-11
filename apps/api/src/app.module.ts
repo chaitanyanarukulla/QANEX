@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { ScheduleModule } from '@nestjs/schedule';
+import { APP_FILTER } from '@nestjs/core';
 import { TenantsModule } from './tenants/tenants.module';
 import { AuthModule } from './auth/auth.module';
 import { RequirementsModule } from './requirements/requirements.module';
@@ -29,9 +30,17 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TenantMiddleware } from './tenants/tenant.middleware';
 import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware';
+import { LoggerModule } from './common/logger/logger.module';
+import { ClsModule } from 'nestjs-cls';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 
 @Module({
   imports: [
+    ClsModule.forRoot({
+      global: true,
+      middleware: { mount: true, generateId: true },
+    }),
+    LoggerModule,
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -107,7 +116,13 @@ import { RequestLoggerMiddleware } from './common/middleware/request-logger.midd
     ScheduleModule.forRoot(),
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_FILTER,
+      useClass: AllExceptionsFilter,
+    },
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

@@ -1,4 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import { Logger } from 'winston';
 import { PiiRedactionService } from './pii-redaction.service';
 
 export interface RagItem {
@@ -24,12 +26,19 @@ export const RAG_BACKEND_TOKEN = 'RAG_BACKEND_TOKEN';
 export class InMemoryRagAdapter implements RagBackend {
   private inMemoryStore: RagItem[] = [];
 
+  constructor(
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+  ) { }
+
   async indexItem(item: RagItem): Promise<void> {
     this.inMemoryStore = this.inMemoryStore.filter((i) => i.id !== item.id);
     this.inMemoryStore.push(item);
-    console.log(
-      `[InMemoryRAG] Indexed ${item.type} ${item.id} (Tenant: ${item.tenantId})`,
-    );
+    this.logger.info(`[InMemoryRAG] Indexed ${item.type} ${item.id}`, {
+      context: 'InMemoryRagAdapter',
+      tenantId: item.tenantId,
+      itemId: item.id,
+      itemType: item.type,
+    });
     return Promise.resolve();
   }
 
@@ -75,7 +84,7 @@ export class RagService {
   constructor(
     @Inject(RAG_BACKEND_TOKEN) private readonly backend: RagBackend,
     private readonly piiService: PiiRedactionService,
-  ) {}
+  ) { }
 
   async indexItem(item: RagItem): Promise<void> {
     // Redact content before indexing
