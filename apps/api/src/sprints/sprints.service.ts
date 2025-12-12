@@ -9,6 +9,9 @@ import {
   SprintItemType,
   SprintItemPriority,
 } from './sprint-item.entity';
+import { Sprint as SprintAggregate } from './domain/sprint.aggregate';
+import { EventStorePublisher } from '../common/event-store/event-store-publisher';
+import { DomainEventPublisher } from '../common/domain/domain-event.publisher';
 
 @Injectable()
 export class SprintsService {
@@ -17,6 +20,8 @@ export class SprintsService {
     private sprintsRepository: Repository<Sprint>,
     @InjectRepository(SprintItem)
     private sprintItemsRepository: Repository<SprintItem>,
+    private readonly eventStorePublisher: EventStorePublisher,
+    private readonly eventPublisher: DomainEventPublisher,
   ) {}
 
   // ===== Sprint Management =====
@@ -28,17 +33,49 @@ export class SprintsService {
     goal?: string,
     startDate?: Date,
     endDate?: Date,
+    userId?: string,
   ): Promise<Sprint> {
-    const sprint = this.sprintsRepository.create({
+    // Step 1: Create aggregate (validates inputs)
+    // Note: Sprint aggregate uses 'capacity' as story points
+    // If startDate/endDate not provided, default to 2-week sprint
+    const now = new Date();
+    const defaultStart = startDate || now;
+    const defaultEnd = endDate || new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+
+    const aggregate = SprintAggregate.create({
+      id: '', // Will be set by repository on insert
+      tenantId,
+      name,
+      capacity,
+      startDate: defaultStart,
+      endDate: defaultEnd,
+      description: goal,
+      userId,
+    });
+
+    // Step 2: Save entity (keeping backward compatibility)
+    const sprintData = this.sprintsRepository.create({
       name,
       tenantId,
       capacity,
       goal,
-      startDate,
-      endDate,
+      startDate: defaultStart,
+      endDate: defaultEnd,
       status: SprintStatus.PLANNED,
     });
-    return this.sprintsRepository.save(sprint);
+    const saved = await this.sprintsRepository.save(sprintData);
+
+    // Step 3: Update aggregate with generated ID
+    aggregate.id = saved.id;
+
+    // Step 4: Publish events (auto-persisted to EventStore)
+    await this.eventStorePublisher.publishAll(
+      aggregate.getDomainEvents(),
+      tenantId,
+    );
+    aggregate.clearDomainEvents();
+
+    return saved;
   }
 
   async findAll(tenantId: string): Promise<Sprint[]> {
@@ -58,25 +95,103 @@ export class SprintsService {
     return sprint;
   }
 
+  async start(id: string, tenantId: string, userId?: string): Promise<Sprint> {
+    // Step 1: Fetch and reconstruct aggregate
+    const sprint = await this.findOne(id, tenantId);
+    const aggregate = this.reconstructAggregate(sprint);
+
+    // Step 2: Apply domain logic (validates state transitions)
+    aggregate.start(userId);
+
+    // Step 3: Update entity
+    sprint.status = SprintStatus.ACTIVE;
+    if (!sprint.startDate) {
+      sprint.startDate = new Date();
+    }
+    if (!sprint.endDate) {
+      const endDate = new Date();
+      endDate.setDate(endDate.getDate() + 14);
+      sprint.endDate = endDate;
+    }
+    const saved = await this.sprintsRepository.save(sprint);
+
+    // Step 4: Publish events (auto-persisted to EventStore)
+    await this.eventStorePublisher.publishAll(
+      aggregate.getDomainEvents(),
+      tenantId,
+    );
+    aggregate.clearDomainEvents();
+
+    return saved;
+  }
+
+  async complete(
+    id: string,
+    tenantId: string,
+    metrics?: {
+      completedItems?: number;
+      completedStoryPoints?: number;
+      velocity?: number;
+    },
+    userId?: string,
+  ): Promise<Sprint> {
+    // Step 1: Fetch and reconstruct aggregate
+    const sprint = await this.findOne(id, tenantId);
+    const aggregate = this.reconstructAggregate(sprint);
+
+    // Step 2: Get actual metrics from sprint items
+    const items = await this.sprintItemsRepository.find({
+      where: { sprintId: id, tenantId },
+    });
+
+    const completedItems =
+      metrics?.completedItems ||
+      items.filter((i) => i.status === SprintItemStatus.DONE).length;
+    const completedStoryPoints = metrics?.completedStoryPoints || 0;
+    const velocity =
+      metrics?.velocity ||
+      items.filter((i) => i.status === SprintItemStatus.DONE).length;
+
+    // Step 3: Apply domain logic (validates state transitions)
+    aggregate.complete(
+      {
+        completedItems,
+        completedStoryPoints,
+        velocity,
+      },
+      userId,
+    );
+
+    // Step 4: Update entity
+    sprint.status = SprintStatus.COMPLETED;
+    sprint.velocity = velocity;
+    const saved = await this.sprintsRepository.save(sprint);
+
+    // Step 5: Publish events (auto-persisted to EventStore)
+    await this.eventStorePublisher.publishAll(
+      aggregate.getDomainEvents(),
+      tenantId,
+    );
+    aggregate.clearDomainEvents();
+
+    return saved;
+  }
+
   async updateStatus(
     id: string,
     tenantId: string,
     status: SprintStatus,
   ): Promise<Sprint> {
-    const sprint = await this.findOne(id, tenantId);
-    sprint.status = status;
-
-    // Auto-set dates when starting
-    if (status === SprintStatus.ACTIVE && !sprint.startDate) {
-      sprint.startDate = new Date();
-      if (!sprint.endDate) {
-        // Default 2-week sprint
-        const endDate = new Date();
-        endDate.setDate(endDate.getDate() + 14);
-        sprint.endDate = endDate;
-      }
+    // Delegate to specific methods
+    if (status === SprintStatus.ACTIVE) {
+      return this.start(id, tenantId);
+    }
+    if (status === SprintStatus.COMPLETED) {
+      return this.complete(id, tenantId);
     }
 
+    const sprint = await this.findOne(id, tenantId);
+    sprint.status = status;
     return this.sprintsRepository.save(sprint);
   }
 
@@ -681,5 +796,35 @@ export class SprintsService {
       suggestedTasks: tasks,
       totalEstimate,
     });
+  }
+
+  /**
+   * Reconstruct Sprint aggregate from entity
+   * Used to apply domain logic to existing sprints
+   * Bridges between persistent entity and domain model
+   *
+   * @private
+   */
+  private reconstructAggregate(entity: Sprint): SprintAggregate {
+    // Create aggregate instance directly
+    const { SprintCapacity } = require('./domain/value-objects/sprint-capacity.vo');
+    const { SprintStatus } = require('./domain/value-objects/sprint-status.vo');
+
+    const capacity = new SprintCapacity(entity.capacity);
+    const status = (entity.status as any) || 'PLANNED';
+
+    const aggregate = new SprintAggregate(
+      entity.id,
+      entity.tenantId,
+      entity.name,
+      capacity,
+      entity.startDate || new Date(),
+      entity.endDate || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+      status,
+      entity.goal,
+    );
+    aggregate.createdAt = entity.createdAt;
+    aggregate.updatedAt = entity.updatedAt;
+    return aggregate;
   }
 }

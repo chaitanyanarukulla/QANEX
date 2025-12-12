@@ -14,6 +14,11 @@ import { CreateRequirementDto } from './dto/create-requirement.dto';
 import { UpdateRequirementDto } from './dto/update-requirement.dto';
 import { IAuthUser } from '../auth/interfaces/auth-user.interface';
 
+// DDD Imports
+import { RequirementAggregate } from './domain/requirement.aggregate';
+import { EventStorePublisher } from '../common/event-store/event-store-publisher';
+import { DomainEventPublisher } from '../common/domain/domain-event.publisher';
+
 export interface TaskDto {
   title: string;
   description: string;
@@ -23,6 +28,12 @@ export interface TaskDto {
   estimatedHours?: number;
 }
 
+/**
+ * RequirementsService - Refactored for DDD & Event-Driven Architecture
+ *
+ * This service now uses DDD aggregates and publishes domain events to EventStore.
+ * All state changes are captured as immutable events for complete audit trail.
+ */
 @Injectable()
 export class RequirementsService {
   private readonly logger = new Logger(RequirementsService.name);
@@ -34,6 +45,8 @@ export class RequirementsService {
     private readonly sprintItemRepo: Repository<SprintItem>,
     private readonly ragService: RagService,
     private readonly aiFactory: AiProviderFactory,
+    private readonly eventStorePublisher: EventStorePublisher,
+    private readonly eventPublisher: DomainEventPublisher,
   ) {}
 
   async create(
@@ -42,57 +55,50 @@ export class RequirementsService {
   ): Promise<Requirement> {
     const { tasks, ...reqData } = createDto;
 
-    // Create Requirement
+    // 1. Create Requirement aggregate (validates inputs)
+    const aggregate = RequirementAggregate.create({
+      title: reqData.title,
+      content: reqData.content,
+      priority: (reqData.priority || 'MEDIUM') as any,
+      type: (reqData.type || 'FUNCTIONAL') as any,
+      acceptanceCriteria: reqData.acceptanceCriteria || [],
+      tenantId: user.tenantId,
+    });
+
+    // 2. Save entity
     const requirement = this.repo.create({
+      id: aggregate.id,
       ...reqData,
       tenantId: user.tenantId,
-      // createdBy: user.id,
     });
     const saved = await this.repo.save(requirement);
 
-    // Create Tasks if any
-    if (tasks && tasks.length > 0) {
-      for (const task of tasks as TaskDto[]) {
-        const typeStr = (task.type || 'task').toLowerCase();
-        const priorityStr = (task.priority || 'MEDIUM').toUpperCase();
+    // 3. Publish domain events (automatically persisted to EventStore)
+    await this.eventStorePublisher.publishAll(
+      aggregate.getDomainEvents(),
+      user.tenantId,
+    );
+    aggregate.clearDomainEvents();
 
-        const itemType = (
-          ['feature', 'bug', 'task'].includes(typeStr) ? typeStr : 'task'
-        ) as SprintItemType;
-        const itemPriority = (
-          ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].includes(priorityStr)
-            ? priorityStr
-            : 'MEDIUM'
-        ) as SprintItemPriority;
-        await this.sprintItemRepo.save(
-          this.sprintItemRepo.create({
-            title: task.title,
-            description: task.description || '',
-            type: itemType,
-            status: SprintItemStatus.TODO,
-            priority: itemPriority,
-            suggestedRole: task.suggestedRole,
-            estimatedHours: task.estimatedHours,
-            requirementId: saved.id,
-            tenantId: user.tenantId,
-          }),
-        );
-      }
+    // 4. Create tasks if provided
+    if (tasks && tasks.length > 0) {
+      await this.addTasks(saved.id, tasks as TaskDto[], user.tenantId);
     }
 
-    // Background: Index    // Auto-Index
+    // 5. Background: Index in RAG
     this.ragService
       .indexRequirement(saved.id, user.tenantId, saved.title, saved.content)
       .catch((e) => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const error = e;
         this.logger.error('RAG Index failed', {
           context: 'RequirementsService',
-          error: error?.message || 'Unknown error',
-          stack: error?.stack,
+          error: (e as Error)?.message || 'Unknown error',
+          stack: (e as Error)?.stack,
         });
       });
 
+    this.logger.debug(
+      `Created requirement ${saved.id} with domain aggregate`,
+    );
     return saved;
   }
 
@@ -338,5 +344,73 @@ export class RequirementsService {
     );
 
     return { count: result.affected || 0 };
+  }
+
+  /**
+   * Approve requirement
+   *
+   * Triggers workflow:
+   * 1. Requirement state changes to APPROVED
+   * 2. RequirementApproved event published
+   * 3. Subscribers notified (may trigger task generation)
+   *
+   * @param id - Requirement ID
+   * @param tenantId - Tenant identifier
+   * @returns Updated requirement
+   */
+  async approve(id: string, tenantId: string): Promise<Requirement> {
+    try {
+      const requirement = await this.findOne(id, tenantId);
+
+      // 1. Reconstruct aggregate and approve
+      const aggregate = this.reconstructAggregate(requirement);
+      aggregate.approve();
+
+      // 2. Update entity
+      requirement.state = RequirementState.APPROVED;
+      const saved = await this.repo.save(requirement);
+
+      // 3. Publish events
+      await this.eventStorePublisher.publishAll(
+        aggregate.getDomainEvents(),
+        tenantId,
+      );
+      aggregate.clearDomainEvents();
+
+      this.logger.log(
+        `Approved requirement ${id} - RequirementApproved event published`,
+      );
+
+      return saved;
+    } catch (error) {
+      this.logger.error(
+        `Failed to approve requirement: ${(error as Error).message}`,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Reconstruct Requirement aggregate from entity
+   *
+   * This is a hybrid approach: loads entity from DB, reconstructs aggregate
+   * for applying business logic and generating events.
+   *
+   * @private
+   */
+  private reconstructAggregate(entity: Requirement): RequirementAggregate {
+    return RequirementAggregate.recreate({
+      id: entity.id,
+      title: entity.title,
+      content: entity.content,
+      status: entity.state,
+      priority: entity.priority as any,
+      type: entity.type as any,
+      acceptanceCriteria: entity.acceptanceCriteria || [],
+      rqs: entity.rqs,
+      tenantId: entity.tenantId,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
+    });
   }
 }

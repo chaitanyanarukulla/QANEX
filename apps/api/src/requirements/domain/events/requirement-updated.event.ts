@@ -1,24 +1,18 @@
 import { DomainEvent } from '../../../common/domain/aggregate-root.interface';
 
 /**
- * RequirementCreated Domain Event
+ * RequirementUpdated Domain Event
  *
- * Published when a new requirement is created.
- *
- * @event RequirementCreated
+ * Published when requirement properties are updated.
  */
-export class RequirementCreated implements DomainEvent {
+export class RequirementUpdated implements DomainEvent {
   eventId: string;
-  eventType: string = 'RequirementCreated';
+  eventType: string = 'RequirementUpdated';
   aggregateId: string;
   aggregateType: string = 'Requirement';
   tenantId: string;
   occurredAt: Date;
-  title: string;
-  content: string;
-  priority: string;
-  type: string;
-  acceptanceCriteria: string[];
+  changes: Record<string, any>;
 
   constructor(props: {
     eventId: string;
@@ -27,11 +21,7 @@ export class RequirementCreated implements DomainEvent {
     aggregateType: string;
     tenantId: string;
     occurredAt: Date;
-    title: string;
-    content: string;
-    priority: string;
-    type: string;
-    acceptanceCriteria: string[];
+    changes: Record<string, any>;
   }) {
     this.eventId = props.eventId;
     this.eventType = props.eventType;
@@ -39,10 +29,6 @@ export class RequirementCreated implements DomainEvent {
     this.aggregateType = props.aggregateType;
     this.tenantId = props.tenantId;
     this.occurredAt = props.occurredAt;
-    this.title = props.title;
-    this.content = props.content;
-    this.priority = props.priority;
-    this.type = props.type;
-    this.acceptanceCriteria = props.acceptanceCriteria;
+    this.changes = props.changes;
   }
 }

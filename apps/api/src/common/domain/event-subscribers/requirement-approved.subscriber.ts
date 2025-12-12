@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { DomainEventPublisher } from '../domain-event.publisher';
+import { DomainEventSubscriber } from '../domain-event.publisher';
+import { DomainEvent } from '../aggregate-root.interface';
 import { RequirementApproved } from '../../../requirements/domain/events/requirement-approved.event';
 
 /**
@@ -20,16 +21,14 @@ import { RequirementApproved } from '../../../requirements/domain/events/require
  * multiple contexts (Requirements → Sprints → Tests → Metrics)
  */
 @Injectable()
-export class RequirementApprovedSubscriber {
+export class RequirementApprovedSubscriber implements DomainEventSubscriber {
   private readonly logger = new Logger(RequirementApprovedSubscriber.name);
 
-  constructor(private eventPublisher: DomainEventPublisher) {
-    // Subscribe to RequirementApproved events
-    this.eventPublisher.subscribe(
-      'RequirementApproved',
-      this.handle.bind(this),
-    );
-  }
+  constructor(
+    // TODO: Inject services when available
+    // private requirementsService: RequirementsService,
+    // private sprintsService: SprintsService,
+  ) {}
 
   /**
    * Handle RequirementApproved event and generate initial tasks
@@ -46,12 +45,12 @@ export class RequirementApprovedSubscriber {
   async handle(event: RequirementApproved): Promise<void> {
     try {
       this.logger.debug(
-        `Processing RequirementApproved event for ${event.requirementId}`,
+        `Processing RequirementApproved event for ${event.aggregateId}`,
       );
 
       // Extract task data from requirement
       // TODO: Implement when Requirement model available
-      // const requirement = await this.requirementsService.findById(event.requirementId);
+      // const requirement = await this.requirementsService.findById(event.aggregateId);
       // const tasks = this.extractTasks(requirement);
 
       // Create tasks in sprint backlog
@@ -62,7 +61,7 @@ export class RequirementApprovedSubscriber {
       //     title: taskData.title,
       //     description: taskData.description,
       //     estimatedPoints: taskData.estimatedPoints,
-      //     requirementId: event.requirementId,
+      //     requirementId: event.aggregateId,
       //   });
       // }
 
@@ -70,18 +69,25 @@ export class RequirementApprovedSubscriber {
       // this.eventPublisher.publish(new TasksGeneratedFromRequirement(...))
 
       this.logger.log(
-        `Successfully generated tasks for requirement ${event.requirementId}`,
+        `✓ RequirementApproved processed for requirement ${event.aggregateId}`,
       );
     } catch (error) {
       // Error handling: log but don't rethrow
       // This ensures requirement approval isn't blocked by task generation failure
       this.logger.error(
-        `Failed to generate tasks for requirement ${event.requirementId}: ${error.message}`,
-        error.stack,
+        `✗ Failed to process RequirementApproved: ${(error as Error).message}`,
+        (error as Error).stack,
       );
 
       // TODO: Could publish FailedToGenerateTasks event for monitoring/alerting
     }
+  }
+
+  /**
+   * Check if subscriber is interested in this event
+   */
+  isSubscribedTo(event: DomainEvent): boolean {
+    return event.eventType === 'RequirementApproved';
   }
 
   /**

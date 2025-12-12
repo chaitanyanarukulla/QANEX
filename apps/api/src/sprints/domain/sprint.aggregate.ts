@@ -315,7 +315,7 @@ export class Sprint extends BaseDomainAggregate {
         userId,
         totalItems: this.items.length,
         completedItems: metrics.completedItems,
-        totalStoryPoints,
+        totalStoryPoints: totalPoints,
         completedStoryPoints: metrics.completedStoryPoints,
         completionPercentage,
         velocity: metrics.velocity,

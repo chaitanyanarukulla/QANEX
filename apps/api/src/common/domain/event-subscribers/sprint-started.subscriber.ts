@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { DomainEventPublisher } from '../domain-event.publisher';
+import { DomainEventSubscriber } from '../domain-event-subscriber.interface';
+import { DomainEvent } from '../aggregate-root.interface';
 import { SprintStarted } from '../../../sprints/domain/events/sprint-started.event';
 
 /**
@@ -25,12 +26,16 @@ import { SprintStarted } from '../../../sprints/domain/events/sprint-started.eve
  * Business Impact: High - team awareness of sprint start is critical
  */
 @Injectable()
-export class SprintStartedSubscriber {
+export class SprintStartedSubscriber implements DomainEventSubscriber {
   private readonly logger = new Logger(SprintStartedSubscriber.name);
 
-  constructor(private eventPublisher: DomainEventPublisher) {
-    // Subscribe to SprintStarted events
-    this.eventPublisher.subscribe('SprintStarted', this.handle.bind(this));
+  constructor() {}
+
+  /**
+   * Check if subscriber is interested in this event
+   */
+  isSubscribedTo(event: DomainEvent): boolean {
+    return event instanceof SprintStarted || event.eventType === 'SprintStarted';
   }
 
   /**
@@ -47,52 +52,53 @@ export class SprintStartedSubscriber {
    *
    * @param event SprintStarted event
    */
-  async handle(event: SprintStarted): Promise<void> {
+  async handle(event: DomainEvent): Promise<void> {
+    const sprintEvent = event as SprintStarted;
     try {
       this.logger.debug(
-        `Processing SprintStarted event for sprint ${event.sprintId}`,
+        `Processing SprintStarted event for sprint ${sprintEvent.aggregateId}`,
       );
 
       // TODO: Implement when Sprint service available
-      // const sprint = await this.sprintsService.findById(event.sprintId);
-      // const team = await this.teamsService.findByTenant(event.tenantId);
+      // const sprint = await this.sprintsService.findById(sprintEvent.aggregateId);
+      // const team = await this.teamsService.findByTenant(sprintEvent.tenantId);
 
       // Calculate velocity baseline
       // const previousVelocity = await this.metricsService.calculateVelocity(
-      //   event.sprintId,
-      //   event.tenantId,
+      //   sprintEvent.aggregateId,
+      //   sprintEvent.tenantId,
       // );
 
       // Initialize burndown tracking
       // await this.burndownService.initialize({
-      //   sprintId: event.sprintId,
-      //   totalStoryPoints: event.totalStoryPoints,
+      //   sprintId: sprintEvent.aggregateId,
+      //   totalStoryPoints: sprintEvent.totalStoryPoints,
       //   daysInSprint: sprint.daysInSprint,
       //   velocityBaseline: previousVelocity,
       // });
 
       // Send notifications
       // await this.notificationService.sendSprintStarted({
-      //   sprintId: event.sprintId,
+      //   sprintId: sprintEvent.aggregateId,
       //   teamId: team.id,
-      //   itemCount: event.itemCount,
-      //   totalStoryPoints: event.totalStoryPoints,
+      //   itemCount: sprintEvent.itemCount,
+      //   totalStoryPoints: sprintEvent.totalStoryPoints,
       // });
 
       // Create sprint dashboard snapshot
       // await this.dashboardService.createSprintView({
-      //   sprintId: event.sprintId,
-      //   tenantId: event.tenantId,
+      //   sprintId: sprintEvent.aggregateId,
+      //   tenantId: sprintEvent.tenantId,
       // });
 
       this.logger.log(
-        `Sprint ${event.sprintId} started: ${event.itemCount} items, ${event.totalStoryPoints} story points`,
+        `Sprint ${sprintEvent.aggregateId} started: ${sprintEvent.itemCount} items, ${sprintEvent.totalStoryPoints} story points`,
       );
     } catch (error) {
       // Error handling: log but don't block sprint operations
       this.logger.error(
-        `Failed to process sprint start for ${event.sprintId}: ${error.message}`,
-        error.stack,
+        `Failed to process sprint start for ${sprintEvent.aggregateId}: ${(error as any).message}`,
+        (error as any).stack,
       );
 
       // TODO: Could publish SprintStartNotificationFailed event for alerting

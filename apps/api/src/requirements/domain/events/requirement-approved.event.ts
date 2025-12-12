@@ -38,40 +38,32 @@ import { DomainEvent } from '../../../common/domain/aggregate-root.interface';
  * ```
  */
 export class RequirementApproved implements DomainEvent {
-  readonly eventId: string;
-  readonly eventType = 'RequirementApproved';
-  readonly aggregateType = 'Requirement';
-  readonly aggregateId: string;
-  readonly tenantId: string;
-  readonly userId?: string;
-  readonly occurredAt: Date;
+  eventId: string;
+  eventType: string = 'RequirementApproved';
+  aggregateId: string;
+  aggregateType: string = 'Requirement';
+  tenantId: string;
+  occurredAt: Date;
+  approverId: string;
+  approverRole: string;
 
-  // Requirement-specific event data
-  readonly requirementId: string;
-  readonly previousState: string;
-  readonly rqsScore?: number;
-
-  constructor(
-    aggregateId: string,
-    tenantId: string,
-    requirementId: string,
-    previousState: string,
-    options?: {
-      eventId?: string;
-      userId?: string;
-      rqsScore?: number;
-      occurredAt?: Date;
-    },
-  ) {
-    this.aggregateId = aggregateId;
-    this.tenantId = tenantId;
-    this.requirementId = requirementId;
-    this.previousState = previousState;
-    this.userId = options?.userId;
-    this.rqsScore = options?.rqsScore;
-    this.occurredAt = options?.occurredAt ?? new Date();
-    this.eventId =
-      options?.eventId ??
-      `RequirementApproved-${requirementId}-${Date.now()}`;
+  constructor(props: {
+    eventId: string;
+    eventType: string;
+    aggregateId: string;
+    aggregateType: string;
+    tenantId: string;
+    occurredAt: Date;
+    approverId: string;
+    approverRole: string;
+  }) {
+    this.eventId = props.eventId;
+    this.eventType = props.eventType;
+    this.aggregateId = props.aggregateId;
+    this.aggregateType = props.aggregateType;
+    this.tenantId = props.tenantId;
+    this.occurredAt = props.occurredAt;
+    this.approverId = props.approverId;
+    this.approverRole = props.approverRole;
   }
 }
