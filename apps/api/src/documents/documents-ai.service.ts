@@ -36,7 +36,26 @@ interface _AiRequirement {
   tasks: AiTask[];
 }
 
-// ... (interfaces)
+interface AiEpic {
+  title: string;
+  description: string;
+  requirements?: Array<{
+    title: string;
+    description: string;
+    priority?: string;
+    type?: string;
+    acceptanceCriteria?: string[];
+    tasks?: AiTask[];
+  }>;
+}
+
+interface AiAnalysisResult {
+  score?: number;
+  summary: string;
+  risks?: Array<{ risk: string; severity: string; mitigation: string }>;
+  gaps?: Array<{ gap: string; suggestion: string }>;
+  epics?: AiEpic[];
+}
 
 // Removed invalid import
 
@@ -122,29 +141,37 @@ export class DocumentsAiService {
         },
         config.apiKey,
       );
+      this.logger.log(`Response: ${response.content.substring(0, 200)}...`);
 
-      let result: any;
+      let result: AiAnalysisResult;
       try {
-        result = JSON.parse(response.content);
-      } catch (jsonError) {
-        this.logger.error('Failed to parse AI response JSON', jsonError);
-        throw new Error(
-          'AI response was invalid or truncated. Try reducing document size.',
-        );
+        result = JSON.parse(response.content) as AiAnalysisResult;
+      } catch (parseError) {
+        this.logger.error('Failed to parse AI response as JSON', parseError);
+        result = {
+          score: 50,
+          summary: response.content.substring(0, 500),
+          risks: [],
+          gaps: [],
+        };
       }
 
       // Create or update review
-      let review = await this.reviewRepo.findOne({
-        where: { documentId: document.id },
+      const review = this.reviewRepo.create({
+        documentId: document.id,
+        score: result.score ?? 50,
+        summary: result.summary,
+        risks: (result.risks || []).map((r) => ({
+          risk: r.risk,
+          severity: (['LOW', 'MEDIUM', 'HIGH'].includes(
+            r.severity.toUpperCase(),
+          )
+            ? r.severity.toUpperCase()
+            : 'MEDIUM') as 'LOW' | 'MEDIUM' | 'HIGH',
+          mitigation: r.mitigation,
+        })),
+        gaps: result.gaps || [],
       });
-      if (!review) {
-        review = this.reviewRepo.create({ documentId: document.id });
-      }
-
-      review.score = result.score || 0;
-      review.summary = result.summary || '';
-      review.risks = result.risks || [];
-      review.gaps = result.gaps || [];
 
       let reqCount = 0;
       let taskCount = 0;
@@ -188,11 +215,12 @@ export class DocumentsAiService {
                   content:
                     reqData.description || 'No description provided by AI',
                   state: RequirementState.DRAFT,
-                  priority: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].includes(
-                    reqData.priority?.toUpperCase(),
+                  priority: (reqData.priority &&
+                  ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].includes(
+                    reqData.priority.toUpperCase(),
                   )
                     ? reqData.priority.toUpperCase()
-                    : 'MEDIUM',
+                    : 'MEDIUM') as 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL',
                   type: 'FUNCTIONAL', // Default to functional for children
                   acceptanceCriteria: reqData.acceptanceCriteria || [],
                   sourceDocumentId: document.id,
