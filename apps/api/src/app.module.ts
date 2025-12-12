@@ -63,9 +63,10 @@ import { DomainEventPublisher } from './common/domain/domain-event.publisher';
               : false,
             extra: {
               // Connection pooling for Neon
-              max: 10,
-              idleTimeoutMillis: 30000,
-              connectionTimeoutMillis: 10000,
+              // Increased limits for long-running AI operations (up to 15s)
+              max: 20,
+              idleTimeoutMillis: 60000,
+              connectionTimeoutMillis: 15000,
             },
           };
         }
@@ -84,6 +85,12 @@ import { DomainEventPublisher } from './common/domain/domain-event.publisher';
           autoLoadEntities: true,
           synchronize: true, // OK for local dev
           ssl: configService.get<string>('DB_SSL') === 'true',
+          extra: {
+            // Connection pooling for local development
+            max: 20,
+            idleTimeoutMillis: 60000,
+            connectionTimeoutMillis: 15000,
+          },
         };
       },
       inject: [ConfigService],
