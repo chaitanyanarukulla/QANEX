@@ -89,7 +89,7 @@ export class EventMigrationHandler {
     }
 
     const migrationKey = `${fromVersion}_to_${toVersion}`;
-    this.migrations.get(eventType).set(migrationKey, migration);
+    this.migrations.get(eventType)!.set(migrationKey, migration);
 
     // Update latest version
     this.latestVersions.set(eventType, toVersion);
@@ -150,11 +150,11 @@ export class EventMigrationHandler {
         );
       } catch (error) {
         this.logger.error(
-          `Failed to migrate ${eventType} from ${fromVersion}: ${error.message}`,
-          error.stack,
+          `Failed to migrate ${eventType} from ${fromVersion}: ${(error as any).message}`,
+          (error as any).stack,
         );
         throw new Error(
-          `Event migration failed for ${eventType} (${migrationKey}): ${error.message}`,
+          `Event migration failed for ${eventType} (${migrationKey}): ${(error as any).message}`,
         );
       }
     }
@@ -184,7 +184,7 @@ export class EventMigrationHandler {
     const currentVersion = event.eventVersion || 'v1';
     const latestVersion = this.latestVersions.get(eventType);
 
-    return latestVersion && currentVersion !== latestVersion;
+    return !!(latestVersion && currentVersion !== latestVersion);
   }
 
   /**
@@ -217,8 +217,8 @@ export class EventMigrationHandler {
       return true;
     } catch (error) {
       this.logger.error(
-        `Error validating event schema: ${error.message}`,
-        error.stack,
+        `Error validating event schema: ${(error as any).message}`,
+        (error as any).stack,
       );
       return false;
     }

@@ -6,6 +6,8 @@ import { SprintItem } from '../sprints/sprint-item.entity';
 import { RagService } from '../ai/rag.service';
 import { AiProviderFactory } from '../ai/providers';
 import { NotFoundException } from '@nestjs/common';
+import { EventStorePublisher } from '../common/event-store/event-store-publisher';
+import { DomainEventPublisher } from '../common/domain/domain-event.publisher';
 
 const mockReqRepo = {
   create: jest.fn(),
@@ -35,6 +37,16 @@ const mockAiProvider = {
   chat: jest.fn(),
 };
 
+const mockEventStorePublisher = {
+  publishAll: jest.fn().mockResolvedValue(undefined),
+  publish: jest.fn().mockResolvedValue(undefined),
+};
+
+const mockDomainEventPublisher = {
+  subscribe: jest.fn(),
+  publish: jest.fn(),
+};
+
 describe('RequirementsService', () => {
   let service: RequirementsService;
 
@@ -57,6 +69,14 @@ describe('RequirementsService', () => {
         {
           provide: AiProviderFactory,
           useValue: mockAiFactory,
+        },
+        {
+          provide: EventStorePublisher,
+          useValue: mockEventStorePublisher,
+        },
+        {
+          provide: DomainEventPublisher,
+          useValue: mockDomainEventPublisher,
         },
       ],
     }).compile();

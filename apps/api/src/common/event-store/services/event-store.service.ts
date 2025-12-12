@@ -67,8 +67,8 @@ export class EventStoreService {
       );
     } catch (error) {
       this.logger.error(
-        `Failed to append event ${event.eventType}: ${error.message}`,
-        error.stack,
+        `Failed to append event ${event.eventType}: ${(error as any).message}`,
+        (error as any).stack,
       );
       throw error;
     }
@@ -101,8 +101,8 @@ export class EventStoreService {
       );
     } catch (error) {
       this.logger.error(
-        `Failed to append ${events.length} events: ${error.message}`,
-        error.stack,
+        `Failed to append ${events.length} events: ${(error as any).message}`,
+        (error as any).stack,
       );
       throw error;
     }
@@ -139,8 +139,8 @@ export class EventStoreService {
       return storedEvents.map(stored => stored.toDomainEvent());
     } catch (error) {
       this.logger.error(
-        `Failed to retrieve events for aggregate ${aggregateId}: ${error.message}`,
-        error.stack,
+        `Failed to retrieve events for aggregate ${aggregateId}: ${(error as any).message}`,
+        (error as any).stack,
       );
       throw error;
     }
@@ -169,8 +169,8 @@ export class EventStoreService {
       return storedEvents.map(stored => stored.toDomainEvent());
     } catch (error) {
       this.logger.error(
-        `Failed to retrieve events since ${since}: ${error.message}`,
-        error.stack,
+        `Failed to retrieve events since ${since}: ${(error as any).message}`,
+        (error as any).stack,
       );
       throw error;
     }
@@ -199,8 +199,8 @@ export class EventStoreService {
       return storedEvents.map(stored => stored.toDomainEvent());
     } catch (error) {
       this.logger.error(
-        `Failed to retrieve events of type ${eventType}: ${error.message}`,
-        error.stack,
+        `Failed to retrieve events of type ${eventType}: ${(error as any).message}`,
+        (error as any).stack,
       );
       throw error;
     }
@@ -229,8 +229,8 @@ export class EventStoreService {
       return storedEvents.map(stored => stored.toDomainEvent());
     } catch (error) {
       this.logger.error(
-        `Failed to retrieve events for aggregate type ${aggregateType}: ${error.message}`,
-        error.stack,
+        `Failed to retrieve events for aggregate type ${aggregateType}: ${(error as any).message}`,
+        (error as any).stack,
       );
       throw error;
     }
@@ -251,8 +251,8 @@ export class EventStoreService {
         .getCount();
     } catch (error) {
       this.logger.error(
-        `Failed to count events: ${error.message}`,
-        error.stack,
+        `Failed to count events: ${(error as any).message}`,
+        (error as any).stack,
       );
       throw error;
     }
@@ -291,8 +291,8 @@ export class EventStoreService {
       );
     } catch (error) {
       this.logger.error(
-        `Failed to record snapshot: ${error.message}`,
-        error.stack,
+        `Failed to record snapshot: ${(error as any).message}`,
+        (error as any).stack,
       );
       throw error;
     }
@@ -312,17 +312,17 @@ export class EventStoreService {
         .update(StoredDomainEvent)
         .set({
           isRedacted: true,
-          eventData: { redacted: true },
+          eventData: { redacted: true } as any,
         })
         .where('eventId = :eventId', { eventId })
         .andWhere('tenantId = :tenantId', { tenantId })
         .execute();
 
-      this.logger.info(`Redacted event ${eventId}`);
+      this.logger.debug(`Redacted event ${eventId}`);
     } catch (error) {
       this.logger.error(
-        `Failed to redact event: ${error.message}`,
-        error.stack,
+        `Failed to redact event: ${(error as any).message}`,
+        (error as any).stack,
       );
       throw error;
     }
@@ -347,8 +347,8 @@ export class EventStoreService {
       this.logger.warn(`Cleared all events for tenant ${tenantId}`);
     } catch (error) {
       this.logger.error(
-        `Failed to clear tenant events: ${error.message}`,
-        error.stack,
+        `Failed to clear tenant events: ${(error as any).message}`,
+        (error as any).stack,
       );
       throw error;
     }

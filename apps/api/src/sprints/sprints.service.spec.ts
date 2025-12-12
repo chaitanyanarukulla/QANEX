@@ -8,6 +8,8 @@ import {
   SprintItemType,
   SprintItemPriority,
 } from './sprint-item.entity';
+import { EventStorePublisher } from '../common/event-store/event-store-publisher';
+import { DomainEventPublisher } from '../common/domain/domain-event.publisher';
 
 const mockSprintRepo = {
   create: jest.fn(),
@@ -24,6 +26,16 @@ const mockSprintItemRepo = {
   delete: jest.fn(),
 };
 
+const mockEventStorePublisher = {
+  publishAll: jest.fn().mockResolvedValue(undefined),
+  publish: jest.fn().mockResolvedValue(undefined),
+};
+
+const mockDomainEventPublisher = {
+  subscribe: jest.fn(),
+  publish: jest.fn(),
+};
+
 describe('SprintsService', () => {
   let service: SprintsService;
 
@@ -38,6 +50,14 @@ describe('SprintsService', () => {
         {
           provide: getRepositoryToken(SprintItem),
           useValue: mockSprintItemRepo,
+        },
+        {
+          provide: EventStorePublisher,
+          useValue: mockEventStorePublisher,
+        },
+        {
+          provide: DomainEventPublisher,
+          useValue: mockDomainEventPublisher,
         },
       ],
     }).compile();

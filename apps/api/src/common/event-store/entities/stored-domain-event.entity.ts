@@ -53,35 +53,35 @@ export class StoredDomainEvent {
    * Format: {eventType}-{aggregateId}-{timestamp}
    */
   @PrimaryColumn('varchar')
-  eventId: string;
+  eventId!: string;
 
   /**
    * Tenant ID for multi-tenancy
    * All queries must filter by tenantId
    */
   @Column('varchar')
-  tenantId: string;
+  tenantId!: string;
 
   /**
    * ID of the aggregate that generated this event
    * Used to find all events for an aggregate
    */
   @Column('varchar')
-  aggregateId: string;
+  aggregateId!: string;
 
   /**
    * Type of aggregate (Release, Sprint, Bug, TestRun, etc.)
    * Used for querying by aggregate type
    */
   @Column('varchar')
-  aggregateType: string;
+  aggregateType!: string;
 
   /**
    * Type of event (ReleaseCreated, BugTriaged, etc.)
    * Used for event routing and versioning
    */
   @Column('varchar')
-  eventType: string;
+  eventType!: string;
 
   /**
    * Version of this event type (for migration support)
@@ -89,21 +89,21 @@ export class StoredDomainEvent {
    * Example: v1, v2 for ReleaseCreated with schema changes
    */
   @Column('varchar', { default: 'v1' })
-  eventVersion: string;
+  eventVersion!: string;
 
   /**
    * When the event occurred in business time
    * May differ from database insertion time
    */
   @Column('timestamp')
-  occurredAt: Date;
+  occurredAt!: Date;
 
   /**
    * When the event was stored in database
    * Used for detecting out-of-order storage
    */
   @CreateDateColumn()
-  storedAt: Date;
+  storedAt!: Date;
 
   /**
    * Full event data as JSON
@@ -111,7 +111,7 @@ export class StoredDomainEvent {
    * Stored as JSONB in PostgreSQL for efficient querying
    */
   @Column('jsonb')
-  eventData: Record<string, any>;
+  eventData!: Record<string, any>;
 
   /**
    * Metadata about event correlation
@@ -141,7 +141,7 @@ export class StoredDomainEvent {
    * Events still exist but data is redacted
    */
   @Column('boolean', { default: false })
-  isRedacted: boolean;
+  isRedacted!: boolean;
 
   /**
    * Create a StoredDomainEvent from a domain event

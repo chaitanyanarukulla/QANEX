@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { DomainEventPublisher } from '../domain-event.publisher';
+import { DomainEventPublisher, DomainEventSubscriber } from '../domain-event.publisher';
+import { DomainEvent } from '../aggregate-root.interface';
 import { BugTriaged } from '../../../bugs/domain/events/bug-triaged.event';
 
 /**
@@ -24,12 +25,16 @@ import { BugTriaged } from '../../../bugs/domain/events/bug-triaged.event';
  * Error Handling: Log and continue (triage shouldn't be blocked)
  */
 @Injectable()
-export class BugTriagedSubscriber {
+export class BugTriagedSubscriber implements DomainEventSubscriber {
   private readonly logger = new Logger(BugTriagedSubscriber.name);
 
   constructor(private eventPublisher: DomainEventPublisher) {
     // Subscribe to BugTriaged events
-    this.eventPublisher.subscribe('BugTriaged', this.handle.bind(this));
+    this.eventPublisher.subscribe(this);
+  }
+
+  isSubscribedTo(event: DomainEvent): boolean {
+    return event.eventType === 'BugTriaged';
   }
 
   /**
@@ -45,43 +50,44 @@ export class BugTriagedSubscriber {
    *
    * @param event BugTriaged event
    */
-  async handle(event: BugTriaged): Promise<void> {
+  async handle(event: DomainEvent): Promise<void> {
+    const bugEvent = event as BugTriaged;
     try {
-      this.logger.debug(`Processing BugTriaged event for bug ${event.bugId}`);
+      this.logger.debug(`Processing BugTriaged event for bug ${bugEvent.bugId}`);
 
       // TODO: Implement when Bug service available
-      // const bug = await this.bugsService.findById(event.bugId);
+      // const bug = await this.bugsService.findById(bugEvent.bugId);
 
       // Handle critical/P0 bugs specially
-      const isCritical = event.severity === 'CRITICAL';
-      const isP0 = event.priority === 'P0';
+      const isCritical = bugEvent.severity === 'CRITICAL';
+      const isP0 = bugEvent.priority === 'P0';
 
       if (isCritical || isP0) {
-        await this.handleCriticalBug(event);
+        await this.handleCriticalBug(bugEvent);
       }
 
       // Assign to developer
-      if (event.assignedTo) {
-        await this.assignBugToDeveloper(event);
+      if (bugEvent.assignedTo) {
+        await this.assignBugToDeveloper(bugEvent);
       }
 
       // Add to sprint backlog if in active sprint
-      // await this.addBugToSprintBacklog(event);
+      // await this.addBugToSprintBacklog(bugEvent);
 
       // Send notifications
-      await this.sendTriageNotifications(event);
+      await this.sendTriageNotifications(bugEvent);
 
       // Update metrics
-      // await this.bugMetricsService.updateTriageMetrics(event);
+      // await this.bugMetricsService.updateTriageMetrics(bugEvent);
 
       this.logger.log(
-        `Bug ${event.bugId} triaged: severity=${event.severity}, priority=${event.priority}`,
+        `Bug ${bugEvent.bugId} triaged: severity=${bugEvent.severity}, priority=${bugEvent.priority}`,
       );
     } catch (error) {
       // Error handling: log but don't block triage
       this.logger.error(
-        `Failed to process bug triage for ${event.bugId}: ${error.message}`,
-        error.stack,
+        `Failed to process bug triage for ${bugEvent.bugId}: ${(error as any).message}`,
+        (error as any).stack,
       );
     }
   }

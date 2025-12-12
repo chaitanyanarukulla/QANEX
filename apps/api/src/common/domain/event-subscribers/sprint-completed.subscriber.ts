@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { DomainEventPublisher } from '../domain-event.publisher';
+import { DomainEventPublisher, DomainEventSubscriber } from '../domain-event.publisher';
+import { DomainEvent } from '../aggregate-root.interface';
 import { SprintCompleted } from '../../../sprints/domain/events/sprint-completed.event';
 
 /**
@@ -24,12 +25,16 @@ import { SprintCompleted } from '../../../sprints/domain/events/sprint-completed
  * Error Handling: Graceful degradation
  */
 @Injectable()
-export class SprintCompletedSubscriber {
+export class SprintCompletedSubscriber implements DomainEventSubscriber {
   private readonly logger = new Logger(SprintCompletedSubscriber.name);
 
   constructor(private eventPublisher: DomainEventPublisher) {
     // Subscribe to SprintCompleted events
-    this.eventPublisher.subscribe('SprintCompleted', this.handle.bind(this));
+    this.eventPublisher.subscribe(this);
+  }
+
+  isSubscribedTo(event: DomainEvent): boolean {
+    return event.eventType === 'SprintCompleted';
   }
 
   /**
@@ -47,14 +52,15 @@ export class SprintCompletedSubscriber {
    *
    * @param event SprintCompleted event
    */
-  async handle(event: SprintCompleted): Promise<void> {
+  async handle(event: DomainEvent): Promise<void> {
+    const sprintEvent = event as SprintCompleted;
     try {
       this.logger.debug(
-        `Processing SprintCompleted event for sprint ${event.sprintId}`,
+        `Processing SprintCompleted event for sprint ${sprintEvent.sprintId}`,
       );
 
       // Calculate sprint velocity
-      const velocity = this.calculateVelocity(event);
+      const velocity = this.calculateVelocity(sprintEvent);
 
       // TODO: Implement when Analytics service available
       // await this.analyticsService.recordSprintMetrics({
@@ -83,16 +89,16 @@ export class SprintCompletedSubscriber {
       // });
 
       // Send notifications
-      await this.sendCompletionNotifications(event, velocity);
+      await this.sendCompletionNotifications(sprintEvent, velocity);
 
       this.logger.log(
-        `Sprint completed: velocity=${velocity}, completion=${event.completionPercentage}%`,
+        `Sprint completed: velocity=${velocity}, completion=${sprintEvent.completionPercentage}%`,
       );
     } catch (error) {
       // Error handling: log but don't block sprint completion
       this.logger.error(
-        `Failed to process sprint completion for ${event.sprintId}: ${error.message}`,
-        error.stack,
+        `Failed to process sprint completion for ${sprintEvent.sprintId}: ${(error as any).message}`,
+        (error as any).stack,
       );
     }
   }

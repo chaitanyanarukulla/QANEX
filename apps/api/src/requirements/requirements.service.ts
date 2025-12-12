@@ -15,7 +15,7 @@ import { UpdateRequirementDto } from './dto/update-requirement.dto';
 import { IAuthUser } from '../auth/interfaces/auth-user.interface';
 
 // DDD Imports
-import { RequirementAggregate } from './domain/requirement.aggregate';
+import { Requirement as RequirementAggregate } from './domain/requirement.aggregate';
 import { EventStorePublisher } from '../common/event-store/event-store-publisher';
 import { DomainEventPublisher } from '../common/domain/domain-event.publisher';
 

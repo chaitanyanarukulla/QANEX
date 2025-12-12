@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { DomainEventPublisher } from '../domain-event.publisher';
+import { DomainEventPublisher, DomainEventSubscriber } from '../domain-event.publisher';
+import { DomainEvent } from '../aggregate-root.interface';
 import { TestRunCompleted } from '../../../test-management/domain/events/test-run-completed.event';
 
 /**
@@ -22,15 +23,16 @@ import { TestRunCompleted } from '../../../test-management/domain/events/test-ru
  * Error Handling: Graceful degradation (metrics don't block release)
  */
 @Injectable()
-export class TestRunCompletedSubscriber {
+export class TestRunCompletedSubscriber implements DomainEventSubscriber {
   private readonly logger = new Logger(TestRunCompletedSubscriber.name);
 
   constructor(private eventPublisher: DomainEventPublisher) {
     // Subscribe to TestRunCompleted events
-    this.eventPublisher.subscribe(
-      'TestRunCompleted',
-      this.handle.bind(this),
-    );
+    this.eventPublisher.subscribe(this);
+  }
+
+  isSubscribedTo(event: DomainEvent): boolean {
+    return event.eventType === 'TestRunCompleted';
   }
 
   /**
@@ -47,56 +49,57 @@ export class TestRunCompletedSubscriber {
    *
    * @param event TestRunCompleted event
    */
-  async handle(event: TestRunCompleted): Promise<void> {
+  async handle(event: DomainEvent): Promise<void> {
+    const testEvent = event as TestRunCompleted;
     try {
       this.logger.debug(
-        `Processing TestRunCompleted event for test run ${event.testRunId}`,
+        `Processing TestRunCompleted event for test run ${testEvent.testRunId}`,
       );
 
       // Store results in analytics
       // TODO: Implement when Analytics service available
       // await this.analyticsService.storeTestResults({
-      //   testRunId: event.testRunId,
-      //   tenantId: event.tenantId,
-      //   passedTests: event.passedTests,
-      //   failedTests: event.failedTests,
-      //   passRate: event.passRate,
-      //   duration: event.durationMs,
+      //   testRunId: testEvent.testRunId,
+      //   tenantId: testEvent.tenantId,
+      //   passedTests: testEvent.passedTests,
+      //   failedTests: testEvent.failedTests,
+      //   passRate: testEvent.passRate,
+      //   duration: testEvent.durationMs,
       // });
 
       // Check release gate
-      const passesReleaseGate = event.passRate >= 80;
+      const passesReleaseGate = testEvent.passRate >= 80;
 
       if (!passesReleaseGate) {
-        await this.handleFailedReleaseGate(event);
+        await this.handleFailedReleaseGate(testEvent);
       }
 
       // Update release readiness if associated with release
       // TODO: Implement when Release service available
       // await this.releaseService.updateTestMetrics({
-      //   testPassRate: event.passRate,
-      //   testRunId: event.testRunId,
+      //   testPassRate: testEvent.passRate,
+      //   testRunId: testEvent.testRunId,
       // });
 
       // Generate test report
       // await this.testReportService.generateReport({
-      //   testRunId: event.testRunId,
-      //   passedTests: event.passedTests,
-      //   failedTests: event.failedTests,
+      //   testRunId: testEvent.testRunId,
+      //   passedTests: testEvent.passedTests,
+      //   failedTests: testEvent.failedTests,
       // });
 
       // Send notifications
-      await this.sendTestCompletionNotifications(event);
+      await this.sendTestCompletionNotifications(testEvent);
 
       this.logger.log(
-        `Test run completed: ${event.passedTests}/${event.passedTests + event.failedTests} passed ` +
-        `(${event.passRate}% pass rate)`,
+        `Test run completed: ${testEvent.passedTests}/${testEvent.passedTests + testEvent.failedTests} passed ` +
+        `(${testEvent.passRate}% pass rate)`,
       );
     } catch (error) {
       // Error handling: log but don't block test completion
       this.logger.error(
-        `Failed to process test completion for ${event.testRunId}: ${error.message}`,
-        error.stack,
+        `Failed to process test completion for ${testEvent.testRunId}: ${(error as any).message}`,
+        (error as any).stack,
       );
     }
   }

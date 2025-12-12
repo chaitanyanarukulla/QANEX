@@ -91,8 +91,8 @@ export class BugAdapter {
       return metrics;
     } catch (error) {
       this.logger.error(
-        `Failed to fetch bug metrics for tenant ${tenantId}: ${error.message}`,
-        error.stack,
+        `Failed to fetch bug metrics for tenant ${tenantId}: ${(error as any).message}`,
+        (error as any).stack,
       );
 
       // Return conservative data (assume worst case)
@@ -261,6 +261,6 @@ export interface BugMetricsDto {
   readonly blockingBugCount: number;
   readonly isBlocked: boolean;
   readonly blockingReason: string | null;
-  readonly criticalBugIds: readonly string[];
-  readonly p0BugIds: readonly string[];
+  readonly criticalBugIds: string[];
+  readonly p0BugIds: string[];
 }

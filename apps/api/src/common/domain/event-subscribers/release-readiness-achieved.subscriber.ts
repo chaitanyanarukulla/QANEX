@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { DomainEventPublisher } from '../domain-event.publisher';
+import { DomainEventPublisher, DomainEventSubscriber } from '../domain-event.publisher';
+import { DomainEvent } from '../aggregate-root.interface';
 import { ReleaseReadinessAchieved } from '../../../releases/domain/events/release-readiness-achieved.event';
 
 /**
@@ -30,17 +31,18 @@ import { ReleaseReadinessAchieved } from '../../../releases/domain/events/releas
  * Error Handling: Critical - must complete successfully
  */
 @Injectable()
-export class ReleaseReadinessAchievedSubscriber {
+export class ReleaseReadinessAchievedSubscriber implements DomainEventSubscriber {
   private readonly logger = new Logger(
     ReleaseReadinessAchievedSubscriber.name,
   );
 
   constructor(private eventPublisher: DomainEventPublisher) {
     // Subscribe to ReleaseReadinessAchieved events
-    this.eventPublisher.subscribe(
-      'ReleaseReadinessAchieved',
-      this.handle.bind(this),
-    );
+    this.eventPublisher.subscribe(this);
+  }
+
+  isSubscribedTo(event: DomainEvent): boolean {
+    return event.eventType === 'ReleaseReadinessAchieved';
   }
 
   /**
@@ -57,17 +59,18 @@ export class ReleaseReadinessAchievedSubscriber {
    *
    * @param event ReleaseReadinessAchieved event
    */
-  async handle(event: ReleaseReadinessAchieved): Promise<void> {
+  async handle(event: DomainEvent): Promise<void> {
+    const releaseEvent = event as ReleaseReadinessAchieved;
     try {
-      this.logger.info(
-        `🚀 RELEASE READY FOR DEPLOYMENT: ${event.releaseId} (v${event.version}, RCS: ${event.score}/100)`,
+      this.logger.debug(
+        `🚀 RELEASE READY FOR DEPLOYMENT: ${releaseEvent.releaseId} (v${releaseEvent.version}, RCS: ${releaseEvent.score}/100)`,
       );
 
       // Verify readiness
-      await this.verifyReadinessFinal(event);
+      await this.verifyReadinessFinal(releaseEvent);
 
       // Enable deployment
-      await this.enableDeploymentPipeline(event);
+      await this.enableDeploymentPipeline(releaseEvent);
 
       // Create approval workflow
       // TODO: Implement when Approval service available
@@ -86,24 +89,24 @@ export class ReleaseReadinessAchievedSubscriber {
       // });
 
       // Send notifications
-      await this.sendDeploymentReadyNotifications(event);
+      await this.sendDeploymentReadyNotifications(releaseEvent);
 
       // Record compliance milestone
       // TODO: Implement when Compliance service available
       // await this.complianceService.recordMilestone({
-      //   releaseId: event.releaseId,
+      //   releaseId: releaseEvent.releaseId,
       //   milestone: 'RELEASE_READY',
-      //   timestamp: event.occurredAt,
+      //   timestamp: releaseEvent.occurredAt,
       // });
 
-      this.logger.info(
-        `Release ${event.releaseId} enabled for deployment. Awaiting approval.`,
+      this.logger.debug(
+        `Release ${releaseEvent.releaseId} enabled for deployment. Awaiting approval.`,
       );
     } catch (error) {
       // Critical error handling - must log and escalate
       this.logger.error(
-        `CRITICAL: Failed to enable deployment for ${event.releaseId}: ${error.message}`,
-        error.stack,
+        `CRITICAL: Failed to enable deployment for ${releaseEvent.releaseId}: ${(error as any).message}`,
+        (error as any).stack,
       );
 
       // TODO: Escalate to on-call engineer
@@ -141,7 +144,7 @@ export class ReleaseReadinessAchievedSubscriber {
   private async enableDeploymentPipeline(
     event: ReleaseReadinessAchieved,
   ): Promise<void> {
-    this.logger.info(
+    this.logger.debug(
       `Enabling deployment pipeline for ${event.releaseId} v${event.version}`,
     );
 

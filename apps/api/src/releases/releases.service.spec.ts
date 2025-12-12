@@ -3,6 +3,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ReleasesService } from './releases.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Release, ReleaseStatus } from './release.entity';
+import { EventStorePublisher } from '../common/event-store/event-store-publisher';
+import { DomainEventPublisher } from '../common/domain/domain-event.publisher';
 
 const mockRepo = {
   create: jest.fn(),
@@ -10,6 +12,16 @@ const mockRepo = {
   find: jest.fn(),
   findOne: jest.fn(),
   update: jest.fn(),
+};
+
+const mockEventStorePublisher = {
+  publishAll: jest.fn().mockResolvedValue(undefined),
+  publish: jest.fn().mockResolvedValue(undefined),
+};
+
+const mockDomainEventPublisher = {
+  subscribe: jest.fn(),
+  publish: jest.fn(),
 };
 
 describe('ReleasesService', () => {
@@ -22,6 +34,14 @@ describe('ReleasesService', () => {
         {
           provide: getRepositoryToken(Release),
           useValue: mockRepo,
+        },
+        {
+          provide: EventStorePublisher,
+          useValue: mockEventStorePublisher,
+        },
+        {
+          provide: DomainEventPublisher,
+          useValue: mockDomainEventPublisher,
         },
       ],
     }).compile();

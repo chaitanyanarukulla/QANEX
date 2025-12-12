@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { DomainEventPublisher } from '../domain-event.publisher';
+import { DomainEventPublisher, DomainEventSubscriber } from '../domain-event.publisher';
+import { DomainEvent } from '../aggregate-root.interface';
 import { ReleaseReadinessEvaluated } from '../../../releases/domain/events/release-readiness-evaluated.event';
 
 /**
@@ -23,15 +24,16 @@ import { ReleaseReadinessEvaluated } from '../../../releases/domain/events/relea
  * Business Impact: Very High - determines if release proceeds
  */
 @Injectable()
-export class ReleaseReadinessEvaluatedSubscriber {
+export class ReleaseReadinessEvaluatedSubscriber implements DomainEventSubscriber {
   private readonly logger = new Logger(ReleaseReadinessEvaluatedSubscriber.name);
 
   constructor(private eventPublisher: DomainEventPublisher) {
     // Subscribe to ReleaseReadinessEvaluated events
-    this.eventPublisher.subscribe(
-      'ReleaseReadinessEvaluated',
-      this.handle.bind(this),
-    );
+    this.eventPublisher.subscribe(this);
+  }
+
+  isSubscribedTo(event: DomainEvent): boolean {
+    return event.eventType === 'ReleaseReadinessEvaluated';
   }
 
   /**
@@ -47,46 +49,47 @@ export class ReleaseReadinessEvaluatedSubscriber {
    *
    * @param event ReleaseReadinessEvaluated event
    */
-  async handle(event: ReleaseReadinessEvaluated): Promise<void> {
+  async handle(event: DomainEvent): Promise<void> {
+    const releaseEvent = event as ReleaseReadinessEvaluated;
     try {
       this.logger.debug(
-        `Processing ReleaseReadinessEvaluated event for ${event.releaseId}`,
+        `Processing ReleaseReadinessEvaluated event for ${releaseEvent.releaseId}`,
       );
 
       // Store RCS evaluation in audit trail
       // TODO: Implement when Release service available
       // await this.releaseAuditService.recordEvaluation({
-      //   releaseId: event.releaseId,
-      //   score: event.score,
-      //   status: event.status,
-      //   timestamp: event.occurredAt,
+      //   releaseId: releaseEvent.releaseId,
+      //   score: releaseEvent.score,
+      //   status: releaseEvent.status,
+      //   timestamp: releaseEvent.occurredAt,
       // });
 
       // Update release metrics
       // await this.releaseMetricsService.updateRCS({
-      //   releaseId: event.releaseId,
-      //   score: event.score,
-      //   status: event.status,
-      //   passesAllGates: event.passesAllGates,
+      //   releaseId: releaseEvent.releaseId,
+      //   score: releaseEvent.score,
+      //   status: releaseEvent.status,
+      //   passesAllGates: releaseEvent.passesAllGates,
       // });
 
       // Handle based on status
-      if (event.status === 'READY' && event.passesAllGates) {
-        await this.handleReadyForRelease(event);
-      } else if (event.status === 'BLOCKED') {
-        await this.handleBlocked(event);
-      } else if (event.status === 'WARNING') {
-        await this.handleWarning(event);
+      if (releaseEvent.status === 'READY' && releaseEvent.passesAllGates) {
+        await this.handleReadyForRelease(releaseEvent);
+      } else if (releaseEvent.status === 'BLOCKED') {
+        await this.handleBlocked(releaseEvent);
+      } else if (releaseEvent.status === 'WARNING') {
+        await this.handleWarning(releaseEvent);
       }
 
       this.logger.log(
-        `Release ${event.releaseId} evaluated: RCS ${event.score}/100 - ${event.status}`,
+        `Release ${releaseEvent.releaseId} evaluated: RCS ${releaseEvent.score}/100 - ${releaseEvent.status}`,
       );
     } catch (error) {
       // Error handling: log but don't block release evaluation
       this.logger.error(
-        `Failed to process release readiness for ${event.releaseId}: ${error.message}`,
-        error.stack,
+        `Failed to process release readiness for ${releaseEvent.releaseId}: ${(error as any).message}`,
+        (error as any).stack,
       );
     }
   }
@@ -98,7 +101,7 @@ export class ReleaseReadinessEvaluatedSubscriber {
   private async handleReadyForRelease(
     event: ReleaseReadinessEvaluated,
   ): Promise<void> {
-    this.logger.info(
+    this.logger.debug(
       `Release ${event.releaseId} is READY for deployment (RCS: ${event.score})`,
     );
 

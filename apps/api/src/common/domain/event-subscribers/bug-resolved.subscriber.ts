@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { DomainEventPublisher } from '../domain-event.publisher';
+import { DomainEventPublisher, DomainEventSubscriber } from '../domain-event.publisher';
+import { DomainEvent } from '../aggregate-root.interface';
 import { BugResolved } from '../../../bugs/domain/events/bug-resolved.event';
 
 /**
@@ -25,12 +26,16 @@ import { BugResolved } from '../../../bugs/domain/events/bug-resolved.event';
  * Error Handling: Log and continue (doesn't block bug resolution)
  */
 @Injectable()
-export class BugResolvedSubscriber {
+export class BugResolvedSubscriber implements DomainEventSubscriber {
   private readonly logger = new Logger(BugResolvedSubscriber.name);
 
   constructor(private eventPublisher: DomainEventPublisher) {
     // Subscribe to BugResolved events
-    this.eventPublisher.subscribe('BugResolved', this.handle.bind(this));
+    this.eventPublisher.subscribe(this);
+  }
+
+  isSubscribedTo(event: DomainEvent): boolean {
+    return event.eventType === 'BugResolved';
   }
 
   /**
@@ -46,16 +51,17 @@ export class BugResolvedSubscriber {
    *
    * @param event BugResolved event
    */
-  async handle(event: BugResolved): Promise<void> {
+  async handle(event: DomainEvent): Promise<void> {
+    const bugEvent = event as BugResolved;
     try {
-      this.logger.debug(`Processing BugResolved event for bug ${event.bugId}`);
+      this.logger.debug(`Processing BugResolved event for bug ${bugEvent.bugId}`);
 
       // Handle critical/P0 bugs that might un-block releases
-      const isCritical = event.severity === 'CRITICAL';
-      const isP0 = event.priority === 'P0';
+      const isCritical = bugEvent.severity === 'CRITICAL';
+      const isP0 = bugEvent.priority === 'P0';
 
       if (isCritical || isP0) {
-        await this.handleCriticalBugResolved(event);
+        await this.handleCriticalBugResolved(bugEvent);
       }
 
       // Create QA verification task
@@ -76,14 +82,14 @@ export class BugResolvedSubscriber {
       // });
 
       // Send notifications
-      await this.sendResolutionNotifications(event);
+      await this.sendResolutionNotifications(bugEvent);
 
-      this.logger.log(`Bug ${event.bugId} resolved - awaiting QA verification`);
+      this.logger.log(`Bug ${bugEvent.bugId} resolved - awaiting QA verification`);
     } catch (error) {
       // Error handling: log but don't block bug resolution
       this.logger.error(
-        `Failed to process bug resolution for ${event.bugId}: ${error.message}`,
-        error.stack,
+        `Failed to process bug resolution for ${bugEvent.bugId}: ${(error as any).message}`,
+        (error as any).stack,
       );
     }
   }
@@ -95,7 +101,7 @@ export class BugResolvedSubscriber {
    * @private
    */
   private async handleCriticalBugResolved(event: BugResolved): Promise<void> {
-    this.logger.info(
+    this.logger.debug(
       `CRITICAL BUG RESOLVED: ${event.bugId} - Re-evaluating release readiness`,
     );
 

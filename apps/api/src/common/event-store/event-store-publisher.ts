@@ -107,8 +107,8 @@ export class EventStorePublisher {
       await this.eventPublisher.publish(event);
     } catch (error) {
       this.logger.error(
-        `Failed to publish event ${event.eventType}: ${error.message}`,
-        error.stack,
+        `Failed to publish event ${event.eventType}: ${(error as any).message}`,
+        (error as any).stack,
       );
 
       // Re-throw to prevent partial failures
@@ -149,8 +149,8 @@ export class EventStorePublisher {
       }
     } catch (error) {
       this.logger.error(
-        `Failed to publish batch of ${events.length} events: ${error.message}`,
-        error.stack,
+        `Failed to publish batch of ${events.length} events: ${(error as any).message}`,
+        (error as any).stack,
       );
 
       // Re-throw to prevent partial failures
@@ -206,8 +206,8 @@ export class EventStorePublisher {
       return events;
     } catch (error) {
       this.logger.error(
-        `Failed to replay events for aggregate ${aggregateId}: ${error.message}`,
-        error.stack,
+        `Failed to replay events for aggregate ${aggregateId}: ${(error as any).message}`,
+        (error as any).stack,
       );
 
       throw error;
@@ -236,8 +236,8 @@ export class EventStorePublisher {
       return events;
     } catch (error) {
       this.logger.error(
-        `Failed to get events since ${since}: ${error.message}`,
-        error.stack,
+        `Failed to get events since ${since}: ${(error as any).message}`,
+        (error as any).stack,
       );
 
       throw error;
@@ -265,8 +265,8 @@ export class EventStorePublisher {
       return events;
     } catch (error) {
       this.logger.error(
-        `Failed to get events of type ${eventType}: ${error.message}`,
-        error.stack,
+        `Failed to get events of type ${eventType}: ${(error as any).message}`,
+        (error as any).stack,
       );
 
       throw error;
@@ -297,8 +297,8 @@ export class EventStorePublisher {
       return events;
     } catch (error) {
       this.logger.error(
-        `Failed to get events for aggregate type ${aggregateType}: ${error.message}`,
-        error.stack,
+        `Failed to get events for aggregate type ${aggregateType}: ${(error as any).message}`,
+        (error as any).stack,
       );
 
       throw error;

@@ -423,7 +423,7 @@ export class Requirement extends BaseDomainAggregate {
    * @returns true if requirement can be assigned to sprint
    */
   isReadyForSprint(): boolean {
-    return this.status === 'APPROVED' && this.rqs && this.rqs.score >= 75;
+    return (this.status === 'APPROVED' && !!this.rqs && this.rqs.score >= 75) || false;
   }
 
   /**
