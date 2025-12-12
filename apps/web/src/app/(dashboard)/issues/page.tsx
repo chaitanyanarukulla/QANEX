@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Plus, Bot, Loader2 } from 'lucide-react';
-import { bugsApi, Bug } from '@/lib/api';
+import { bugsApi } from '@/services/issues.service';
+import { Bug } from '@/types/issue';
 import { useToast } from '@/components/ui/use-toast';
 
 const COLUMNS = [

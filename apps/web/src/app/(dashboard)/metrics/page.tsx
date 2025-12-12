@@ -4,22 +4,10 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Activity, Zap, CheckCircle, Bug } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { api } from '@/lib/api';
+import { metricsApi } from '@/services/metrics.service';
+import { DashboardMetrics } from '@/types/metrics';
 
-interface DashboardMetrics {
-    project: {
-        avgRqs: number;
-        bugDensity: number;
-    };
-    ai: {
-        totalCalls: number;
-        avgLatency: number;
-        breakdown: {
-            analyze: number;
-            triage: number;
-        };
-    };
-}
+// DashboardMetrics is imported from @/types/metrics
 
 export default function MetricsPage() {
     const [data, setData] = useState<DashboardMetrics | null>(null);
@@ -28,7 +16,7 @@ export default function MetricsPage() {
     useEffect(() => {
         const fetchMetrics = async () => {
             try {
-                const jsonData = await api<DashboardMetrics>('/metrics/dashboard');
+                const jsonData = await metricsApi.dashboard();
                 setData(jsonData);
             } catch (e) {
                 console.error('Failed to fetch metrics', e);

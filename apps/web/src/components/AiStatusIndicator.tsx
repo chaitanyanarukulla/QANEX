@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { tenantsApi } from '@/lib/api';
+import { tenantsApi } from '@/services/tenants.service';
 import { ShieldCheck, Cloud } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 

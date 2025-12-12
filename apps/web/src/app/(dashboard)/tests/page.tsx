@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Plus, Search, FileText, Loader2, Trash2, Edit, ChevronDown, ChevronRight } from 'lucide-react';
-import { testCasesApi, TestCase, TestStep } from '@/lib/api';
+import { testCasesApi } from '@/services/tests.service';
+import { TestCase, TestStep } from '@/types/tests';
 
 export default function TestRepositoryPage() {
     const [testCases, setTestCases] = useState<TestCase[]>([]);

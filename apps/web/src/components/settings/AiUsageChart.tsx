@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { api } from '@/lib/api';
+import { metricsApi } from '@/services/metrics.service';
+import { AiUsageByDate } from '@/types/ai';
 
 interface UsageData {
     date: string;
@@ -21,9 +22,9 @@ export function AiUsageChart() {
 
     const loadData = async () => {
         try {
-            const history = await api<UsageData[]>('/metrics/ai/usage');
+            const history = await metricsApi.aiUsage();
             // Format dates
-            const formatted = history.map(h => ({
+            const formatted = history.map((h: AiUsageByDate) => ({
                 ...h,
                 date: new Date(h.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
             }));

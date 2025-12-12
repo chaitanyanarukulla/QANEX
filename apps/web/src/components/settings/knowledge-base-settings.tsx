@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
-import { aiApi, SearchResult } from '@/lib/api';
+import { aiApi } from '@/services/ai.service';
+import { SearchResult } from '@/types/ai';
 import { Trash2, RefreshCw, FileText, Bug, CheckSquare, Search } from 'lucide-react';
 
 export function KnowledgeBaseSettings() {

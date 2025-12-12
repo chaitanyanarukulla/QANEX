@@ -6,7 +6,8 @@ import {
     ArrowLeft, CheckCircle, XCircle, AlertTriangle, SkipForward,
     Loader2, FileText
 } from 'lucide-react';
-import { testRunsApi, testCasesApi, TestRun, TestCase, TestResult } from '@/lib/api';
+import { testRunsApi, testCasesApi } from '@/services/tests.service';
+import { TestRun, TestCase, TestResult } from '@/types/tests';
 import Link from 'next/link';
 
 type ResultStatus = 'PASS' | 'FAIL' | 'BLOCKED' | 'SKIPPED';

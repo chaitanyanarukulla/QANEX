@@ -6,7 +6,8 @@ import Link from 'next/link';
 import {
     ArrowLeft, Calendar, Users, GripVertical, MoreHorizontal, Plus, ChevronDown, Loader2, BarChart3
 } from 'lucide-react';
-import { sprintsApi, Sprint, SprintMetrics, SprintItem } from '@/lib/api';
+import { sprintsApi } from '@/services/sprints.service';
+import { Sprint, SprintMetrics, SprintItem } from '@/types/sprint';
 
 // SDLC Swimlane definitions
 const SWIMLANES = [

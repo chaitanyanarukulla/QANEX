@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { documentsApi, Document, DocumentStatus } from '@/lib/api';
+import { documentsApi } from '@/services/documents.service';
+import { Document, DocumentStatus } from '@/types/document';
 import { Loader2, Save, ArrowLeft, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { AiReviewPanel } from '@/components/documents/AiReviewPanel';
@@ -26,6 +27,12 @@ export default function DocumentDetailPage() {
     const [isSaving, setIsSaving] = useState(false);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
+    const [showDetailsModal, setShowDetailsModal] = useState(false);
+    const [detailsForm, setDetailsForm] = useState({
+        description: '',
+        version: '',
+        tags: ''
+    });
     const [showSidebar, setShowSidebar] = useState(true);
 
     // Initialize Tiptap editor
@@ -62,8 +69,12 @@ export default function DocumentDetailPage() {
             setTitle(data.title);
             setContent(data.content || '');
             setStatus(data.status);
+            setDetailsForm({
+                description: data.description || '',
+                version: data.version || '1.0',
+                tags: data.tags?.join(', ') || ''
+            });
 
-            // Update editor content
             if (editor && data.content) {
                 editor.commands.setContent(data.content);
             }
@@ -77,6 +88,28 @@ export default function DocumentDetailPage() {
     useEffect(() => {
         loadDocument();
     }, [loadDocument]);
+
+    const handleSaveDetails = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!document) return;
+        setIsSaving(true);
+        try {
+            const updated = await documentsApi.update(document.id, {
+                title, // Keep title from main state
+                description: detailsForm.description,
+                version: detailsForm.version,
+                tags: detailsForm.tags.split(',').map(t => t.trim()).filter(Boolean)
+            });
+            setDocument(updated);
+            setShowDetailsModal(false);
+            showToast("Details updated successfully", "success");
+        } catch (error) {
+            console.error('Failed to update details:', error);
+            showToast("Failed to update details", "error");
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     const handleSave = async (newStatus?: DocumentStatus) => {
         if (!document) return;
@@ -206,19 +239,84 @@ export default function DocumentDetailPage() {
 
     return (
         <div className="flex flex-col h-screen bg-gray-50">
+            {/* Details Modal */}
+            {showDetailsModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                    <div className="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
+                        <h2 className="mb-4 text-xl font-semibold">Document Details</h2>
+                        <form onSubmit={handleSaveDetails} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Description</label>
+                                <textarea
+                                    className="mt-1 block w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                    rows={3}
+                                    value={detailsForm.description}
+                                    onChange={e => setDetailsForm({ ...detailsForm, description: e.target.value })}
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Version</label>
+                                    <input
+                                        type="text"
+                                        className="mt-1 block w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                        value={detailsForm.version}
+                                        onChange={e => setDetailsForm({ ...detailsForm, version: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Tags (comma separated)</label>
+                                    <input
+                                        type="text"
+                                        className="mt-1 block w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                        value={detailsForm.tags}
+                                        onChange={e => setDetailsForm({ ...detailsForm, tags: e.target.value })}
+                                        placeholder="e.g. frontend, v1, urgent"
+                                    />
+                                </div>
+                            </div>
+                            <div className="flex justify-end gap-2 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowDetailsModal(false)}
+                                    className="rounded-md px-4 py-2 text-sm text-gray-600 hover:bg-gray-100"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isSaving}
+                                    className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                                >
+                                    {isSaving ? 'Saving...' : 'Save Details'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
             {/* Top Navigation Bar */}
             <div className="flex items-center justify-between px-6 py-3 bg-white border-b">
                 <div className="flex items-center gap-4 flex-1">
                     <Link href="/documents" className="rounded-full p-2 hover:bg-gray-100">
                         <ArrowLeft className="h-5 w-5" />
                     </Link>
-                    <input
-                        type="text"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        placeholder="Document Title"
-                        className="text-xl font-semibold text-gray-900 bg-transparent border-none outline-none focus:ring-0 px-4"
-                    />
+                    <div className="flex flex-col">
+                        <input
+                            type="text"
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            placeholder="Document Title"
+                            className="text-xl font-semibold text-gray-900 bg-transparent border-none outline-none focus:ring-0 px-0"
+                        />
+                        <button
+                            onClick={() => setShowDetailsModal(true)}
+                            className="text-xs text-blue-600 hover:underline text-left -mt-1"
+                        >
+                            v{document.version || '1.0'} • Edit Details
+                        </button>
+                    </div>
                 </div>
 
                 <div className="flex items-center gap-3">

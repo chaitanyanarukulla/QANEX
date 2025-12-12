@@ -26,7 +26,7 @@ export function useOnboarding() {
 
     const fetchChecklist = async () => {
         try {
-            const { onboardingApi } = await import('@/lib/api');
+            const { onboardingApi } = await import('@/services/onboarding.service');
             const data = await onboardingApi.checklist();
 
             setState({

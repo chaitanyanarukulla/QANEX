@@ -3,12 +3,21 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Calendar, Plus, ArrowRight, Bot, MoreHorizontal, Loader2, Lightbulb, X, FileText } from 'lucide-react';
-import { sprintsApi, requirementsApi, SprintItem, AIPlanRecommendation, Requirement } from '@/lib/api';
+import { Calendar, Plus, ArrowRight, Bot, MoreHorizontal, Loader2, Lightbulb, X, FileText, ChevronDown, ChevronRight as ChevronRightIcon } from 'lucide-react';
+import { sprintsApi } from '@/services/sprints.service';
+import { requirementsApi } from '@/services/requirements.service';
+import { SprintItem, AIPlanRecommendation } from '@/types/sprint';
+import { Requirement } from '@/types/requirement';
+
+interface BacklogRequirement extends Requirement {
+    tasks: SprintItem[];
+}
 
 export default function PlanningPage() {
     const router = useRouter();
-    const [backlog, setBacklog] = useState<SprintItem[]>([]);
+    const [backlogRequirements, setBacklogRequirements] = useState<BacklogRequirement[]>([]);
+    const [standaloneBacklog, setStandaloneBacklog] = useState<SprintItem[]>([]);
+    const [expandedRequirements, setExpandedRequirements] = useState<Set<string>>(new Set());
     const [sprintItems, setSprintItems] = useState<SprintItem[]>([]);
     const [isStarting, setIsStarting] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
@@ -27,8 +36,13 @@ export default function PlanningPage() {
     const loadBacklogItems = async () => {
         try {
             setIsLoading(true);
-            const items = await sprintsApi.getBacklogItems();
-            setBacklog(items);
+            const data = await sprintsApi.getStructuredBacklog();
+            setBacklogRequirements(data.requirements);
+            setStandaloneBacklog(data.standaloneTasks);
+
+            // Auto expand all requirements initially
+            setExpandedRequirements(new Set(data.requirements.map(r => r.id)));
+
             setError(null);
         } catch (err) {
             console.error('Failed to load backlog:', err);
@@ -38,14 +52,49 @@ export default function PlanningPage() {
         }
     };
 
+    const toggleRequirement = (reqId: string) => {
+        const newExpanded = new Set(expandedRequirements);
+        if (newExpanded.has(reqId)) {
+            newExpanded.delete(reqId);
+        } else {
+            newExpanded.add(reqId);
+        }
+        setExpandedRequirements(newExpanded);
+    };
+
     const moveRight = (item: SprintItem) => {
-        setBacklog(backlog.filter(i => i.id !== item.id));
+        // Remove from standalone if present
+        if (standaloneBacklog.find(i => i.id === item.id)) {
+            setStandaloneBacklog(standaloneBacklog.filter(i => i.id !== item.id));
+        } else {
+            // Remove from requirement tasks
+            setBacklogRequirements(prev => prev.map(req => ({
+                ...req,
+                tasks: req.tasks.filter(t => t.id !== item.id)
+            })));
+        }
         setSprintItems([...sprintItems, item]);
     };
 
     const moveLeft = (item: SprintItem) => {
         setSprintItems(sprintItems.filter(i => i.id !== item.id));
-        setBacklog([...backlog, item]);
+
+        // Check if it belongs to a requirement
+        if (item.requirementId) {
+            const reqExists = backlogRequirements.find(r => r.id === item.requirementId);
+            if (reqExists) {
+                setBacklogRequirements(prev => prev.map(req => {
+                    if (req.id === item.requirementId) {
+                        return { ...req, tasks: [...req.tasks, item] };
+                    }
+                    return req;
+                }));
+                return;
+            }
+        }
+
+        // Add to standalone
+        setStandaloneBacklog([...standaloneBacklog, item]);
     };
 
     const handleAutoPlan = async () => {
@@ -59,12 +108,21 @@ export default function PlanningPage() {
 
             // Auto-add recommended items to sprint
             const recommendedItems = recommendation.recommendedItems.map(r => r.item);
-            const remainingBacklog = backlog.filter(item =>
-                !recommendedItems.some(rec => rec.id === item.id)
-            );
 
-            setSprintItems([...sprintItems, ...recommendedItems]);
-            setBacklog(remainingBacklog);
+            // Add to sprint items
+            setSprintItems(prev => [...prev, ...recommendedItems]);
+
+            // Remove from standalone
+            setStandaloneBacklog(prev => prev.filter(item =>
+                !recommendedItems.some(rec => rec.id === item.id)
+            ));
+
+            // Remove from requirements
+            setBacklogRequirements(prev => prev.map(req => ({
+                ...req,
+                tasks: req.tasks.filter(t => !recommendedItems.some(rec => rec.id === t.id))
+            })));
+
         } catch (err) {
             console.error('Failed to plan sprint:', err);
             setError('Failed to get AI recommendations');
@@ -237,7 +295,7 @@ export default function PlanningPage() {
                     </button>
                     <button
                         onClick={handleAutoPlan}
-                        disabled={backlog.length === 0 || isPlanning}
+                        disabled={(standaloneBacklog.length + backlogRequirements.reduce((acc, r) => acc + r.tasks.length, 0)) === 0 || isPlanning}
                         className="inline-flex items-center justify-center rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-purple-700 disabled:opacity-50">
                         {isPlanning ? (
                             <>
@@ -348,33 +406,112 @@ export default function PlanningPage() {
                     <div className="p-4 border-b bg-muted/40 flex justify-between items-center">
                         <h3 className="font-semibold flex items-center gap-2">
                             Product Backlog
-                            <span className="rounded-full bg-secondary px-2 py-0.5 text-xs text-secondary-foreground">{backlog.length}</span>
+                            <span className="rounded-full bg-secondary px-2 py-0.5 text-xs text-secondary-foreground">
+                                {standaloneBacklog.length + backlogRequirements.reduce((acc, req) => acc + req.tasks.length, 0)} items
+                            </span>
                         </h3>
                         <button className="text-muted-foreground hover:text-foreground">
                             <Plus className="h-4 w-4" />
                         </button>
                     </div>
-                    <div className="flex-1 overflow-y-auto p-4 space-y-2">
-                        {backlog.map(item => (
-                            <div key={item.id} className="group flex items-center justify-between p-3 rounded-md border bg-background hover:border-primary/50 transition-colors">
-                                <div>
-                                    <Link href={`/planning/backlog/${item.id}`} className="hover:underline">
-                                        <div className="font-medium text-sm">{item.title}</div>
-                                    </Link>
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+
+                        {/* 1. Requirements with Tasks */}
+                        {backlogRequirements.map(req => (
+                            <div key={req.id} className="border rounded-md bg-background overflow-hidden">
+                                <div
+                                    className="flex items-center justify-between p-3 bg-muted/30 hover:bg-muted/50 cursor-pointer transition-colors"
+                                    onClick={() => toggleRequirement(req.id)}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        {expandedRequirements.has(req.id) ? (
+                                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                        ) : (
+                                            <ChevronRightIcon className="h-4 w-4 text-muted-foreground" />
+                                        )}
+                                        <span className="font-medium text-purple-900 dark:text-purple-300">
+                                            {req.title}
+                                        </span>
+                                        <span className="text-xs text-muted-foreground bg-background border px-1.5 py-0.5 rounded">
+                                            {req.tasks.length} tasks
+                                        </span>
+                                    </div>
                                     <div className="text-xs text-muted-foreground">
-                                        {item.rqsScore ? `RQS: ${item.rqsScore}` : 'No RQS'} • {item.priority}
+                                        RQS: {req.rqsScore || '-'}
                                     </div>
                                 </div>
-                                <button
-                                    onClick={() => moveRight(item)}
-                                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-all">
-                                    <ArrowRight className="h-4 w-4" />
-                                </button>
+
+                                {expandedRequirements.has(req.id) && (
+                                    <div className="divide-y border-t">
+                                        {req.tasks.length === 0 ? (
+                                            <div className="p-3 text-xs text-muted-foreground text-center italic">
+                                                No tasks in backlog for this requirement.
+                                            </div>
+                                        ) : (
+                                            req.tasks.map(item => (
+                                                <div key={item.id} className="group flex items-center justify-between p-3 pl-8 hover:bg-accent/50 transition-colors bg-white dark:bg-slate-950">
+                                                    <div>
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="font-medium text-sm">{item.title}</div>
+                                                            <span className="px-1.5 py-0.5 text-[10px] font-medium border rounded uppercase text-muted-foreground">
+                                                                {item.type}
+                                                            </span>
+                                                        </div>
+                                                        <div className="text-xs text-muted-foreground mt-0.5">
+                                                            Priority: {item.priority}
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            moveRight(item);
+                                                        }}
+                                                        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-all">
+                                                        <ArrowRight className="h-4 w-4" />
+                                                    </button>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         ))}
-                        {backlog.length === 0 && (
-                            <div className="text-center py-8 text-muted-foreground text-sm">
-                                No backlog items. Create sprint items first.
+
+                        {/* 2. Standalone Tasks */}
+                        {standaloneBacklog.length > 0 && (
+                            <div className="space-y-2">
+                                {backlogRequirements.length > 0 && (
+                                    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider py-1">
+                                        Unlinked Items
+                                    </div>
+                                )}
+                                {standaloneBacklog.map(item => (
+                                    <div key={item.id} className="group flex items-center justify-between p-3 rounded-md border bg-background hover:border-primary/50 transition-colors">
+                                        <div>
+                                            <Link href={`/planning/backlog/${item.id}`} className="hover:underline">
+                                                <div className="font-medium text-sm">{item.title}</div>
+                                            </Link>
+                                            <div className="text-xs text-muted-foreground">
+                                                {item.rqsScore ? `RQS: ${item.rqsScore}` : 'No RQS'} • {item.priority}
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => moveRight(item)}
+                                            className="opacity-0 group-hover:opacity-100 p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-all">
+                                            <ArrowRight className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {backlogRequirements.length === 0 && standaloneBacklog.length === 0 && (
+                            <div className="text-center py-12 border rounded-lg border-dashed bg-muted/10">
+                                <FileText className="h-8 w-8 mx-auto text-muted-foreground mb-2 opacity-50" />
+                                <h3 className="text-sm font-medium">Backlog is empty</h3>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    Approve requirements to add them here.
+                                </p>
                             </div>
                         )}
                     </div>

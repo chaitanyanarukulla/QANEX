@@ -3,7 +3,9 @@
 import { Plus, Box, Folder, ArrowRight, Clock, Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { projectsApi, demoApi, Project } from '@/lib/api';
+import { projectsApi } from '@/services/projects.service';
+import { demoApi } from '@/services/demo.service';
+import { Project } from '@/types/project';
 
 export default function ProjectsPage() {
     const [isLoading, setIsLoading] = useState(true);

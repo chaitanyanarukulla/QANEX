@@ -43,6 +43,15 @@ export class Document {
   })
   status!: DocumentStatus;
 
+  @Column({ type: 'text', nullable: true })
+  description?: string;
+
+  @Column('simple-array', { nullable: true })
+  tags?: string[];
+
+  @Column({ default: '1.0' })
+  version?: string;
+
   @Column({
     type: 'enum',
     enum: DocumentSource,

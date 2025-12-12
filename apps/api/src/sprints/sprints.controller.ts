@@ -123,6 +123,12 @@ export class SprintsController {
     return this.sprintsService.getBacklogItems(tenantId);
   }
 
+  @Get('backlog/structured')
+  getStructuredBacklog(@Request() req: AuthenticatedRequest) {
+    const tenantId = req.user.tenantId || 'mock-tenant-id';
+    return this.sprintsService.getStructuredBacklog(tenantId);
+  }
+
   @Get(':id/items')
   getSprintItems(
     @Param('id') id: string,

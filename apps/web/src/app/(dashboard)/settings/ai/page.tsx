@@ -2,16 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { aiSettingsApi } from '@/services/ai.service';
+import { tenantsApi } from '@/services/tenants.service';
 import {
-  aiSettingsApi,
-  tenantsApi,
   AIProviderType,
   AIProviderInfo,
   AIModelInfo,
   AIConnectionTestResult,
   AIFoundryLocalStatus,
   TenantAIConfig,
-} from '@/lib/api';
+} from '@/types/ai';
 
 // Provider icons/badges
 const ProviderBadge = ({ category }: { category: 'cloud' | 'local' }) => (

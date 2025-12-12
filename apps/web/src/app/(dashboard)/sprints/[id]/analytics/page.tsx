@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, TrendingUp, TrendingDown, Minus, Loader2 } from 'lucide-react';
-import { sprintsApi, type BurndownData, type VelocityTrend } from '@/lib/api';
+import { sprintsApi } from '@/services/sprints.service';
+import { type BurndownData, type VelocityTrend } from '@/types/sprint';
 
 export default function SprintAnalyticsPage() {
     const params = useParams();

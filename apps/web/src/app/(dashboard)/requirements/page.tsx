@@ -3,7 +3,10 @@
 import { FileText, Plus, Search, Loader2, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { requirementsApi, documentsApi, Requirement, DocumentStatus, Document as AppDocument } from '@/lib/api';
+import { requirementsApi } from '@/services/requirements.service';
+import { documentsApi } from '@/services/documents.service';
+import { Requirement } from '@/types/requirement';
+import { DocumentStatus, Document as AppDocument } from '@/types/document';
 
 const stateColors: Record<string, string> = {
   DRAFT: 'bg-slate-500/15 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800',
@@ -11,6 +14,7 @@ const stateColors: Record<string, string> = {
   NEEDS_REVISION: 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-800',
   READY: 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border-cyan-200 dark:border-cyan-800',
   APPROVED: 'bg-green-500/15 text-green-600 dark:text-green-400 border-green-200 dark:border-green-800',
+  BACKLOGGED: 'bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-800',
 };
 
 const rqsColor = (score: number) => {

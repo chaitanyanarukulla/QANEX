@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Loader2 } from 'lucide-react';
-import { api } from '@/lib/api';
+import { projectsApi } from '@/services/projects.service';
 
 export default function NewProjectPage() {
     const router = useRouter();
@@ -22,10 +22,7 @@ export default function NewProjectPage() {
         setError(null);
 
         try {
-            await api('/projects', {
-                method: 'POST',
-                body: formData,
-            });
+            await projectsApi.create(formData);
             router.push('/projects');
         } catch (err) {
             console.error('Failed to create project:', err);

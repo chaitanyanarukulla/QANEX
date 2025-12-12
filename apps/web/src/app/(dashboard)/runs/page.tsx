@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Play, CheckCircle, Clock, Plus, Loader2, BarChart3 } from 'lucide-react';
-import { testRunsApi, TestRun } from '@/lib/api';
+import { testRunsApi } from '@/services/tests.service';
+import { TestRun } from '@/types/tests';
 import Link from 'next/link';
 
 export default function TestRunnerPage() {

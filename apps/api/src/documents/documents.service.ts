@@ -23,7 +23,7 @@ export class DocumentsService {
     private versionRepo: Repository<DocumentVersion>,
     private documentsAiService: DocumentsAiService,
     private ragService: RagService,
-  ) { }
+  ) {}
 
   async create(
     data: {

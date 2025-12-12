@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Loader2, Bot, Save, Trash2, Check, ListTodo, PlusCircle, MinusCircle } from 'lucide-react';
 import Link from 'next/link';
-import { requirementsApi, sprintsApi, Requirement, Sprint } from '@/lib/api';
+import { requirementsApi } from '@/services/requirements.service';
+import { Requirement } from '@/types/requirement';
 import { useToast } from '@/components/ui/use-toast';
 
 export default function RequirementDetailPage() {
@@ -26,8 +27,6 @@ export default function RequirementDetailPage() {
 
     const [error, setError] = useState<string | null>(null);
 
-    const [sprints, setSprints] = useState<Sprint[]>([]);
-
     const loadRequirement = useCallback(async () => {
         try {
             setIsLoading(true);
@@ -45,32 +44,12 @@ export default function RequirementDetailPage() {
         }
     }, [id]);
 
-    const loadSprints = useCallback(async () => {
-        try {
-            const data = await sprintsApi.list();
-            setSprints(data);
-        } catch (error) {
-            console.error('Failed to load sprints', error);
-        } finally {
-        }
-    }, []);
-
     useEffect(() => {
         if (id) {
             loadRequirement();
-            loadSprints();
+            // loadSprints(); // Not needed anymore
         }
-    }, [id, loadRequirement, loadSprints]);
-
-    const handleTaskSprintChange = async (taskId: string, sprintId: string) => {
-        try {
-            await sprintsApi.moveItem(taskId, sprintId);
-            // Reload requirement to refresh tasks (or update locally)
-            loadRequirement();
-        } catch (error) {
-            console.error('Failed to assign task to sprint', error);
-        }
-    };
+    }, [id, loadRequirement]);
 
     const handleEdit = () => {
         setIsEditing(true);
@@ -131,7 +110,6 @@ export default function RequirementDetailPage() {
 
             // Reload to get tasks
             await loadRequirement();
-            await loadSprints();
             setError(null);
         } catch (err) {
             console.error('Failed to generate tasks:', err);
@@ -156,6 +134,30 @@ export default function RequirementDetailPage() {
         } finally {
             setIsSaving(false);
         }
+    };
+
+    const handleMoveToBacklog = async () => {
+        try {
+            setIsSaving(true);
+            const result = await requirementsApi.moveTasksToBacklog(id);
+            showToast(`Moved ${result.count} tasks to backlog`, 'success');
+            // Reload
+            loadRequirement();
+        } catch (err) {
+            console.error('Failed to move tasks to backlog:', err);
+            showToast('Failed to move tasks to backlog', 'error');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleAddTask = () => {
+        // Navigate to new task creation page, passing this requirement ID
+        // Simplified: use query param or just navigate to generic create with predefined value if possible
+        // For now, let's assume we have a way to create linked tasks. 
+        // Or we can just create a placeholder via API and then edit it.
+        // Actually, let's create a *new* task page: /tasks/new?requirementId=...
+        router.push(`/tasks/new?requirementId=${id}`);
     };
 
     const addAcceptanceCriteria = () => {
@@ -201,6 +203,7 @@ export default function RequirementDetailPage() {
         NEEDS_REVISION: 'bg-yellow-500/20 text-yellow-600 dark:text-yellow-400',
         READY: 'bg-green-500/20 text-green-600 dark:text-green-400',
         APPROVED: 'bg-green-600/20 text-green-700 dark:text-green-300',
+        BACKLOGGED: 'bg-purple-600/20 text-purple-700 dark:text-purple-300',
     };
 
     const rqsColor = (score?: number) => {
@@ -250,13 +253,35 @@ export default function RequirementDetailPage() {
                                 </button>
                             )}
                             {requirement && requirement.state === 'APPROVED' && (
+                                <>
+                                    {(!requirement.sprintItems || requirement.sprintItems.length === 0) ? (
+                                        <button
+                                            onClick={handleGenerateTasks}
+                                            disabled={isAnalyzing}
+                                            className="inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-blue-700 disabled:opacity-50"
+                                        >
+                                            {isAnalyzing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ListTodo className="mr-2 h-4 w-4" />}
+                                            Generate Tasks
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={handleMoveToBacklog}
+                                            disabled={isSaving}
+                                            className="inline-flex items-center justify-center rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-purple-700 disabled:opacity-50"
+                                        >
+                                            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ListTodo className="mr-2 h-4 w-4" />}
+                                            Approve & Move to Backlog
+                                        </button>
+                                    )}
+                                </>
+                            )}
+                            {requirement && requirement.state === 'BACKLOGGED' && (
                                 <button
-                                    onClick={handleGenerateTasks}
-                                    disabled={isAnalyzing}
-                                    className="inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-blue-700 disabled:opacity-50"
+                                    disabled
+                                    className="inline-flex items-center justify-center rounded-full bg-purple-600/10 px-4 py-2 text-sm font-medium text-purple-600 shadow-none border border-purple-200 dark:border-purple-800 cursor-not-allowed opacity-80"
                                 >
-                                    {isAnalyzing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ListTodo className="mr-2 h-4 w-4" />}
-                                    Generate Tasks
+                                    <span className="mr-2">📋</span>
+                                    Backlogged
                                 </button>
                             )}
 
@@ -434,10 +459,19 @@ export default function RequirementDetailPage() {
                 <div className="space-y-6">
                     {/* Tasks Section */}
                     <div className="rounded-lg border bg-card p-4">
-                        <h3 className="text-sm font-semibold text-muted-foreground mb-4">Implementation Tasks ({requirement.sprintItems?.length || 0})</h3>
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-sm font-semibold text-muted-foreground">Implementation Tasks ({requirement.sprintItems?.length || 0})</h3>
+                            <button
+                                onClick={handleAddTask}
+                                className="inline-flex items-center justify-center rounded-md border border-input bg-background p-1 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+                                title="Add Task"
+                            >
+                                <PlusCircle className="h-4 w-4" />
+                            </button>
+                        </div>
                         <div className="space-y-3">
                             {requirement.sprintItems?.map((task) => (
-                                <div key={task.id} className="p-3 rounded-md border bg-background/50 hover:bg-accent transition-colors">
+                                <Link href={`/tasks/${task.id}`} key={task.id} className="block p-3 rounded-md border bg-background/50 hover:bg-accent transition-colors">
                                     <div className="flex items-start justify-between mb-2">
                                         <span className={`text-xs px-2 py-0.5 rounded-full ${task.type === 'bug' ? 'bg-red-500/10 text-red-500' : 'bg-blue-500/10 text-blue-500'
                                             }`}>
@@ -447,22 +481,14 @@ export default function RequirementDetailPage() {
                                     </div>
                                     <p className="font-medium text-sm mb-2">{task.title}</p>
 
-                                    <div className="flex flex-col gap-2 mt-2">
-                                        <select
-                                            className="text-xs bg-muted/50 border rounded px-2 py-1 w-full"
-                                            value={task.sprintId || ''}
-                                            onChange={(e) => handleTaskSprintChange(task.id, e.target.value)}
-                                            disabled={isEditing}
-                                        >
-                                            <option value="">Unassigned (Backlog)</option>
-                                            {sprints.map(s => (
-                                                <option key={s.id} value={s.id}>
-                                                    {s.name} ({s.status})
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                </div>
+                                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                                        <span className={`w-2 h-2 rounded-full ${task.status === 'done' ? 'bg-green-500' :
+                                            task.status === 'in_progress' ? 'bg-blue-500' :
+                                                'bg-gray-300'
+                                            }`} />
+                                        {task.status.replace('_', ' ')}
+                                    </span>
+                                </Link>
                             ))}
                             {(!requirement.sprintItems || requirement.sprintItems.length === 0) && (
                                 <p className="text-sm text-muted-foreground italic">No tasks generated yet. Approve and generate tasks to see them here.</p>

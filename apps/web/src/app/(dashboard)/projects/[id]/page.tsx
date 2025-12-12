@@ -3,7 +3,8 @@
 import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { projectsApi, Project } from '@/lib/api';
+import { projectsApi } from '@/services/projects.service';
+import { Project } from '@/types/project';
 import { Loader2, ArrowLeft, MoreVertical, FileText, Beaker, Bug, Rocket, Folder } from 'lucide-react';
 
 export default function ProjectDetailsPage() {

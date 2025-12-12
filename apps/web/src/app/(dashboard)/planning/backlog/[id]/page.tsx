@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Loader2, Save, Trash2, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
-import { sprintsApi, SprintItem, SprintItemPriority, SprintItemType, SprintItemStatus } from '@/lib/api';
+import { sprintsApi } from '@/services/sprints.service';
+import { SprintItem, SprintItemPriority, SprintItemType, SprintItemStatus } from '@/types/sprint';
 
 export default function BacklogItemDetailPage() {
     const params = useParams();

@@ -15,6 +15,7 @@ export enum RequirementState {
   NEEDS_REVISION = 'NEEDS_REVISION',
   READY = 'READY',
   APPROVED = 'APPROVED',
+  BACKLOGGED = 'BACKLOGGED',
 }
 
 @Entity('requirements')

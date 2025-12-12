@@ -106,4 +106,13 @@ export class RequirementsController {
     const tasks = await this.requirementsService.generateTasks(id, tenantId);
     return { count: tasks.length, tasks };
   }
+
+  @Post(':id/move-tasks-backlog')
+  async moveTasksToBacklog(
+    @Param('id') id: string,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    const tenantId = req.user.tenantId || 'mock-tenant-id';
+    return this.requirementsService.moveTasksToBacklog(id, tenantId);
+  }
 }

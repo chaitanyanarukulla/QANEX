@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { documentsApi, Document } from '@/lib/api';
+import { documentsApi } from '@/services/documents.service';
+import { Document } from '@/types/document';
 import { Loader2, Plus, Search, FileText, Upload, Brain } from 'lucide-react';
 import Link from 'next/link';
 
@@ -245,16 +246,25 @@ export default function DocumentsPage() {
                                         {doc.title}
                                     </h3>
                                     <p className="mt-2 text-sm text-muted-foreground line-clamp-2">
-                                        {doc.requirementsCount !== undefined && (
-                                            <span className="inline-flex items-center rounded-sm bg-secondary px-2 py-1 text-xs font-medium text-secondary-foreground">
-                                                {doc.requirementsCount} Requirements
-                                            </span>
-                                        )}
+                                        {doc.description || 'No description provided.'}
                                     </p>
+                                    {doc.tags && doc.tags.length > 0 && (
+                                        <div className="flex flex-wrap gap-1 mt-2">
+                                            {doc.tags.map((tag, i) => (
+                                                <span key={i} className="px-1.5 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded">
+                                                    #{tag}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
-                            <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
-                                <span>{new Date(doc.updatedAt).toLocaleDateString()}</span>
+                            <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground pt-3 border-t">
+                                <span className="flex items-center gap-2">
+                                    <span className="font-semibold text-foreground">v{doc.version || '1.0'}</span>
+                                    <span>•</span>
+                                    <span>{new Date(doc.updatedAt).toLocaleDateString()}</span>
+                                </span>
                                 <span className={`uppercase font-medium ${doc.status === 'FINAL' ? 'text-green-600' : 'text-yellow-600'
                                     }`}>
                                     {doc.status}

@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Requirement } from './requirement.entity';
+import { Requirement, RequirementState } from './requirement.entity';
 import {
   SprintItem,
   SprintItemStatus,
@@ -294,5 +294,35 @@ export class RequirementsService {
       );
       throw error;
     }
+  }
+
+  async moveTasksToBacklog(
+    id: string,
+    tenantId: string,
+  ): Promise<{ count: number }> {
+    const requirement = await this.findOne(id, tenantId);
+
+    // Update all tasks linked to this requirement to have status BACKLOG and sprintId null
+    // We can do this with a single update query
+    const result = await this.sprintItemRepo.update(
+      { requirementId: id, tenantId },
+      {
+        status: SprintItemStatus.BACKLOG,
+        sprintId: null as any,
+      },
+    );
+
+    // Update requirement status to BACKLOGGED
+    await this.repo.update(
+      { id, tenantId },
+      { state: RequirementState.BACKLOGGED },
+    );
+
+    this.logger.log(
+      `[Req-Backlog] Moved ${result.affected} tasks to backlog for requirement ${id}`,
+      { tenantId, requirementId: id },
+    );
+
+    return { count: result.affected || 0 };
   }
 }

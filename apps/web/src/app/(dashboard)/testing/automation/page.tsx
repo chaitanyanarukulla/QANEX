@@ -3,7 +3,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Play, GitPullRequest, Search, Loader2, CheckCircle, Clock, AlertCircle, Sparkles, TrendingUp, Target } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { automationApi, AutomationCandidate, AutomationCoverage } from '@/lib/api';
+import { automationApi } from '@/services/automation.service';
+import { AutomationCandidate, AutomationCoverage } from '@/types/tests';
 
 export default function AutomationPage() {
     const [candidates, setCandidates] = useState<AutomationCandidate[]>([]);

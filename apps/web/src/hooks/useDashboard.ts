@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { api, releasesApi } from '@/lib/api';
+import { metricsApi } from '@/services/metrics.service';
+import { releasesApi } from '@/services/releases.service';
 
 interface DashboardStats {
   totalRequirements: number;
@@ -39,24 +40,12 @@ export function useDashboard() {
     try {
       // Fetch data from multiple endpoints in parallel
       const [metricsRes, releasesRes] = await Promise.all([
-        api<{
-          project: {
-            totalRequirements: number;
-            avgRqs: number;
-            totalBugs: number;
-            openBugs: number;
-            bugDensity: string | number;
-            testPassRate?: number;
-          };
-          ai: {
-            totalInteractions: number;
-            avgLatency: number;
-          };
-        }>('/metrics/dashboard').catch(() => null),
+        metricsApi.dashboard().catch(() => null),
         releasesApi.list().catch(() => []),
       ]);
 
-      const projectStats = metricsRes?.project || {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const projectStats = (metricsRes as any)?.project || {
         totalRequirements: 0,
         avgRqs: 0,
         totalBugs: 0,

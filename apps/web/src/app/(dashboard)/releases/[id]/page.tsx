@@ -5,7 +5,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { RcsGauge } from '@/components/releases/RcsGauge';
 import { PillarCard } from '@/components/releases/PillarCard';
 import { FileText, Beaker, Bug, Shield, Loader2, ArrowLeft, RefreshCw, AlertTriangle, CheckCircle2, Sparkles, Lock, Unlock, XCircle } from 'lucide-react';
-import { releasesApi, Release, ReleaseGatesEvaluation } from '@/lib/api';
+import { releasesApi } from '@/services/releases.service';
+import { Release, ReleaseGatesEvaluation } from '@/types/release';
 import Link from 'next/link';
 
 const statusColors: Record<string, string> = {

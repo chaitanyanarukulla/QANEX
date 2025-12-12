@@ -3,7 +3,8 @@
 import { Rocket, Plus, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { releasesApi, Release } from '@/lib/api';
+import { releasesApi } from '@/services/releases.service';
+import { Release } from '@/types/release';
 
 const statusColors: Record<string, string> = {
   PLANNED: 'bg-gray-500/20 text-gray-400',
@@ -108,9 +109,8 @@ export default function ReleasesPage() {
             <Link href={`/releases/${release.id}`} key={release.id}>
               <div className="flex items-center justify-between p-6 rounded-lg border bg-card text-card-foreground shadow-sm hover:border-primary/50 transition-colors">
                 <div className="flex items-center gap-4">
-                  <div className={`h-12 w-12 rounded-full flex items-center justify-center font-bold text-lg ${
-                    release.rcsScore !== undefined ? rcsColor(release.rcsScore) : 'bg-muted text-muted-foreground'
-                  }`}>
+                  <div className={`h-12 w-12 rounded-full flex items-center justify-center font-bold text-lg ${release.rcsScore !== undefined ? rcsColor(release.rcsScore) : 'bg-muted text-muted-foreground'
+                    }`}>
                     {release.rcsScore ?? '–'}
                   </div>
                   <div>

@@ -42,6 +42,9 @@ export class DocumentsController {
       content: string;
       source?: DocumentSource;
       sourceUrl?: string;
+      description?: string;
+      tags?: string[];
+      version?: string;
     },
     @Request() req: AuthenticatedRequest,
   ) {
@@ -65,7 +68,15 @@ export class DocumentsController {
   @Patch(':id')
   update(
     @Param('id') id: string,
-    @Body() dto: { title?: string; content?: string; status?: DocumentStatus },
+    @Body()
+    dto: {
+      title?: string;
+      content?: string;
+      status?: DocumentStatus;
+      description?: string;
+      tags?: string[];
+      version?: string;
+    },
     @Request() req: AuthenticatedRequest,
   ) {
     return this.documentsService.update(id, dto, req.user.tenantId);

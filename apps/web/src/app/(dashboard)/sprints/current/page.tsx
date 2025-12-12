@@ -11,7 +11,7 @@ export default function CurrentSprintPage() {
         const fetchActiveSprint = async () => {
             try {
                 // Fetch the current active sprint from the API
-                const { sprintsApi } = await import('@/lib/api');
+                const { sprintsApi } = await import('@/services/sprints.service');
                 const activeSprint = await sprintsApi.getActive();
                 if (activeSprint && activeSprint.id) {
                     router.replace(`/sprints/${activeSprint.id}`);

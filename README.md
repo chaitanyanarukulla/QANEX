@@ -84,6 +84,25 @@ cd apps/web
 # Install dependencies
 npm install
 
+## Testing
+We have established a standardized testing stack for this project.
+- **Frontend**: Jest + React Testing Library
+- **Backend**: Jest + NestJS Testing
+
+**Current Coverage Goal**: 75%
+
+To run tests:
+```bash
+# Backend
+cd apps/api && npm run test:cov
+
+# Frontend
+cd apps/web && npm run test:cov
+```
+
+See [TESTING.md](./TESTING.md) for detailed instructions.
+
+## Development Server
 # Run Development Server
 npm run dev
 ```

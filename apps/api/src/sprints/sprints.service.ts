@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
+import { RequirementState } from '../requirements/requirement.entity';
 import { Sprint, SprintStatus } from './sprint.entity';
 import {
   SprintItem,
@@ -142,6 +143,60 @@ export class SprintsService {
       },
       order: { priority: 'DESC', createdAt: 'DESC' },
     });
+  }
+
+  async getStructuredBacklog(tenantId: string): Promise<{
+    requirements: any[];
+    standaloneTasks: SprintItem[];
+  }> {
+    // 1. Get all backlog tasks (not in any sprint)
+    const allBacklogTasks = await this.sprintItemsRepository.find({
+      where: {
+        tenantId,
+        sprintId: IsNull(),
+      },
+      order: { priority: 'DESC', createdAt: 'DESC' },
+      relations: ['requirement'], // We need requirement info to group them
+    });
+
+    // 2. Identify tasks that belong to a "Backlogged" requirement
+    const tasksWithReqs = allBacklogTasks.filter(
+      (item) =>
+        item.requirement &&
+        item.requirement.state === RequirementState.BACKLOGGED,
+    );
+
+    const standaloneTasks = allBacklogTasks.filter(
+      (item) =>
+        !item.requirement ||
+        item.requirement.state !== RequirementState.BACKLOGGED,
+    );
+
+    // 3. Group tasks by requirement
+    const reqMap = new Map<string, any>();
+
+    for (const task of tasksWithReqs) {
+      if (!task.requirement) continue;
+      const reqId = task.requirement.id;
+
+      if (!reqMap.has(reqId)) {
+        // Initialize requirement group
+        reqMap.set(reqId, {
+          ...task.requirement,
+          tasks: [],
+        });
+      }
+
+      // Add task to its requirement
+      const reqGroup = reqMap.get(reqId);
+      reqGroup.tasks.push(task);
+    }
+
+    // 4. Return structured data
+    return {
+      requirements: Array.from(reqMap.values()),
+      standaloneTasks,
+    };
   }
 
   async updateItem(

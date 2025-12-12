@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { KnowledgeBaseSettings } from '@/components/settings/knowledge-base-settings';
 import { AiUsageChart } from '@/components/settings/AiUsageChart';
-import { usersApi, TenantUser } from '@/lib/api';
+import { usersApi } from '@/services/users.service';
+import { TenantUser } from '@/types/user';
 import { Loader2, Plus, X, Check, Trash2, Pencil } from 'lucide-react';
 
 export default function SettingsPage() {

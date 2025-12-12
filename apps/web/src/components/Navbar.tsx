@@ -5,7 +5,8 @@ import { useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { FeedbackModal } from './feedback/FeedbackModal';
 import { useAuth } from '@/contexts/AuthContext';
-import { aiApi, SearchResult } from '@/lib/api';
+import { aiApi } from '@/services/ai.service';
+import { SearchResult } from '@/types/ai';
 import { AiStatusIndicator } from './AiStatusIndicator';
 
 export function Navbar() {
