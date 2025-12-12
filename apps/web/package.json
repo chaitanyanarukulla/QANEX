@@ -12,6 +12,7 @@
     "test:cov": "jest --coverage"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.90.12",
     "@tiptap/extension-text-align": "^3.13.0",
     "@tiptap/extension-underline": "^3.13.0",
     "@tiptap/react": "^3.13.0",
