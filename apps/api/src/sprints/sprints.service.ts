@@ -188,7 +188,9 @@ export class SprintsService {
       }
 
       // Add task to its requirement
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const reqGroup = reqMap.get(reqId);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
       reqGroup.tasks.push(task);
     }
 

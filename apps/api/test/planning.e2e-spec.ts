@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument */
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
@@ -14,6 +15,7 @@ import { RolesGuard } from '../src/auth/guards/roles.guard';
 import {
   SprintItemType,
   SprintItemPriority,
+  SprintItemStatus,
 } from '../src/sprints/sprint-item.entity';
 
 describe('Planning Flow (e2e)', () => {
@@ -55,16 +57,16 @@ describe('Planning Flow (e2e)', () => {
       title: 'Planning E2E Req',
       content: 'Desc',
       state: RequirementState.BACKLOGGED,
-      type: 'functional',
-      priority: 'high',
+      type: 'FUNCTIONAL',
+      priority: 'HIGH',
       tenantId: 'test-tenant-id',
     });
     const savedReq = await reqRepo.save(req);
 
     const task1 = sprintItemRepo.create({
       title: 'Task linked to Req',
-      status: 'todo',
-      type: SprintItemType.IMPLEMENTATION,
+      status: SprintItemStatus.TODO,
+      type: SprintItemType.TASK,
       priority: SprintItemPriority.HIGH,
       requirementId: savedReq.id,
       tenantId: 'test-tenant-id',
@@ -74,7 +76,7 @@ describe('Planning Flow (e2e)', () => {
     // 2. Setup: Create a standalone task
     const task2 = sprintItemRepo.create({
       title: 'Standalone Task',
-      status: 'todo',
+      status: SprintItemStatus.TODO,
       type: SprintItemType.BUG,
       priority: SprintItemPriority.LOW,
       tenantId: 'test-tenant-id',

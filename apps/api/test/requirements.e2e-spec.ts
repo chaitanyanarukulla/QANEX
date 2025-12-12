@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
@@ -14,6 +15,7 @@ import { RolesGuard } from '../src/auth/guards/roles.guard';
 import {
   SprintItemType,
   SprintItemPriority,
+  SprintItemStatus,
 } from '../src/sprints/sprint-item.entity';
 import { RagService } from '../src/ai/rag.service';
 import { AiProviderFactory } from '../src/ai/providers';
@@ -71,8 +73,8 @@ describe('Requirements Flow (e2e)', () => {
     const createDto: CreateRequirementDto = {
       title: 'E2E Test Requirement',
       content: 'Testing the full flow',
-      priority: 'high',
-      type: 'functional',
+      priority: 'HIGH',
+      type: 'FUNCTIONAL',
     };
 
     const response = await request(app.getHttpServer())
@@ -106,9 +108,9 @@ describe('Requirements Flow (e2e)', () => {
     const task = sprintItemRepo.create({
       title: 'Test Implementation Task',
       description: 'Implement the thing',
-      status: 'todo',
+      status: SprintItemStatus.TODO,
       priority: SprintItemPriority.MEDIUM,
-      type: SprintItemType.IMPLEMENTATION,
+      type: SprintItemType.TASK,
       requirementId: createdReqId,
       tenantId: 'test-tenant-id',
       // sprintId is null initially

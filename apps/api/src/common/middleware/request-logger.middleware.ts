@@ -21,12 +21,15 @@ export class RequestLoggerMiddleware implements NestMiddleware {
       const duration = Date.now() - start;
       const traceId = this.cls.getId();
 
-      /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+      /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
       const reqAny = req as any;
-      const tenantId = reqAny.user?.tenantId || req.headers['x-tenant-id'];
-      const userId = reqAny.user?.id || reqAny.user?.userId;
-
-      /* eslint-enable @typescript-eslint/no-unsafe-assignment */
+      const tenantId = (reqAny.user?.tenantId || req.headers['x-tenant-id']) as
+        | string
+        | undefined;
+      const userId = (reqAny.user?.id || reqAny.user?.userId) as
+        | string
+        | undefined;
+      /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
 
       this.logger.info(
         `${method} ${originalUrl} ${statusCode} - ${duration}ms`,

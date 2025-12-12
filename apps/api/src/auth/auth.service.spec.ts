@@ -38,6 +38,7 @@ describe('AuthService', () => {
   describe('validateUser', () => {
     it('should find user by email', async () => {
       mockUsersService.findByEmail.mockResolvedValue({ id: 'u1' });
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const res = await service.validateUser('test@test.com', 'sub');
       expect(res).toEqual({ id: 'u1' });
     });
