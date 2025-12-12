@@ -19,6 +19,7 @@ permissions:
 
 env:
   NODE_VERSION: '20'
+  REPO_LOWER: ''
 
 jobs:
   # ============================================
@@ -193,7 +194,7 @@ jobs:
       - name: Build
         working-directory: apps/web
         env:
-          NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL || 'http://localhost:3000' }}
+          NEXT_PUBLIC_API_URL: ${{ vars['NEXT_PUBLIC_API_URL'] || 'http://localhost:3000' }}
         run: npm run build
 
   # ============================================
@@ -252,7 +253,7 @@ jobs:
       - name: Deploy to Railway
         working-directory: apps/api
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_TOKEN: ${{ secrets['RAILWAY_TOKEN'] }}
         run: |
           if [ -z "$RAILWAY_TOKEN" ]; then
             echo "RAILWAY_TOKEN not set, skipping deployment."
@@ -279,9 +280,9 @@ jobs:
       - name: Deploy to Vercel
         working-directory: apps/web
         env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_TOKEN: ${{ secrets['VERCEL_TOKEN'] }}
+          VERCEL_ORG_ID: ${{ secrets['VERCEL_ORG_ID'] }}
+          VERCEL_PROJECT_ID: ${{ secrets['VERCEL_PROJECT_ID'] }}
         run: |
           if [ -z "$VERCEL_TOKEN" ]; then
             echo "VERCEL_TOKEN not set, skipping deployment."

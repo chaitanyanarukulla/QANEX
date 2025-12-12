@@ -92,7 +92,7 @@ describe('Planning Flow (e2e)', () => {
 
     // Verify Requirements
     expect(Array.isArray(requirements)).toBe(true);
-    const foundReq = requirements.find((r) => r.id === savedReq.id);
+    const foundReq = requirements.find((r: any) => r.id === savedReq.id);
     expect(foundReq).toBeDefined();
     expect(foundReq.tasks).toHaveLength(1);
     expect(foundReq.tasks[0].title).toBe('Task linked to Req');
@@ -100,7 +100,7 @@ describe('Planning Flow (e2e)', () => {
     // Verify Standalone
     expect(Array.isArray(standaloneTasks)).toBe(true);
     const foundTask = standaloneTasks.find(
-      (t) => t.title === 'Standalone Task',
+      (t: any) => t.title === 'Standalone Task',
     );
     expect(foundTask).toBeDefined();
   });

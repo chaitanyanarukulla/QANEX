@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Loader2, Save } from 'lucide-react';
 import Link from 'next/link';
 import { sprintsApi } from '@/services/sprints.service';
-import { SprintItemPriority, SprintItemStatus, SprintItemType } from '@/types/sprint';
+import { SprintItemPriority, SprintItemStatus, SprintItemType, SprintItem } from '@/types/sprint';
 import { useToast } from '@/components/ui/use-toast';
 
 function NewTaskForm() {
@@ -42,8 +42,8 @@ function NewTaskForm() {
                 // I'll default to TODO if standard creation, or use the API default which handles it.
                 // API default is TODO if sprintId provided, else BACKLOG. Here sprintId is null.
                 // So it will be BACKLOG.
-                type: type as any,
-                priority: priority as any,
+                type: type as SprintItem['type'],
+                priority: priority as SprintItem['priority'],
                 estimatedHours: Number(estimatedHours),
                 assigneeName,
                 requirementId: requirementId || undefined,
