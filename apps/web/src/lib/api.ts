@@ -68,7 +68,7 @@ export interface User {
 export interface Requirement {
   id: string;
   title: string;
-  description: string;
+  content: string; // matches backend entity
   state: 'DRAFT' | 'PUBLISHED' | 'NEEDS_REVISION' | 'READY';
   priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   type?: 'FUNCTIONAL' | 'NON_FUNCTIONAL' | 'BUG' | 'FEATURE' | 'ENHANCEMENT';
@@ -77,6 +77,10 @@ export interface Requirement {
   rqsBreakdown?: Record<string, number>;
   sprintId?: string;
   sprintItems?: SprintItem[];
+  parentId?: string;
+  parent?: Requirement;
+  children?: Requirement[];
+  sourceDocumentId?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -91,6 +95,73 @@ export interface Bug {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface DocumentAIReview {
+  id?: string;
+  score?: number;
+  summary: string;
+  risks?: { risk: string; severity: 'LOW' | 'MEDIUM' | 'HIGH'; mitigation: string }[];
+  gaps?: { gap: string; suggestion: string }[];
+  suggestions: string[];
+  generatedAt: string;
+}
+
+export interface Document {
+  id: string;
+  title: string;
+  content: string;
+  status: DocumentStatus;
+  source: 'MANUAL' | 'UPLOAD' | 'CONFLUENCE';
+  sourceUrl?: string;
+  tenantId: string;
+  authorId?: string;
+  createdAt: string;
+  updatedAt: string;
+  aiReview?: DocumentAIReview;
+}
+
+export enum DocumentStatus {
+  DRAFT = 'DRAFT',
+  IN_REVIEW = 'IN_REVIEW',
+  AI_ANALYZING = 'AI_ANALYZING',
+  FIXING_GAPS = 'FIXING_GAPS',
+  READY_FOR_IMPLEMENTATION = 'READY_FOR_IMPLEMENTATION',
+  FINAL = 'FINAL',
+  ARCHIVED = 'ARCHIVED',
+}
+
+export const documentsApi = {
+  list: () => api<Document[]>('/documents'),
+  get: (id: string) => api<Document>(`/documents/${id}`),
+  create: (data: { title: string; content: string; source?: string }) =>
+    api<Document>('/documents', { method: 'POST', body: data }),
+  update: (id: string, data: Partial<Document>) =>
+    api<Document>(`/documents/${id}`, { method: 'PATCH', body: data }),
+  delete: (id: string) => api(`/documents/${id}`, { method: 'DELETE' }),
+  analyze: (id: string) => api<DocumentAIReview>(`/documents/${id}/analyze`, { method: 'POST' }),
+  snapshot: (id: string) => api(`/documents/${id}/snapshot`, { method: 'POST' }),
+  upload: async (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+
+    const response = await fetch(`${API_BASE}/documents/upload`, {
+      method: 'POST',
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Upload failed' }));
+      throw new Error(error.message || 'Upload failed');
+    }
+    return response.json() as Promise<Document>;
+  },
+  importConfluence: (data: { siteUrl: string; email: string; apiToken: string; pageId: string }) =>
+    api<Document>('/documents/import/confluence', { method: 'POST', body: data }),
+};
 
 export interface Sprint {
   id: string;
@@ -144,6 +215,29 @@ export interface SprintMetrics {
   };
   avgRqsScore: number | null;
 }
+
+export const SprintItemStatus = {
+  TODO: 'todo',
+  IN_PROGRESS: 'in_progress',
+  CODE_REVIEW: 'code_review',
+  READY_FOR_QA: 'ready_for_qa',
+  IN_TESTING: 'in_testing',
+  DONE: 'done',
+  BACKLOG: 'backlog',
+} as const;
+
+export const SprintItemType = {
+  FEATURE: 'feature',
+  BUG: 'bug',
+  TASK: 'task',
+} as const;
+
+export const SprintItemPriority = {
+  CRITICAL: 'CRITICAL',
+  HIGH: 'HIGH',
+  MEDIUM: 'MEDIUM',
+  LOW: 'LOW',
+} as const;
 
 export interface AIPlanRecommendation {
   recommendedItems: Array<{
@@ -303,6 +397,7 @@ export const sprintsApi = {
 
   // Sprint Items
   getItems: (sprintId: string) => api<SprintItem[]>(`/sprints/${sprintId}/items`),
+  getItem: (itemId: string) => api<SprintItem>(`/sprints/items/${itemId}`),
   getBacklogItems: () => api<SprintItem[]>('/sprints/backlog/items'),
   addItem: (data: Partial<SprintItem>) =>
     api<SprintItem>('/sprints/items', { method: 'POST', body: data }),
@@ -743,55 +838,4 @@ export const usersApi = {
     api<TenantUser>(`/users/${userId}`, { method: 'PATCH', body: data }),
 };
 
-// Documents API
-export interface Document {
-  id: string;
-  title: string;
-  content: string;
-  source: 'MANUAL' | 'UPLOAD' | 'CONFLUENCE';
-  status: 'DRAFT' | 'IN_REVIEW' | 'FINAL' | 'ARCHIVED';
-  aiReview?: DocumentAIReview;
-  updatedAt: string;
-}
 
-export interface DocumentAIReview {
-  id: string;
-  score?: number;
-  summary?: string;
-  risks?: { risk: string; severity: 'LOW' | 'MEDIUM' | 'HIGH'; mitigation: string }[];
-  gaps?: { gap: string; suggestion: string }[];
-  analyzedAt: string;
-}
-
-export const documentsApi = {
-  list: () => api<Document[]>('/documents'),
-  get: (id: string) => api<Document>(`/documents/${id}`),
-  create: (data: { title: string; content: string; source?: string }) =>
-    api<Document>('/documents', { method: 'POST', body: data }),
-  update: (id: string, data: Partial<Document>) =>
-    api<Document>(`/documents/${id}`, { method: 'PATCH', body: data }),
-  delete: (id: string) => api(`/documents/${id}`, { method: 'DELETE' }),
-  analyze: (id: string) => api<DocumentAIReview>(`/documents/${id}/analyze`, { method: 'POST' }),
-  snapshot: (id: string) => api(`/documents/${id}/snapshot`, { method: 'POST' }),
-  upload: async (file: File) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
-
-    const response = await fetch(`${API_BASE}/documents/upload`, {
-      method: 'POST',
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Upload failed' }));
-      throw new Error(error.message || 'Upload failed');
-    }
-    return response.json() as Promise<Document>;
-  },
-  importConfluence: (data: { siteUrl: string; email: string; apiToken: string; pageId: string }) =>
-    api<Document>('/documents/import/confluence', { method: 'POST', body: data }),
-};

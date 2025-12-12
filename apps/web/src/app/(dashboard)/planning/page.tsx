@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Calendar, Plus, ArrowRight, Bot, MoreHorizontal, Loader2, Lightbulb, X, FileText } from 'lucide-react';
 import { sprintsApi, requirementsApi, SprintItem, AIPlanRecommendation, Requirement } from '@/lib/api';
 
@@ -357,7 +358,9 @@ export default function PlanningPage() {
                         {backlog.map(item => (
                             <div key={item.id} className="group flex items-center justify-between p-3 rounded-md border bg-background hover:border-primary/50 transition-colors">
                                 <div>
-                                    <div className="font-medium text-sm">{item.title}</div>
+                                    <Link href={`/planning/backlog/${item.id}`} className="hover:underline">
+                                        <div className="font-medium text-sm">{item.title}</div>
+                                    </Link>
                                     <div className="text-xs text-muted-foreground">
                                         {item.rqsScore ? `RQS: ${item.rqsScore}` : 'No RQS'} • {item.priority}
                                     </div>

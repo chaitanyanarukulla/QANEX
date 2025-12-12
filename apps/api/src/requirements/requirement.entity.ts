@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  ManyToOne,
 } from 'typeorm';
 import { SprintItem } from '../sprints/sprint-item.entity';
 
@@ -69,7 +70,19 @@ export class Requirement {
   @Column({ nullable: true })
   sprintId?: string;
 
-  @OneToMany(() => SprintItem, (item) => item.requirement)
+  @Column('uuid', { nullable: true })
+  parentId?: string;
+
+  @ManyToOne(() => Requirement, (req) => req.children)
+  parent?: Requirement;
+
+  @OneToMany(() => Requirement, (req) => req.parent)
+  children?: Requirement[];
+
+  @OneToMany(() => SprintItem, (item) => item.requirement, {
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
   sprintItems?: SprintItem[];
 
   // We need to import SprintItem circularly or lazily, or just define it.

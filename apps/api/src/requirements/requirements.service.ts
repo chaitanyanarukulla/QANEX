@@ -153,4 +153,14 @@ export class RequirementsService {
   }
 
   // Removed getAiSettings as logic is moved to factory
+
+  async remove(id: string, tenantId: string): Promise<void> {
+    const result = await this.repo.delete({ id, tenantId });
+    if (result.affected === 0) {
+      throw new NotFoundException(`Requirement ${id} not found`);
+    }
+
+    // Optional: Also remove from RAG index
+    // this.ragService.removeRequirement(id).catch(console.error);
+  }
 }

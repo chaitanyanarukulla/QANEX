@@ -11,11 +11,13 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { DocumentsService } from './documents.service';
 import { FileUploadService } from './file-upload.service';
 import { ConfluenceService } from './confluence.service';
+import { DocumentsAiService } from './documents-ai.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { DocumentSource, DocumentStatus } from './entities/document.entity';
 import type { AuthenticatedRequest } from '../auth/interfaces/authenticated-request.interface';
@@ -23,8 +25,11 @@ import type { AuthenticatedRequest } from '../auth/interfaces/authenticated-requ
 @Controller('documents')
 @UseGuards(JwtAuthGuard)
 export class DocumentsController {
+  private readonly logger = new Logger(DocumentsController.name);
+
   constructor(
     private readonly documentsService: DocumentsService,
+    private readonly documentsAiService: DocumentsAiService,
     private readonly fileUploadService: FileUploadService,
     private readonly confluenceService: ConfluenceService,
   ) {}
@@ -77,8 +82,31 @@ export class DocumentsController {
   }
 
   @Post(':id/analyze')
-  analyze(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
-    return this.documentsService.analyze(id, req.user.tenantId);
+  async analyze(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
+    try {
+      this.logger.log(`[Analyze] Starting analysis for document ${id}`);
+      const document = await this.documentsService.findOne(
+        id,
+        req.user.tenantId,
+      );
+      this.logger.log(`[Analyze] Document found: ${document.title} `);
+
+      const result = await this.documentsAiService.analyzeDocument(
+        document,
+        req.user.tenantId,
+        'REVIEW',
+      );
+      this.logger.log(
+        `[Analyze] Analysis completed successfully for document ${id}`,
+      );
+      return result;
+    } catch (error) {
+      this.logger.error(
+        `[Analyze] Failed to analyze document ${id}:`,
+        error instanceof Error ? error.stack : error,
+      );
+      throw error;
+    }
   }
 
   @Post('upload')

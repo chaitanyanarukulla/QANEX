@@ -59,7 +59,8 @@ export default function RequirementsPage() {
 
   const filteredRequirements = requirements.filter(req =>
     req.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    req.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    req.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    req.content?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -134,7 +135,7 @@ export default function RequirementsPage() {
                     </span>
                   </div>
                   <p className="text-sm text-muted-foreground line-clamp-2">
-                    {req.description || 'No description'}
+                    {req.content || 'No content'}
                   </p>
                 </div>
 

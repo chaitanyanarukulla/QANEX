@@ -10,6 +10,8 @@ import { DocumentVersion } from './entities/document-version.entity';
 
 import { DocumentsAiService } from './documents-ai.service';
 
+import { RagService } from '../ai/rag.service';
+
 @Injectable()
 export class DocumentsService {
   constructor(
@@ -18,6 +20,7 @@ export class DocumentsService {
     @InjectRepository(DocumentVersion)
     private versionRepo: Repository<DocumentVersion>,
     private documentsAiService: DocumentsAiService,
+    private ragService: RagService,
   ) {}
 
   async create(
@@ -69,8 +72,53 @@ export class DocumentsService {
 
     // Auto-versioning logic could go here if status changes to FINAL or content changes on FINAL doc
     // For now, simple update
+    const oldStatus = document.status;
     Object.assign(document, data);
-    return this.documentRepo.save(document);
+    const savedDoc = await this.documentRepo.save(document);
+
+    // Workflow Triggers
+    if (data.status && data.status !== oldStatus) {
+      // AI_ANALYZING status change no longer auto-triggers analysis
+      // User must explicitly click "Run AI Analysis" button
+      // This gives users control over when AI analysis actually runs
+
+      if (data.status === DocumentStatus.READY_FOR_IMPLEMENTATION) {
+        // Trigger AI Requirements Generation (Epics -> Reqs -> Tasks)
+        this.documentsAiService
+          .analyzeDocument(savedDoc, tenantId, 'REQUIREMENTS')
+          .catch((err) =>
+            console.error(
+              `Background AI Requirements Generation failed for ${savedDoc.id}`,
+              err,
+            ),
+          );
+
+        // Index to Knowledge Base (Source of Truth)
+        this.ragService
+          .indexItem({
+            id: savedDoc.id,
+            tenantId,
+            type: 'REQUIREMENT',
+            content: savedDoc.content,
+            metadata: {
+              title: savedDoc.title,
+              source: 'KNOWLEDGE_BASE',
+              status: 'APPROVED',
+            },
+          })
+          .catch((err) =>
+            console.error(
+              `Background RAG Indexing failed for ${savedDoc.id}`,
+              err,
+            ),
+          );
+      } else if (data.status === DocumentStatus.FINAL) {
+        // Final state, maybe archived or just locked
+        // RAG indexing already done at READY_FOR_IMPLEMENTATION
+      }
+    }
+
+    return savedDoc;
   }
 
   async remove(id: string, tenantId: string): Promise<void> {

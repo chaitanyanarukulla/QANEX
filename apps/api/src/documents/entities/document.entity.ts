@@ -13,6 +13,9 @@ import { DocumentAIReview } from './document-ai-review.entity';
 export enum DocumentStatus {
   DRAFT = 'DRAFT',
   IN_REVIEW = 'IN_REVIEW',
+  AI_ANALYZING = 'AI_ANALYZING',
+  FIXING_GAPS = 'FIXING_GAPS',
+  READY_FOR_IMPLEMENTATION = 'READY_FOR_IMPLEMENTATION',
   FINAL = 'FINAL',
   ARCHIVED = 'ARCHIVED',
 }
@@ -35,8 +38,7 @@ export class Document {
   content!: string;
 
   @Column({
-    type: 'enum',
-    enum: DocumentStatus,
+    type: 'varchar',
     default: DocumentStatus.DRAFT,
   })
   status!: DocumentStatus;

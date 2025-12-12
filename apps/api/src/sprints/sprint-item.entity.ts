@@ -48,7 +48,10 @@ export class SprintItem {
   @Column({ nullable: true })
   requirementId?: string;
 
-  @ManyToOne(() => Requirement, (req) => req.sprintItems, { nullable: true })
+  @ManyToOne(() => Requirement, (req) => req.sprintItems, {
+    nullable: true,
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'requirementId' })
   requirement?: Requirement;
 

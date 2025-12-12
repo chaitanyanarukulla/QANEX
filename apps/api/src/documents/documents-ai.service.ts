@@ -36,13 +36,9 @@ interface AiRequirement {
   tasks: AiTask[];
 }
 
-interface AiAnalysisResult {
-  score: number;
-  summary: string;
-  risks: AiRisk[];
-  gaps: AiGap[];
-  requirements: AiRequirement[];
-}
+// ... (interfaces)
+
+// Removed invalid import
 
 @Injectable()
 export class DocumentsAiService {
@@ -59,8 +55,11 @@ export class DocumentsAiService {
   async analyzeDocument(
     document: Document,
     tenantId: string,
+    mode: 'REVIEW' | 'REQUIREMENTS' = 'REVIEW',
   ): Promise<DocumentAIReview> {
-    this.logger.log(`Analyzing document ${document.id} for tenant ${tenantId}`);
+    this.logger.log(
+      `Analyzing document ${document.id} for tenant ${tenantId} in mode ${mode}`,
+    );
 
     const { provider, config } =
       await this.aiProviderFactory.getProvider(tenantId);
@@ -73,6 +72,8 @@ export class DocumentsAiService {
       Content:
       ${document.content}
 
+      Goal: Break down the document into Epics (Features), then Requirements for each Epic, and finally Implementation Tasks (FE/BE) for each Requirement.
+
       Output JSON format:
       {
         "score": number (0-100),
@@ -83,21 +84,27 @@ export class DocumentsAiService {
         "gaps": [
           { "gap": "Description", "suggestion": "What to add" }
         ],
-        "requirements": [
-          { 
-            "title": "Requirement Title", 
-            "description": "Detailed description of functionality",
-            "priority": "LOW" | "MEDIUM" | "HIGH" | "CRITICAL",
-            "type": "FUNCTIONAL" | "NON_FUNCTIONAL" | "BUG" | "FEATURE" | "ENHANCEMENT",
-            "acceptanceCriteria": ["Criteria 1", "Criteria 2"],
-            "tasks": [
-                {
-                    "title": "Task title",
-                    "description": "Task description",
-                    "type": "task" | "feature" | "bug",
-                    "suggestedRole": "Backend" | "Frontend" | "QA" | "DevOps",
-                    "estimatedHours": number
-                }
+        "epics": [
+          {
+            "title": "Epic/Feature Name",
+            "description": "High-level description",
+            "requirements": [
+              { 
+                "title": "Requirement Title", 
+                "description": "Detailed functional listing",
+                "priority": "LOW" | "MEDIUM" | "HIGH" | "CRITICAL",
+                "type": "FUNCTIONAL" | "NON_FUNCTIONAL" | "BUG" | "FEATURE" | "ENHANCEMENT",
+                "acceptanceCriteria": ["Criteria 1", "Criteria 2"],
+                "tasks": [
+                    {
+                        "title": "FE: Task title" or "BE: Task title",
+                        "description": "Task description",
+                        "type": "task" | "feature" | "bug",
+                        "suggestedRole": "Backend" | "Frontend" | "QA" | "DevOps",
+                        "estimatedHours": number
+                    }
+                ]
+              }
             ]
           }
         ]
@@ -111,14 +118,14 @@ export class DocumentsAiService {
           model: config.model,
           temperature: 0.1,
           responseFormat: 'json',
-          maxTokens: 4000,
+          maxTokens: 4096, // Set to 4096 for current model (increase to 8192+ when using GPT-4o)
         },
         config.apiKey,
       );
 
-      let result: AiAnalysisResult;
+      let result: any;
       try {
-        result = JSON.parse(response.content) as AiAnalysisResult;
+        result = JSON.parse(response.content);
       } catch (jsonError) {
         this.logger.error('Failed to parse AI response JSON', jsonError);
         throw new Error(
@@ -134,53 +141,33 @@ export class DocumentsAiService {
         review = this.reviewRepo.create({ documentId: document.id });
       }
 
-      review.score = result.score;
-      review.summary = result.summary;
-      review.risks = result.risks;
-      review.gaps = result.gaps;
+      review.score = result.score || 0;
+      review.summary = result.summary || '';
+      review.risks = result.risks || [];
+      review.gaps = result.gaps || [];
 
+      let epicCount = 0;
       let reqCount = 0;
       let taskCount = 0;
 
-      // Sync Requirements
-      if (result.requirements && Array.isArray(result.requirements)) {
-        reqCount = result.requirements.length;
-        for (const req of result.requirements) {
-          taskCount += req.tasks?.length || 0;
-
-          // Note: In real world we would update existing ones if we can match them.
-          // For now, we create new ones as per initial simple logic, but with more fields.
-          await this.requirementsService.create(
+      // Sync Requirements only in REQUIREMENTS mode
+      if (
+        mode === 'REQUIREMENTS' &&
+        result.epics &&
+        Array.isArray(result.epics)
+      ) {
+        epicCount = result.epics.length;
+        for (const epicData of result.epics) {
+          // 1. Create Epic (Requirement type FEATURE)
+          const epic = await this.requirementsService.create(
             {
-              title: req.title,
-              content: req.description,
+              title: epicData.title || 'Untitled Epic',
+              content: epicData.description || 'No description provided by AI',
               state: RequirementState.DRAFT,
-              priority: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].includes(
-                req.priority?.toUpperCase(),
-              )
-                ? (req.priority.toUpperCase() as
-                    | 'LOW'
-                    | 'MEDIUM'
-                    | 'HIGH'
-                    | 'CRITICAL')
-                : 'MEDIUM',
-              type: [
-                'FUNCTIONAL',
-                'NON_FUNCTIONAL',
-                'BUG',
-                'FEATURE',
-                'ENHANCEMENT',
-              ].includes(req.type?.toUpperCase())
-                ? (req.type.toUpperCase() as
-                    | 'FUNCTIONAL'
-                    | 'NON_FUNCTIONAL'
-                    | 'BUG'
-                    | 'FEATURE'
-                    | 'ENHANCEMENT')
-                : 'FUNCTIONAL',
-              acceptanceCriteria: req.acceptanceCriteria || [],
+              priority: 'MEDIUM',
+              type: 'FEATURE',
               sourceDocumentId: document.id,
-              tasks: req.tasks || [],
+              acceptanceCriteria: [],
             },
             {
               tenantId,
@@ -188,29 +175,72 @@ export class DocumentsAiService {
               email: 'ai@system.local',
               roles: ['system'],
               sub: 'system',
-            },
+            }, // Mock user
           );
+
+          // 2. Create Child Requirements
+          if (epicData.requirements && Array.isArray(epicData.requirements)) {
+            for (const reqData of epicData.requirements) {
+              reqCount++;
+              taskCount += reqData.tasks?.length || 0;
+
+              await this.requirementsService.create(
+                {
+                  title: reqData.title || 'Untitled Requirement',
+                  content:
+                    reqData.description || 'No description provided by AI',
+                  state: RequirementState.DRAFT,
+                  priority: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].includes(
+                    reqData.priority?.toUpperCase(),
+                  )
+                    ? reqData.priority.toUpperCase()
+                    : 'MEDIUM',
+                  type: 'FUNCTIONAL', // Default to functional for children
+                  acceptanceCriteria: reqData.acceptanceCriteria || [],
+                  sourceDocumentId: document.id,
+                  parentId: epic.id, // Link to Epic
+                  tasks: reqData.tasks || [],
+                },
+                {
+                  tenantId,
+                  userId: 'system-ai',
+                  email: 'ai@system.local',
+                  roles: ['system'],
+                  sub: 'system',
+                },
+              );
+            }
+          }
         }
       }
 
       review.summary =
         (result.summary || '') +
-        `\n\nGenerated ${reqCount} requirements and ${taskCount} tasks.`;
+        (mode === 'REQUIREMENTS'
+          ? `\n\nGenerated ${reqCount} requirements and ${taskCount} tasks.`
+          : '\n\nAI Review completed (Risks & Gaps identified).');
       await this.reviewRepo.save(review);
 
       // Also index in RAG
-      await this.ragService.indexItem({
-        id: document.id,
-        tenantId,
-        type: 'REQUIREMENT', // mapping generic doc to generic REQUIREMENT type for now, or update RAG types
-        content: document.content,
-        metadata: { title: document.title, source: 'DOCUMENT' },
-      });
+      try {
+        await this.ragService.indexItem({
+          id: document.id,
+          tenantId,
+          type: 'REQUIREMENT', // mapping generic doc to generic REQUIREMENT type for now, or update RAG types
+          content: document.content,
+          metadata: { title: document.title, source: 'DOCUMENT' },
+        });
+      } catch (ragError) {
+        this.logger.error('RAG Indexing failed (non-blocking)', ragError);
+      }
 
       return review;
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : String(error);
-      this.logger.error(`Failed to analyze document ${document.id}`, error);
+      this.logger.error(
+        `Failed to analyze document ${document.id}: ${msg}`,
+        error,
+      );
 
       if (
         msg.includes('No AI provider configured') ||

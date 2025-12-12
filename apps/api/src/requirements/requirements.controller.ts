@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Delete,
   Body,
   Param,
   UseGuards,
@@ -60,5 +61,13 @@ export class RequirementsController {
   ): Promise<Requirement> {
     const tenantId = req.user.tenantId || 'mock-tenant-id';
     return this.requirementsService.assignToSprint(id, sprintId, tenantId);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
+    return this.requirementsService.remove(
+      id,
+      req.user.tenantId || 'mock-tenant-id',
+    );
   }
 }

@@ -16,7 +16,7 @@ export default function RequirementDetailPage() {
     const [isSaving, setIsSaving] = useState(false);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [title, setTitle] = useState('');
-    const [description, setDescription] = useState('');
+    const [content, setContent] = useState('');
     const [error, setError] = useState<string | null>(null);
 
     const [sprints, setSprints] = useState<Sprint[]>([]);
@@ -27,7 +27,7 @@ export default function RequirementDetailPage() {
             const data = await requirementsApi.get(id);
             setRequirement(data);
             setTitle(data.title);
-            setDescription(data.description);
+            setContent(data.content);
             setError(null);
         } catch (err) {
             console.error('Failed to load requirement:', err);
@@ -71,7 +71,7 @@ export default function RequirementDetailPage() {
             setIsSaving(true);
             const updated = await requirementsApi.update(id, {
                 title,
-                description,
+                content,
                 state: requirement.state,
             });
             setRequirement(updated);
@@ -232,11 +232,29 @@ export default function RequirementDetailPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="md:col-span-2 space-y-6">
+                    {/* Header Info: Source Doc & Parent Epic */}
+                    <div className="flex gap-4 text-sm">
+                        {requirement.sourceDocumentId && (
+                            <Link href={`/documents/${requirement.sourceDocumentId}`} className="flex items-center gap-1 text-blue-600 hover:underline">
+                                <span className="px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900 border border-blue-200 dark:border-blue-800">
+                                    📄 Source Document
+                                </span>
+                            </Link>
+                        )}
+                        {requirement.parent && (
+                            <Link href={`/requirements/${requirement.parent.id}`} className="flex items-center gap-1 text-purple-600 hover:underline">
+                                <span className="px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-900 border border-purple-200 dark:border-purple-800">
+                                    🏔️ Parent Epic: {requirement.parent.title}
+                                </span>
+                            </Link>
+                        )}
+                    </div>
+
                     <div className="min-h-[200px] rounded-lg border bg-card p-4">
-                        <h3 className="text-sm font-semibold text-muted-foreground mb-2">Description</h3>
+                        <h3 className="text-sm font-semibold text-muted-foreground mb-2">Content</h3>
                         <textarea
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
+                            value={content}
+                            onChange={(e) => setContent(e.target.value)}
                             className="w-full h-full min-h-[200px] resize-none bg-transparent focus:outline-none"
                             placeholder="Describe the requirement in detail..."
                         />
@@ -250,6 +268,25 @@ export default function RequirementDetailPage() {
                                     <li key={idx} className="text-sm">{ac}</li>
                                 ))}
                             </ul>
+                        </div>
+                    )}
+
+                    {/* Children Requirements (for Epics) */}
+                    {requirement.children && requirement.children.length > 0 && (
+                        <div className="rounded-lg border bg-card p-4">
+                            <h3 className="text-sm font-semibold text-muted-foreground mb-4">Child Requirements</h3>
+                            <div className="space-y-2">
+                                {requirement.children.map(child => (
+                                    <Link key={child.id} href={`/requirements/${child.id}`} className="block p-3 rounded-md border bg-background/50 hover:bg-accent transition-colors">
+                                        <div className="flex items-center justify-between">
+                                            <span className="font-medium">{child.title}</span>
+                                            <span className={`text-xs px-2 py-0.5 rounded-full ${stateColors[child.state] || 'bg-gray-100'}`}>
+                                                {child.state}
+                                            </span>
+                                        </div>
+                                    </Link>
+                                ))}
+                            </div>
                         </div>
                     )}
                 </div>

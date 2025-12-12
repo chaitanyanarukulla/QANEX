@@ -1,4 +1,10 @@
-import { IsString, IsNotEmpty, IsOptional, IsEnum } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsEnum,
+  IsUUID,
+} from 'class-validator';
 import { RequirementState } from '../requirement.entity';
 
 export class CreateRequirementDto {
@@ -13,6 +19,11 @@ export class CreateRequirementDto {
   @IsEnum(RequirementState)
   @IsOptional()
   state?: RequirementState;
+
+  @IsString()
+  @IsOptional()
+  @IsUUID()
+  parentId?: string;
 
   @IsString()
   @IsOptional()

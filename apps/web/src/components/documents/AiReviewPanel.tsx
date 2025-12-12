@@ -8,20 +8,22 @@ interface AiReviewPanelProps {
 }
 
 export function AiReviewPanel({ review, isLoading, onAnalyze }: AiReviewPanelProps) {
-    if (!review && !isLoading) {
+    if ((!review || review.score === undefined) && !isLoading) {
         return (
-            <div className="rounded-lg border bg-card p-6 text-center shadow-sm">
-                <Brain className="mx-auto h-12 w-12 text-muted-foreground/50" />
-                <h3 className="mt-4 text-lg font-medium">No AI Analysis Yet</h3>
-                <p className="mt-2 text-sm text-muted-foreground">
-                    Analyze this document to get quality scores, identify risks, and find missed requirements.
+            <div className="rounded-lg border border-gray-200 bg-white p-8 text-center shadow-sm">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
+                    <Brain className="h-8 w-8 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Ready to Analyze</h3>
+                <p className="mt-2 text-sm text-gray-600">
+                    Click below to run AI analysis and get quality scores, identify risks, and find potential gaps.
                 </p>
                 <button
                     onClick={onAnalyze}
-                    className="mt-6 inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90"
+                    className="mt-6 inline-flex items-center gap-2 rounded-md bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
                 >
-                    <Brain className="mr-2 h-4 w-4" />
-                    Analyze Document
+                    <Brain className="h-4 w-4" />
+                    Run AI Analysis
                 </button>
             </div>
         );
@@ -29,9 +31,17 @@ export function AiReviewPanel({ review, isLoading, onAnalyze }: AiReviewPanelPro
 
     if (isLoading) {
         return (
-            <div className="rounded-lg border bg-card p-12 text-center shadow-sm">
-                <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-                <p className="mt-4 text-sm font-medium text-muted-foreground">Analysing document...</p>
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-8 text-center shadow-sm">
+                <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+                <h3 className="text-lg font-semibold text-blue-900">AI is Analyzing Document...</h3>
+                <p className="mt-2 text-sm text-blue-700">
+                    This may take up to 30 seconds. Please wait.
+                </p>
+                <div className="mt-4 flex items-center justify-center gap-2">
+                    <div className="h-2 w-2 animate-bounce rounded-full bg-blue-600" style={{ animationDelay: '0ms' }} />
+                    <div className="h-2 w-2 animate-bounce rounded-full bg-blue-600" style={{ animationDelay: '150ms' }} />
+                    <div className="h-2 w-2 animate-bounce rounded-full bg-blue-600" style={{ animationDelay: '300ms' }} />
+                </div>
             </div>
         );
     }
@@ -42,8 +52,17 @@ export function AiReviewPanel({ review, isLoading, onAnalyze }: AiReviewPanelPro
                 <div className="flex items-center justify-between">
                     <h3 className="text-lg font-medium">AI Analysis</h3>
                     <div className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground">Last analyzed: {new Date(review!.analyzedAt).toLocaleDateString()}</span>
-                        <button onClick={onAnalyze} className="text-xs text-primary hover:underline">Re-analyze</button>
+                        {review?.generatedAt && (
+                            <span className="text-xs text-muted-foreground">
+                                Analyzed {new Date(review.generatedAt).toLocaleDateString()} at {new Date(review.generatedAt).toLocaleTimeString()}
+                            </span>
+                        )}
+                        <button
+                            onClick={onAnalyze}
+                            className="rounded-md px-3 py-1 text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
+                        >
+                            Re-analyze
+                        </button>
                     </div>
                 </div>
 

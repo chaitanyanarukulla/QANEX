@@ -132,6 +132,15 @@ export class SprintsController {
     return this.sprintsService.getSprintItems(id, tenantId);
   }
 
+  @Get('items/:itemId')
+  findOneItem(
+    @Param('itemId') itemId: string,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<SprintItem> {
+    const tenantId = req.user.tenantId || 'mock-tenant-id';
+    return this.sprintsService.findOneItem(itemId, tenantId);
+  }
+
   @Patch('items/:itemId')
   updateItem(
     @Param('itemId') itemId: string,

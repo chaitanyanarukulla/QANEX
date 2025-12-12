@@ -161,6 +161,19 @@ export class SprintsService {
     return this.sprintItemsRepository.save(item);
   }
 
+  async findOneItem(itemId: string, tenantId: string): Promise<SprintItem> {
+    const item = await this.sprintItemsRepository.findOne({
+      where: { id: itemId, tenantId },
+      relations: ['sprint'],
+    });
+
+    if (!item) {
+      throw new NotFoundException(`Sprint item ${itemId} not found`);
+    }
+
+    return item;
+  }
+
   async moveItemToSprint(
     itemId: string,
     sprintId: string | null,
