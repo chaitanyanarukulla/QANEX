@@ -44,8 +44,12 @@ export function useDashboard() {
         releasesApi.list().catch(() => []),
       ]);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const projectStats = (metricsRes as any)?.project || {
+      // Type-safe extraction with fallback defaults
+      const projectStats = (
+        metricsRes && typeof metricsRes === 'object' && 'project' in metricsRes
+          ? (metricsRes as { project: any }).project
+          : null
+      ) || {
         totalRequirements: 0,
         avgRqs: 0,
         totalBugs: 0,

@@ -25,10 +25,7 @@ export class ProjectsController {
 
   @Post()
   create(@Body() body: Partial<Project>, @Request() req: AuthenticatedRequest) {
-    return this.projectsService.create({
-      ...body,
-      tenantId: req.user.tenantId,
-    });
+    return this.projectsService.create(body, req.user.tenantId);
   }
 
   @Get(':id')

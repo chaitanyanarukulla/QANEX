@@ -49,7 +49,7 @@ describe('RequirementsController', () => {
   describe('findAll', () => {
     it('should return all requirements', async () => {
       mockService.findAll.mockResolvedValue([]);
-      expect(await controller.findAll(mockReq)).toEqual([]);
+      expect(await controller.findAll('t1')).toEqual([]);
       expect(mockService.findAll).toHaveBeenCalledWith('t1');
     });
   });
@@ -92,7 +92,7 @@ describe('RequirementsController', () => {
   describe('moveTasksToBacklog', () => {
     it('should move tasks', async () => {
       mockService.moveTasksToBacklog.mockResolvedValue({});
-      await controller.moveTasksToBacklog('r1', mockReq);
+      await controller.moveTasksToBacklog('r1', 't1');
       expect(mockService.moveTasksToBacklog).toHaveBeenCalledWith('r1', 't1');
     });
   });

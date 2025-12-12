@@ -39,11 +39,14 @@ describe('ProjectsController', () => {
 
   describe('create', () => {
     it('should create project', async () => {
-      mockService.create.mockResolvedValue({});
-      await controller.create({ name: 'P' }, mockReq);
-      expect(mockService.create).toHaveBeenCalledWith(
-        expect.objectContaining({ name: 'P', tenantId: 't1' }),
-      );
+      const body = { name: 'P' } as any;
+      mockService.create.mockResolvedValue({
+        id: 'p1',
+        name: 'P',
+        tenantId: 't1',
+      });
+      await controller.create(body, mockReq);
+      expect(mockService.create).toHaveBeenCalledWith(body, 't1');
     });
   });
 

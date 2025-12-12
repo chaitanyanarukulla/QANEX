@@ -56,22 +56,21 @@ export class RequirementsService {
         const typeStr = (task.type || 'task').toLowerCase();
         const priorityStr = (task.priority || 'MEDIUM').toUpperCase();
 
-        const itemType = ['feature', 'bug', 'task'].includes(typeStr)
-          ? typeStr
-          : 'task';
-        const itemPriority = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].includes(
-          priorityStr,
-        )
-          ? priorityStr
-          : 'MEDIUM';
-
+        const itemType = (
+          ['feature', 'bug', 'task'].includes(typeStr) ? typeStr : 'task'
+        ) as SprintItemType;
+        const itemPriority = (
+          ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].includes(priorityStr)
+            ? priorityStr
+            : 'MEDIUM'
+        ) as SprintItemPriority;
         await this.sprintItemRepo.save(
           this.sprintItemRepo.create({
             title: task.title,
             description: task.description || '',
-            type: itemType as SprintItemType,
+            type: itemType,
             status: SprintItemStatus.TODO,
-            priority: itemPriority as SprintItemPriority,
+            priority: itemPriority,
             suggestedRole: task.suggestedRole,
             estimatedHours: task.estimatedHours,
             requirementId: saved.id,
@@ -84,7 +83,15 @@ export class RequirementsService {
     // Background: Index    // Auto-Index
     this.ragService
       .indexRequirement(saved.id, user.tenantId, saved.title, saved.content)
-      .catch((e) => console.error('RAG Index failed', e));
+      .catch((e) => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        const error = e;
+        this.logger.error('RAG Index failed', {
+          context: 'RequirementsService',
+          error: error?.message || 'Unknown error',
+          stack: error?.stack,
+        });
+      });
 
     return saved;
   }
@@ -121,7 +128,14 @@ export class RequirementsService {
     // Update index
     this.ragService
       .indexRequirement(saved.id, user.tenantId, saved.title, saved.content)
-      .catch(console.error);
+      .catch((e) => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        const error = e;
+        this.logger.error('Background task failed', {
+          context: 'RequirementsService',
+          error: error?.message || 'Unknown error',
+        });
+      });
 
     return saved;
   }
@@ -167,7 +181,12 @@ export class RequirementsService {
     }
 
     // Optional: Also remove from RAG index
-    // this.ragService.removeRequirement(id).catch(console.error);
+    // this.ragService.removeRequirement(id).catch((e) => {
+    //   this.logger.error('Background task failed', {
+    //     context: 'RequirementsService',
+    //     error: e.message,
+    //   });
+    // });
   }
 
   async addTasks(
@@ -183,15 +202,9 @@ export class RequirementsService {
       const typeStr = (task.type || 'task').toLowerCase();
       const priorityStr = (task.priority || 'MEDIUM').toUpperCase();
 
-      const itemType = ['feature', 'bug', 'task'].includes(typeStr)
-        ? typeStr
-        : 'task';
-      const itemPriority = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].includes(
-        priorityStr,
-      )
-        ? priorityStr
-        : 'MEDIUM';
-
+      const itemType = typeStr in ['feature', 'bug'] ? typeStr : 'task';
+      const itemPriority =
+        priorityStr in ['CRITICAL', 'HIGH', 'LOW'] ? priorityStr : 'MEDIUM';
       const savedItem = await this.sprintItemRepo.save(
         this.sprintItemRepo.create({
           title: task.title,

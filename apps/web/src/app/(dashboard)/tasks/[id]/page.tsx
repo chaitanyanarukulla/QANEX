@@ -8,6 +8,10 @@ import { sprintsApi } from '@/services/sprints.service';
 import { SprintItem, SprintItemPriority, SprintItemStatus, SprintItemType } from '@/types/sprint';
 import { useToast } from '@/components/ui/use-toast';
 
+type SprintItemStatusType = typeof SprintItemStatus[keyof typeof SprintItemStatus];
+type SprintItemTypeType = typeof SprintItemType[keyof typeof SprintItemType];
+type SprintItemPriorityType = typeof SprintItemPriority[keyof typeof SprintItemPriority];
+
 export default function TaskDetailPage() {
     const params = useParams();
     const router = useRouter();
@@ -17,7 +21,7 @@ export default function TaskDetailPage() {
     const [task, setTask] = useState<SprintItem | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    
 
     // Form State
     const [title, setTitle] = useState('');
@@ -42,11 +46,8 @@ export default function TaskDetailPage() {
             setPriority(data.priority);
             setEstimatedHours(data.estimatedHours || 0);
             setAssigneeName(data.assigneeName || '');
-
-            setError(null);
         } catch (err) {
             console.error('Failed to load task:', err);
-            setError('Failed to load task details');
         } finally {
             setIsLoading(false);
         }
@@ -61,12 +62,23 @@ export default function TaskDetailPage() {
     const handleSave = async () => {
         try {
             setIsSaving(true);
+            // Safely cast to known enum values with validation
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const isValidStatus = (val: any): val is SprintItemStatusType =>
+                Object.values(SprintItemStatus).includes(val);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const isValidType = (val: any): val is SprintItemTypeType =>
+                Object.values(SprintItemType).includes(val);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const isValidPriority = (val: any): val is SprintItemPriorityType =>
+                Object.values(SprintItemPriority).includes(val);
+            
             const updated = await sprintsApi.updateItem(id, {
                 title,
                 description,
-                status: status as any,
-                type: type as any,
-                priority: priority as any,
+                status: isValidStatus(status) ? status : SprintItemStatus.TODO,
+                type: isValidType(type) ? type : SprintItemType.TASK,
+                priority: isValidPriority(priority) ? priority : SprintItemPriority.MEDIUM,
                 estimatedHours: Number(estimatedHours),
                 assigneeName,
             });

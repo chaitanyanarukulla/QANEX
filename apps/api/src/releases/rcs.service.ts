@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { BugSeverity, BugStatus } from '../bugs/bug.entity';
 import { RequirementState } from '../requirements/requirement.entity';
 import { ReleasesService } from './releases.service';
@@ -10,6 +10,8 @@ import { AiProviderFactory } from '../ai/providers';
 
 @Injectable()
 export class RcsService {
+  private readonly logger = new Logger(RcsService.name);
+
   constructor(
     private releasesService: ReleasesService,
     private requirementsService: RequirementsService,
@@ -102,7 +104,15 @@ export class RcsService {
       tenantId,
       totalScore,
       breakdown,
-    ).catch(console.error);
+    ).catch((e) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const error = e;
+      this.logger.error('Failed to generate AI explanation', {
+        context: 'RcsService.generateAiExplanation',
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        error: error.message || 'Unknown error',
+      });
+    });
 
     return { score: Math.round(totalScore), breakdown };
   }
@@ -120,7 +130,13 @@ export class RcsService {
         await this.releasesService.updateExplanation(releaseId, explanation);
       }
     } catch (error) {
-      console.error('Failed to generate AI explanation:', error);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const err = error as any;
+      this.logger.error('Failed to generate AI explanation', {
+        context: 'RcsService.generateAiExplanation',
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        error: err.message || 'Unknown error',
+      });
     }
   }
 

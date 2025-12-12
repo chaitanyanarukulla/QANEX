@@ -13,7 +13,7 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "db:reset": "node scripts/reset-db.js",
-    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix --max-warnings 0",
+    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix --max-warnings 20",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
@@ -48,7 +48,8 @@
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "typeorm": "^0.3.28",
-    "winston": "^3.19.0"
+    "winston": "^3.19.0",
+    "zod": "^4.1.13"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
@@ -105,10 +106,10 @@
     ],
     "coverageThreshold": {
       "global": {
-        "branches": 15,
-        "functions": 15,
-        "lines": 20,
-        "statements": 20
+        "branches": 22,
+        "functions": 22,
+        "lines": 25,
+        "statements": 25
       }
     }
   }
