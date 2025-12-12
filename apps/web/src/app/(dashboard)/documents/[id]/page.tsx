@@ -216,8 +216,8 @@ export default function DocumentDetailPage() {
                         type="text"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
-                        className="text-lg font-medium outline-none bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 transition-colors px-2 py-1"
-                        placeholder="Untitled Document"
+                        placeholder="Document Title"
+                        className="text-xl font-semibold text-gray-900 bg-transparent border-none outline-none focus:ring-0 px-4"
                     />
                 </div>
 
@@ -283,7 +283,7 @@ export default function DocumentDetailPage() {
 
                 {/* Sidebar */}
                 {showSidebar && (
-                    <div className="w-[480px] border-l bg-white overflow-y-auto p-4">
+                    <div className="w-[552px] border-l bg-white overflow-y-auto p-4">
                         <AiReviewPanel
                             review={document.aiReview}
                             isLoading={isAnalyzing}
