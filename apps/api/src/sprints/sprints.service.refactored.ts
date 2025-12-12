@@ -323,7 +323,10 @@ export class SprintsServiceRefactored {
    */
   private reconstructAggregate(entity: Sprint): SprintAggregate {
     // Create aggregate instance directly from entity
-    const capacity = new (require('./domain/value-objects/sprint-capacity.vo').SprintCapacity)(entity.capacity);
+    const capacity =
+      new (require('./domain/value-objects/sprint-capacity.vo').SprintCapacity)(
+        entity.capacity,
+      );
     const status = (entity.status as any) || 'PLANNED';
 
     const aggregate = new SprintAggregate(

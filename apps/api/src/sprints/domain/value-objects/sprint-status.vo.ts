@@ -45,10 +45,7 @@ export class SprintStatusHelper {
   /**
    * Check if transition from `current` to `next` is valid.
    */
-  static isValidTransition(
-    current: SprintStatus,
-    next: SprintStatus,
-  ): boolean {
+  static isValidTransition(current: SprintStatus, next: SprintStatus): boolean {
     const validTransitions: Record<SprintStatus, SprintStatus[]> = {
       [SprintStatus.PLANNED]: [SprintStatus.ACTIVE, SprintStatus.CANCELLED],
       [SprintStatus.ACTIVE]: [SprintStatus.COMPLETED, SprintStatus.CANCELLED],

@@ -54,7 +54,8 @@ describe('EventStorePublisher', () => {
 
     publisher = module.get<EventStorePublisher>(EventStorePublisher);
     eventStore = module.get<EventStoreService>(EventStoreService);
-    domainEventPublisher = module.get<DomainEventPublisher>(DomainEventPublisher);
+    domainEventPublisher =
+      module.get<DomainEventPublisher>(DomainEventPublisher);
     migrationHandler = module.get<EventMigrationHandler>(EventMigrationHandler);
   });
 
@@ -65,7 +66,10 @@ describe('EventStorePublisher', () => {
 
       await publisher.publish(mockEvent, 'tenant-1');
 
-      expect(eventStore.appendEvent).toHaveBeenCalledWith(mockEvent, 'tenant-1');
+      expect(eventStore.appendEvent).toHaveBeenCalledWith(
+        mockEvent,
+        'tenant-1',
+      );
       expect(domainEventPublisher.publish).toHaveBeenCalledWith(mockEvent);
     });
 
@@ -161,9 +165,9 @@ describe('EventStorePublisher', () => {
         .spyOn(eventStore, 'appendEvents')
         .mockRejectedValue(new Error('Batch error'));
 
-      await expect(
-        publisher.publishAll(events, 'tenant-1'),
-      ).rejects.toThrow('Batch error');
+      await expect(publisher.publishAll(events, 'tenant-1')).rejects.toThrow(
+        'Batch error',
+      );
 
       expect(domainEventPublisher.publish).not.toHaveBeenCalled();
     });
@@ -205,9 +209,7 @@ describe('EventStorePublisher', () => {
     });
 
     it('should return empty array if no events', async () => {
-      jest
-        .spyOn(eventStore, 'getEventsForAggregate')
-        .mockResolvedValue([]);
+      jest.spyOn(eventStore, 'getEventsForAggregate').mockResolvedValue([]);
 
       const result = await publisher.replayEvents('req-1', 'tenant-1');
 
@@ -219,9 +221,9 @@ describe('EventStorePublisher', () => {
         .spyOn(eventStore, 'getEventsForAggregate')
         .mockRejectedValue(new Error('Replay error'));
 
-      await expect(
-        publisher.replayEvents('req-1', 'tenant-1'),
-      ).rejects.toThrow('Replay error');
+      await expect(publisher.replayEvents('req-1', 'tenant-1')).rejects.toThrow(
+        'Replay error',
+      );
     });
   });
 
@@ -230,9 +232,7 @@ describe('EventStorePublisher', () => {
       const since = new Date('2024-01-01');
       const events = [mockEvent];
 
-      jest
-        .spyOn(eventStore, 'getEventsSince')
-        .mockResolvedValue(events as any);
+      jest.spyOn(eventStore, 'getEventsSince').mockResolvedValue(events as any);
 
       const result = await publisher.getEventsSince('tenant-1', since);
 
@@ -287,12 +287,7 @@ describe('EventStorePublisher', () => {
     it('should register migration with handler', () => {
       const migration = (event: any) => event;
 
-      publisher.registerMigration(
-        'TestEvent',
-        'v1',
-        'v2',
-        migration,
-      );
+      publisher.registerMigration('TestEvent', 'v1', 'v2', migration);
 
       expect(migrationHandler.registerMigration).toHaveBeenCalledWith(
         'TestEvent',
@@ -343,9 +338,9 @@ describe('EventStorePublisher', () => {
         });
 
       // Should throw on first publisher error
-      await expect(
-        publisher.publishAll(events, 'tenant-1'),
-      ).rejects.toThrow('First publisher failed');
+      await expect(publisher.publishAll(events, 'tenant-1')).rejects.toThrow(
+        'First publisher failed',
+      );
 
       // Events should still be persisted
       expect(eventStore.appendEvents).toHaveBeenCalled();

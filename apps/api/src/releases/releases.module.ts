@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ReleasesService } from './releases.service';
 import { ReleasesController } from './releases.controller';
@@ -17,7 +17,7 @@ import { EventStoreModule } from '../common/event-store/event-store.module';
     BugsModule,
     TestKeysModule,
     SecurityOpsModule,
-    EventStoreModule,
+    forwardRef(() => EventStoreModule),
   ],
   providers: [ReleasesService, RcsService],
   controllers: [ReleasesController],

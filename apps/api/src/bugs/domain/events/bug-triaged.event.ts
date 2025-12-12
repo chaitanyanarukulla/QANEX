@@ -51,8 +51,7 @@ export class BugTriaged implements DomainEvent {
     this.assignedTo = data.assignedTo;
     this.userId = data.userId;
     this.occurredAt = data.occurredAt ?? new Date();
-    this.eventId =
-      data.eventId ?? `BugTriaged-${aggregateId}-${Date.now()}`;
+    this.eventId = data.eventId ?? `BugTriaged-${aggregateId}-${Date.now()}`;
   }
 
   /**

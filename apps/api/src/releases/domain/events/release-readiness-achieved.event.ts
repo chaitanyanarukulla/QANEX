@@ -51,8 +51,7 @@ export class ReleaseReadinessAchieved implements DomainEvent {
     this.userId = data.userId;
     this.occurredAt = data.occurredAt ?? new Date();
     this.eventId =
-      data.eventId ??
-      `ReleaseReadinessAchieved-${aggregateId}-${Date.now()}`;
+      data.eventId ?? `ReleaseReadinessAchieved-${aggregateId}-${Date.now()}`;
   }
 
   /**

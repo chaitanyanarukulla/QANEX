@@ -49,8 +49,7 @@ export class BugResolved implements DomainEvent {
     this.resolutionNotes = data.resolutionNotes;
     this.userId = data.userId;
     this.occurredAt = data.occurredAt ?? new Date();
-    this.eventId =
-      data.eventId ?? `BugResolved-${aggregateId}-${Date.now()}`;
+    this.eventId = data.eventId ?? `BugResolved-${aggregateId}-${Date.now()}`;
   }
 
   /**

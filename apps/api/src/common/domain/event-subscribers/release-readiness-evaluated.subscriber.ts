@@ -1,5 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { DomainEventPublisher, DomainEventSubscriber } from '../domain-event.publisher';
+import {
+  DomainEventPublisher,
+  DomainEventSubscriber,
+} from '../domain-event.publisher';
 import { DomainEvent } from '../aggregate-root.interface';
 import { ReleaseReadinessEvaluated } from '../../../releases/domain/events/release-readiness-evaluated.event';
 
@@ -25,7 +28,9 @@ import { ReleaseReadinessEvaluated } from '../../../releases/domain/events/relea
  */
 @Injectable()
 export class ReleaseReadinessEvaluatedSubscriber implements DomainEventSubscriber {
-  private readonly logger = new Logger(ReleaseReadinessEvaluatedSubscriber.name);
+  private readonly logger = new Logger(
+    ReleaseReadinessEvaluatedSubscriber.name,
+  );
 
   constructor(private eventPublisher: DomainEventPublisher) {
     // Subscribe to ReleaseReadinessEvaluated events
@@ -116,9 +121,7 @@ export class ReleaseReadinessEvaluatedSubscriber implements DomainEventSubscribe
    * Handle BLOCKED status: critical issues detected
    * @private
    */
-  private async handleBlocked(
-    event: ReleaseReadinessEvaluated,
-  ): Promise<void> {
+  private async handleBlocked(event: ReleaseReadinessEvaluated): Promise<void> {
     this.logger.warn(
       `Release ${event.releaseId} is BLOCKED (RCS: ${event.score}) - immediate action required`,
     );
@@ -135,9 +138,7 @@ export class ReleaseReadinessEvaluatedSubscriber implements DomainEventSubscribe
    * Handle WARNING status: some gates at risk but not blocking
    * @private
    */
-  private async handleWarning(
-    event: ReleaseReadinessEvaluated,
-  ): Promise<void> {
+  private async handleWarning(event: ReleaseReadinessEvaluated): Promise<void> {
     this.logger.warn(
       `Release ${event.releaseId} has WARNING status (RCS: ${event.score})`,
     );
@@ -152,7 +153,9 @@ export class ReleaseReadinessEvaluatedSubscriber implements DomainEventSubscribe
    * Store evaluation for compliance and audit trail
    * @private
    */
-  private async storeEvaluationAudit(event: ReleaseReadinessEvaluated): Promise<void> {
+  private async storeEvaluationAudit(
+    event: ReleaseReadinessEvaluated,
+  ): Promise<void> {
     // TODO: Implement compliance audit trail
     // This is required for SOC2, ISO27001, etc.
   }

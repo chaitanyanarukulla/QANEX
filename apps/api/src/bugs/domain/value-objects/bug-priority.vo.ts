@@ -77,10 +77,7 @@ export class BugPriorityHelper {
    * Compare two priorities
    * @returns negative if a < b (a is higher priority), 0 if a === b, positive if a > b
    */
-  static compare(
-    a: BugPriorityLevel,
-    b: BugPriorityLevel,
-  ): number {
+  static compare(a: BugPriorityLevel, b: BugPriorityLevel): number {
     return this.getWeight(b) - this.getWeight(a); // Reverse for descending
   }
 

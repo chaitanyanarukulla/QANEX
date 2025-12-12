@@ -80,9 +80,7 @@ describe('EventStoreService', () => {
       });
 
       const consoleSpy = jest.spyOn(console, 'time').mockImplementation();
-      const consoleEndSpy = jest
-        .spyOn(console, 'timeEnd')
-        .mockImplementation();
+      const consoleEndSpy = jest.spyOn(console, 'timeEnd').mockImplementation();
 
       await service.appendEvent(mockEvent, 'tenant-1');
 
@@ -94,9 +92,9 @@ describe('EventStoreService', () => {
         .spyOn(repository, 'insert')
         .mockRejectedValue(new Error('Database error'));
 
-      await expect(
-        service.appendEvent(mockEvent, 'tenant-1'),
-      ).rejects.toThrow('Database error');
+      await expect(service.appendEvent(mockEvent, 'tenant-1')).rejects.toThrow(
+        'Database error',
+      );
     });
   });
 
@@ -135,9 +133,9 @@ describe('EventStoreService', () => {
         .spyOn(repository, 'insert')
         .mockRejectedValue(new Error('Batch insert failed'));
 
-      await expect(
-        service.appendEvents(events, 'tenant-1'),
-      ).rejects.toThrow('Batch insert failed');
+      await expect(service.appendEvents(events, 'tenant-1')).rejects.toThrow(
+        'Batch insert failed',
+      );
     });
   });
 

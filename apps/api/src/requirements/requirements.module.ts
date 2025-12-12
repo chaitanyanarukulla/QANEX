@@ -11,7 +11,7 @@ import { EventStoreModule } from '../common/event-store/event-store.module';
   imports: [
     TypeOrmModule.forFeature([Requirement, SprintItem]),
     forwardRef(() => AiModule),
-    EventStoreModule,
+    forwardRef(() => EventStoreModule),
   ],
   providers: [RequirementsService],
   controllers: [RequirementsController],

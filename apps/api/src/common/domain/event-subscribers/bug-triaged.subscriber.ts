@@ -1,5 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { DomainEventPublisher, DomainEventSubscriber } from '../domain-event.publisher';
+import {
+  DomainEventPublisher,
+  DomainEventSubscriber,
+} from '../domain-event.publisher';
 import { DomainEvent } from '../aggregate-root.interface';
 import { BugTriaged } from '../../../bugs/domain/events/bug-triaged.event';
 
@@ -53,7 +56,9 @@ export class BugTriagedSubscriber implements DomainEventSubscriber {
   async handle(event: DomainEvent): Promise<void> {
     const bugEvent = event as BugTriaged;
     try {
-      this.logger.debug(`Processing BugTriaged event for bug ${bugEvent.bugId}`);
+      this.logger.debug(
+        `Processing BugTriaged event for bug ${bugEvent.bugId}`,
+      );
 
       // TODO: Implement when Bug service available
       // const bug = await this.bugsService.findById(bugEvent.bugId);

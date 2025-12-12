@@ -35,10 +35,10 @@ export class SprintAdapter {
   >();
   private readonly CACHE_TTL_MS = 300000; // 5 minutes
 
-  constructor(
+  constructor() {
     // TODO: Inject services from other contexts
     // - private requirementsService: RequirementsService,
-  ) {}
+  }
 
   /**
    * Map requirement to sprint item
@@ -109,7 +109,7 @@ export class SprintAdapter {
 
     // Map in parallel for performance
     const items = await Promise.all(
-      requirementIds.map(id => this.mapRequirementToSprintItem(id)),
+      requirementIds.map((id) => this.mapRequirementToSprintItem(id)),
     );
 
     return items;
@@ -148,7 +148,9 @@ export class SprintAdapter {
    * @returns Estimated story points (typically 5, 8, 13, 21)
    */
   async estimateStoryPoints(requirementId: string): Promise<number> {
-    this.logger.debug(`Estimating story points for requirement ${requirementId}`);
+    this.logger.debug(
+      `Estimating story points for requirement ${requirementId}`,
+    );
 
     try {
       // TODO: Implement estimation algorithm based on:

@@ -52,9 +52,13 @@ describe('Event Sourcing (E2E)', () => {
     await app.init();
 
     eventStore = moduleFixture.get<EventStoreService>(EventStoreService);
-    eventStorePublisher = moduleFixture.get<EventStorePublisher>(EventStorePublisher);
-    migrationHandler = moduleFixture.get<EventMigrationHandler>(EventMigrationHandler);
-    domainEventPublisher = moduleFixture.get<DomainEventPublisher>(DomainEventPublisher);
+    eventStorePublisher =
+      moduleFixture.get<EventStorePublisher>(EventStorePublisher);
+    migrationHandler = moduleFixture.get<EventMigrationHandler>(
+      EventMigrationHandler,
+    );
+    domainEventPublisher =
+      moduleFixture.get<DomainEventPublisher>(DomainEventPublisher);
     storedEventRepository = moduleFixture.get('StoredDomainEventRepository');
   });
 
@@ -150,7 +154,10 @@ describe('Event Sourcing (E2E)', () => {
 
       await eventStore.appendEvents(events, tenantId);
 
-      const retrieved = await eventStore.getEventsForAggregate('req-3', tenantId);
+      const retrieved = await eventStore.getEventsForAggregate(
+        'req-3',
+        tenantId,
+      );
 
       expect(retrieved).toHaveLength(3);
       expect(retrieved[0].eventId).toBe('evt-10');
@@ -236,7 +243,10 @@ describe('Event Sourcing (E2E)', () => {
       await eventStore.appendEvents(events, tenantId);
 
       // Replay events
-      const replayed = await eventStorePublisher.replayEvents('req-6', tenantId);
+      const replayed = await eventStorePublisher.replayEvents(
+        'req-6',
+        tenantId,
+      );
 
       expect(replayed).toHaveLength(2);
       expect(replayed[0].eventType).toBe('RequirementCreated');
@@ -244,7 +254,10 @@ describe('Event Sourcing (E2E)', () => {
     });
 
     it('should replay empty array if no events exist', async () => {
-      const replayed = await eventStorePublisher.replayEvents('req-nonexistent', tenantId);
+      const replayed = await eventStorePublisher.replayEvents(
+        'req-nonexistent',
+        tenantId,
+      );
 
       expect(replayed).toEqual([]);
     });
@@ -277,7 +290,10 @@ describe('Event Sourcing (E2E)', () => {
       await eventStore.appendEvent(event, tenantId);
 
       // Replay and migrate
-      const replayed = await eventStorePublisher.replayEvents('req-7', tenantId);
+      const replayed = await eventStorePublisher.replayEvents(
+        'req-7',
+        tenantId,
+      );
 
       expect(replayed[0].eventVersion).toBe('v2');
       expect(replayed[0].approverRole).toBe('REVIEWER');
@@ -305,7 +321,8 @@ describe('Event Sourcing (E2E)', () => {
         'v3',
         (event) => ({
           ...event,
-          approvalTimestamp: event.approvalTimestamp || new Date().toISOString(),
+          approvalTimestamp:
+            event.approvalTimestamp || new Date().toISOString(),
         }),
       );
 
@@ -323,7 +340,10 @@ describe('Event Sourcing (E2E)', () => {
       await eventStore.appendEvent(oldEvent, tenantId);
 
       // Replay should apply both migrations
-      const replayed = await eventStorePublisher.replayEvents('req-8', tenantId);
+      const replayed = await eventStorePublisher.replayEvents(
+        'req-8',
+        tenantId,
+      );
 
       expect(replayed[0].eventVersion).toBe('v3');
       expect(replayed[0].approverRole).toBe('REVIEWER');
@@ -383,24 +403,32 @@ describe('Event Sourcing (E2E)', () => {
       );
 
       expect(approvalEvents).toHaveLength(2);
-      expect(approvalEvents.every((e) => e.eventType === 'RequirementApproved')).toBe(true);
+      expect(
+        approvalEvents.every((e) => e.eventType === 'RequirementApproved'),
+      ).toBe(true);
     });
 
     it('should query events by aggregate type', async () => {
-      const requirementEvents = await eventStorePublisher.getEventsByAggregateType(
-        tenantId,
-        'Requirement',
-      );
+      const requirementEvents =
+        await eventStorePublisher.getEventsByAggregateType(
+          tenantId,
+          'Requirement',
+        );
 
       expect(requirementEvents.length).toBeGreaterThanOrEqual(3);
-      expect(requirementEvents.every((e) => e.aggregateType === 'Requirement')).toBe(true);
+      expect(
+        requirementEvents.every((e) => e.aggregateType === 'Requirement'),
+      ).toBe(true);
     });
 
     it('should query events since timestamp', async () => {
       const now = new Date();
       const future = new Date(now.getTime() + 1000);
 
-      const recentEvents = await eventStorePublisher.getEventsSince(tenantId, future);
+      const recentEvents = await eventStorePublisher.getEventsSince(
+        tenantId,
+        future,
+      );
 
       // Should be empty since all events are in the past
       expect(recentEvents.length).toBe(0);

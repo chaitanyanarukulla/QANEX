@@ -49,10 +49,7 @@ export class EventMigrationHandler {
    *
    * This enables composable migrations: v1 → v2 → v3
    */
-  private migrations = new Map<
-    string,
-    Map<string, (event: any) => any>
-  >();
+  private migrations = new Map<string, Map<string, (event: any) => any>>();
 
   /**
    * Latest version for each event type
@@ -130,9 +127,7 @@ export class EventMigrationHandler {
       const toVersion = `v${v + 1}`;
       const migrationKey = `${fromVersion}_to_${toVersion}`;
 
-      const migration = this.migrations
-        .get(eventType)
-        ?.get(migrationKey);
+      const migration = this.migrations.get(eventType)?.get(migrationKey);
 
       if (!migration) {
         this.logger.warn(

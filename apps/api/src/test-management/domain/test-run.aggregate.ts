@@ -1,6 +1,4 @@
-import {
-  BaseDomainAggregate,
-} from '../../common/domain/aggregate-root.interface';
+import { BaseDomainAggregate } from '../../common/domain/aggregate-root.interface';
 import { PassRateHelper, PassRateStatus } from './value-objects/pass-rate.vo';
 import {
   TestRunStatusType,
@@ -161,7 +159,7 @@ export class TestRun extends BaseDomainAggregate {
     ) {
       throw new Error(
         `Cannot start ${this.status} test run. ` +
-        `Valid next states: ${TestRunStatusHelper.getValidNextStates(this.status).join(', ')}`,
+          `Valid next states: ${TestRunStatusHelper.getValidNextStates(this.status).join(', ')}`,
       );
     }
 
@@ -190,9 +188,7 @@ export class TestRun extends BaseDomainAggregate {
     errorMessage?: string;
   }): void {
     if (TestRunStatusHelper.isTerminal(this.status)) {
-      throw new Error(
-        `Cannot record result on ${this.status} test run.`,
-      );
+      throw new Error(`Cannot record result on ${this.status} test run.`);
     }
 
     // Update counts
@@ -242,7 +238,7 @@ export class TestRun extends BaseDomainAggregate {
     ) {
       throw new Error(
         `Cannot complete ${this.status} test run. ` +
-        `Valid next states: ${TestRunStatusHelper.getValidNextStates(this.status).join(', ')}`,
+          `Valid next states: ${TestRunStatusHelper.getValidNextStates(this.status).join(', ')}`,
       );
     }
 
@@ -273,9 +269,7 @@ export class TestRun extends BaseDomainAggregate {
         TestRunStatusType.STOPPED,
       )
     ) {
-      throw new Error(
-        `Cannot stop ${this.status} test run.`,
-      );
+      throw new Error(`Cannot stop ${this.status} test run.`);
     }
 
     this.status = TestRunStatusType.STOPPED;
@@ -294,9 +288,7 @@ export class TestRun extends BaseDomainAggregate {
         TestRunStatusType.CANCELLED,
       )
     ) {
-      throw new Error(
-        `Cannot cancel ${this.status} test run.`,
-      );
+      throw new Error(`Cannot cancel ${this.status} test run.`);
     }
 
     this.status = TestRunStatusType.CANCELLED;

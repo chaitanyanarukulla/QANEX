@@ -24,11 +24,11 @@ import { RequirementApproved } from '../../../requirements/domain/events/require
 export class RequirementApprovedSubscriber implements DomainEventSubscriber {
   private readonly logger = new Logger(RequirementApprovedSubscriber.name);
 
-  constructor(
+  constructor() {
     // TODO: Inject services when available
     // private requirementsService: RequirementsService,
     // private sprintsService: SprintsService,
-  ) {}
+  }
 
   /**
    * Handle RequirementApproved event and generate initial tasks

@@ -94,23 +94,19 @@ export class Sprint extends BaseDomainAggregate {
    *
    * @throws Error if dates are invalid (startDate >= endDate)
    */
-  public static create(
-    params: {
-      id: string;
-      tenantId: string;
-      name: string;
-      capacity: number; // story points
-      startDate: Date;
-      endDate: Date;
-      description?: string;
-      userId?: string;
-    },
-  ): Sprint {
+  public static create(params: {
+    id: string;
+    tenantId: string;
+    name: string;
+    capacity: number; // story points
+    startDate: Date;
+    endDate: Date;
+    description?: string;
+    userId?: string;
+  }): Sprint {
     // Validate dates
     if (params.startDate >= params.endDate) {
-      throw new Error(
-        'Invalid sprint dates: startDate must be before endDate',
-      );
+      throw new Error('Invalid sprint dates: startDate must be before endDate');
     }
 
     // Validate capacity
@@ -357,9 +353,7 @@ export class Sprint extends BaseDomainAggregate {
    * Check if sprint is full (100% capacity).
    */
   public isFull(): boolean {
-    return (
-      this.getTotalStoryPoints() >= this.capacity.getValue()
-    );
+    return this.getTotalStoryPoints() >= this.capacity.getValue();
   }
 
   /**

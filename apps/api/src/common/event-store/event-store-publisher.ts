@@ -222,10 +222,7 @@ export class EventStorePublisher {
    * @param since - Timestamp to start from
    * @returns Events after the timestamp
    */
-  async getEventsSince(
-    tenantId: string,
-    since: Date,
-  ): Promise<DomainEvent[]> {
+  async getEventsSince(tenantId: string, since: Date): Promise<DomainEvent[]> {
     try {
       const events = await this.eventStore.getEventsSince(tenantId, since);
 
@@ -258,9 +255,7 @@ export class EventStorePublisher {
     try {
       const events = await this.eventStore.getEventsByType(tenantId, eventType);
 
-      this.logger.debug(
-        `Retrieved ${events.length} ${eventType} events`,
-      );
+      this.logger.debug(`Retrieved ${events.length} ${eventType} events`);
 
       return events;
     } catch (error) {

@@ -16,12 +16,7 @@ describe('EventMigrationHandler', () => {
     it('should register a migration', () => {
       const migration = (event: any) => ({ ...event, newField: 'value' });
 
-      handler.registerMigration(
-        'TestEvent',
-        'v1',
-        'v2',
-        migration,
-      );
+      handler.registerMigration('TestEvent', 'v1', 'v2', migration);
 
       expect(handler.getLatestVersion('TestEvent')).toBe('v2');
     });
@@ -62,12 +57,10 @@ describe('EventMigrationHandler', () => {
     });
 
     it('should apply single migration', async () => {
-      handler.registerMigration(
-        'TestEvent',
-        'v1',
-        'v2',
-        (event) => ({ ...event, newField: 'added' }),
-      );
+      handler.registerMigration('TestEvent', 'v1', 'v2', (event) => ({
+        ...event,
+        newField: 'added',
+      }));
 
       const event = {
         eventType: 'TestEvent',
@@ -82,19 +75,15 @@ describe('EventMigrationHandler', () => {
     });
 
     it('should apply composable migrations (v1 -> v2 -> v3)', async () => {
-      handler.registerMigration(
-        'TestEvent',
-        'v1',
-        'v2',
-        (event) => ({ ...event, field1: 'v1' }),
-      );
+      handler.registerMigration('TestEvent', 'v1', 'v2', (event) => ({
+        ...event,
+        field1: 'v1',
+      }));
 
-      handler.registerMigration(
-        'TestEvent',
-        'v2',
-        'v3',
-        (event) => ({ ...event, field2: 'v2' }),
-      );
+      handler.registerMigration('TestEvent', 'v2', 'v3', (event) => ({
+        ...event,
+        field2: 'v2',
+      }));
 
       const event = {
         eventType: 'TestEvent',
@@ -110,12 +99,10 @@ describe('EventMigrationHandler', () => {
     });
 
     it('should handle missing eventVersion by treating as v1', async () => {
-      handler.registerMigration(
-        'TestEvent',
-        'v1',
-        'v2',
-        (event) => ({ ...event, upgraded: true }),
-      );
+      handler.registerMigration('TestEvent', 'v1', 'v2', (event) => ({
+        ...event,
+        upgraded: true,
+      }));
 
       const event = {
         eventType: 'TestEvent',
@@ -141,14 +128,9 @@ describe('EventMigrationHandler', () => {
     });
 
     it('should throw error if migration fails', async () => {
-      handler.registerMigration(
-        'TestEvent',
-        'v1',
-        'v2',
-        (event) => {
-          throw new Error('Migration failed');
-        },
-      );
+      handler.registerMigration('TestEvent', 'v1', 'v2', (event) => {
+        throw new Error('Migration failed');
+      });
 
       const event = {
         eventType: 'TestEvent',
@@ -162,15 +144,10 @@ describe('EventMigrationHandler', () => {
     });
 
     it('should use default values for missing fields', async () => {
-      handler.registerMigration(
-        'TestEvent',
-        'v1',
-        'v2',
-        (event) => ({
-          ...event,
-          priority: event.priority || 'MEDIUM',
-        }),
-      );
+      handler.registerMigration('TestEvent', 'v1', 'v2', (event) => ({
+        ...event,
+        priority: event.priority || 'MEDIUM',
+      }));
 
       const event = {
         eventType: 'TestEvent',
@@ -184,12 +161,10 @@ describe('EventMigrationHandler', () => {
     });
 
     it('should preserve existing data during migration', async () => {
-      handler.registerMigration(
-        'TestEvent',
-        'v1',
-        'v2',
-        (event) => ({ ...event, newField: 'value' }),
-      );
+      handler.registerMigration('TestEvent', 'v1', 'v2', (event) => ({
+        ...event,
+        newField: 'value',
+      }));
 
       const event = {
         eventType: 'TestEvent',
@@ -318,25 +293,15 @@ describe('EventMigrationHandler', () => {
       // v2: Added approverRole
       // v3: Added approvalTimestamp
 
-      handler.registerMigration(
-        'RequirementApproved',
-        'v1',
-        'v2',
-        (event) => ({
-          ...event,
-          approverRole: event.approverRole || 'REVIEWER',
-        }),
-      );
+      handler.registerMigration('RequirementApproved', 'v1', 'v2', (event) => ({
+        ...event,
+        approverRole: event.approverRole || 'REVIEWER',
+      }));
 
-      handler.registerMigration(
-        'RequirementApproved',
-        'v2',
-        'v3',
-        (event) => ({
-          ...event,
-          approvalTimestamp: event.approvalTimestamp || new Date().toISOString(),
-        }),
-      );
+      handler.registerMigration('RequirementApproved', 'v2', 'v3', (event) => ({
+        ...event,
+        approvalTimestamp: event.approvalTimestamp || new Date().toISOString(),
+      }));
 
       // Old v1 event
       const oldEvent = {
@@ -390,15 +355,10 @@ describe('EventMigrationHandler', () => {
 
   describe('edge cases', () => {
     it('should handle events with null values', async () => {
-      handler.registerMigration(
-        'TestEvent',
-        'v1',
-        'v2',
-        (event) => ({
-          ...event,
-          nullable: event.nullable || null,
-        }),
-      );
+      handler.registerMigration('TestEvent', 'v1', 'v2', (event) => ({
+        ...event,
+        nullable: event.nullable || null,
+      }));
 
       const event = {
         eventType: 'TestEvent',
@@ -413,18 +373,13 @@ describe('EventMigrationHandler', () => {
     });
 
     it('should handle events with complex nested objects', async () => {
-      handler.registerMigration(
-        'TestEvent',
-        'v1',
-        'v2',
-        (event) => ({
-          ...event,
-          metadata: {
-            ...event.metadata,
-            migratedAt: new Date().toISOString(),
-          },
-        }),
-      );
+      handler.registerMigration('TestEvent', 'v1', 'v2', (event) => ({
+        ...event,
+        metadata: {
+          ...event.metadata,
+          migratedAt: new Date().toISOString(),
+        },
+      }));
 
       const event = {
         eventType: 'TestEvent',

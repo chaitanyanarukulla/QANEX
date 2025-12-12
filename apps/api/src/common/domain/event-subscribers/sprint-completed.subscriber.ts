@@ -1,5 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { DomainEventPublisher, DomainEventSubscriber } from '../domain-event.publisher';
+import {
+  DomainEventPublisher,
+  DomainEventSubscriber,
+} from '../domain-event.publisher';
 import { DomainEvent } from '../aggregate-root.interface';
 import { SprintCompleted } from '../../../sprints/domain/events/sprint-completed.event';
 

@@ -218,7 +218,8 @@ export class Requirement extends BaseDomainAggregate {
       (props.priority && props.priority !== this.priority) ||
       (props.type && props.type !== this.type) ||
       (props.acceptanceCriteria &&
-        JSON.stringify(props.acceptanceCriteria) !== JSON.stringify(this.acceptanceCriteria));
+        JSON.stringify(props.acceptanceCriteria) !==
+          JSON.stringify(this.acceptanceCriteria));
 
     if (!hasChanges) {
       return; // No changes, no event
@@ -229,7 +230,8 @@ export class Requirement extends BaseDomainAggregate {
     if (props.content) this.content = props.content;
     if (props.priority) this.priority = props.priority;
     if (props.type) this.type = props.type;
-    if (props.acceptanceCriteria) this.acceptanceCriteria = props.acceptanceCriteria;
+    if (props.acceptanceCriteria)
+      this.acceptanceCriteria = props.acceptanceCriteria;
 
     this.updatedAt = new Date();
 
@@ -358,9 +360,7 @@ export class Requirement extends BaseDomainAggregate {
     }
 
     if (this.status !== 'DRAFT' && this.status !== 'NEEDS_REVISION') {
-      throw new Error(
-        `Cannot publish requirement from ${this.status} state`,
-      );
+      throw new Error(`Cannot publish requirement from ${this.status} state`);
     }
 
     this.status = 'PUBLISHED';
@@ -423,7 +423,10 @@ export class Requirement extends BaseDomainAggregate {
    * @returns true if requirement can be assigned to sprint
    */
   isReadyForSprint(): boolean {
-    return (this.status === 'APPROVED' && !!this.rqs && this.rqs.score >= 75) || false;
+    return (
+      (this.status === 'APPROVED' && !!this.rqs && this.rqs.score >= 75) ||
+      false
+    );
   }
 
   /**
@@ -450,6 +453,10 @@ export class Requirement extends BaseDomainAggregate {
    * @returns true if can be analyzed
    */
   canBeAnalyzed(): boolean {
-    return this.status === 'DRAFT' || this.status === 'PUBLISHED' || this.status === 'READY';
+    return (
+      this.status === 'DRAFT' ||
+      this.status === 'PUBLISHED' ||
+      this.status === 'READY'
+    );
   }
 }

@@ -105,7 +105,11 @@ export class ReleasesService {
     return saved;
   }
 
-  async activate(id: string, tenantId: string, userId?: string): Promise<Release> {
+  async activate(
+    id: string,
+    tenantId: string,
+    userId?: string,
+  ): Promise<Release> {
     // Step 1: Fetch and reconstruct aggregate
     const release = await this.findOne(id, tenantId);
     const aggregate = this.reconstructAggregate(release);

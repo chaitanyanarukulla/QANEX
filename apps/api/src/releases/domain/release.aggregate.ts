@@ -1,7 +1,8 @@
+import { BaseDomainAggregate } from '../../common/domain/aggregate-root.interface';
 import {
-  BaseDomainAggregate,
-} from '../../common/domain/aggregate-root.interface';
-import { ReleaseConfidenceScore, ReadinessStatus } from './value-objects/release-confidence-score.vo';
+  ReleaseConfidenceScore,
+  ReadinessStatus,
+} from './value-objects/release-confidence-score.vo';
 import { ReleaseStatus } from './value-objects/release-status.vo';
 import { ReleaseCreated } from './events/release-created.event';
 import { ReleaseReadinessEvaluated } from './events/release-readiness-evaluated.event';
@@ -123,15 +124,10 @@ export class Release extends BaseDomainAggregate {
 
     // Publish domain event
     release.addDomainEvent(
-      new ReleaseCreated(
-        release.id,
-        release.tenantId,
-        release.version,
-        {
-          userId: params.userId,
-          environment: params.environment,
-        },
-      ),
+      new ReleaseCreated(release.id, release.tenantId, release.version, {
+        userId: params.userId,
+        environment: params.environment,
+      }),
     );
 
     return release;
@@ -164,19 +160,16 @@ export class Release extends BaseDomainAggregate {
     if (this.isInTerminalState()) {
       throw new Error(
         `Cannot evaluate readiness for ${this.status} release. ` +
-        `Evaluation only allowed for PLANNED, ACTIVE, or FROZEN releases.`,
+          `Evaluation only allowed for PLANNED, ACTIVE, or FROZEN releases.`,
       );
     }
 
     // Create RCS from bug metrics
-    const rcs = ReleaseConfidenceScore.fromBugMetrics(
-      readinessData.bugCounts,
-      {
-        qt: readinessData.testPassRate,
-        rp: readinessData.requirementsReadinessPercentage,
-        so: readinessData.securityScorePercentage,
-      },
-    );
+    const rcs = ReleaseConfidenceScore.fromBugMetrics(readinessData.bugCounts, {
+      qt: readinessData.testPassRate,
+      rp: readinessData.requirementsReadinessPercentage,
+      so: readinessData.securityScorePercentage,
+    });
 
     this.readinessScore = rcs;
     this.readinessStatus = rcs.getReadinessStatus();
@@ -225,7 +218,7 @@ export class Release extends BaseDomainAggregate {
     if (!this.readinessScore) {
       throw new Error(
         'Cannot activate release without readiness evaluation. ' +
-        'Call evaluateReadiness() first.',
+          'Call evaluateReadiness() first.',
       );
     }
 
@@ -265,14 +258,14 @@ export class Release extends BaseDomainAggregate {
     if (!this.readinessScore) {
       throw new Error(
         'Cannot release without readiness evaluation. ' +
-        'Call evaluateReadiness() first.',
+          'Call evaluateReadiness() first.',
       );
     }
 
     if (!this.readinessScore.passesAllGates()) {
       throw new Error(
         `Cannot release: ${this.blockingReasons.join(', ')}. ` +
-        `Address blocking issues before proceeding.`,
+          `Address blocking issues before proceeding.`,
       );
     }
 
@@ -291,10 +284,13 @@ export class Release extends BaseDomainAggregate {
    * @throws InvalidStateError if release is not ACTIVE or FROZEN
    */
   public block(reason: string, userId?: string): void {
-    if (this.status === ReleaseStatus.PLANNED || this.status === ReleaseStatus.RELEASED) {
+    if (
+      this.status === ReleaseStatus.PLANNED ||
+      this.status === ReleaseStatus.RELEASED
+    ) {
       throw new Error(
         `Cannot block ${this.status} release. ` +
-        `Only ACTIVE or FROZEN releases can be blocked.`,
+          `Only ACTIVE or FROZEN releases can be blocked.`,
       );
     }
 
@@ -319,10 +315,13 @@ export class Release extends BaseDomainAggregate {
    * @throws InvalidStateError if release is RELEASED or ABORTED
    */
   public reEvaluateReadiness(readinessData: ReleaseReadinessData): void {
-    if (this.status === ReleaseStatus.RELEASED || this.status === ReleaseStatus.ABORTED) {
+    if (
+      this.status === ReleaseStatus.RELEASED ||
+      this.status === ReleaseStatus.ABORTED
+    ) {
       throw new Error(
         `Cannot re-evaluate ${this.status} release. ` +
-        `Only PLANNED, ACTIVE, FROZEN, or BLOCKED releases can be re-evaluated.`,
+          `Only PLANNED, ACTIVE, FROZEN, or BLOCKED releases can be re-evaluated.`,
       );
     }
 
@@ -345,10 +344,13 @@ export class Release extends BaseDomainAggregate {
    * @throws InvalidStateError if release is already in terminal state
    */
   public abort(reason: string, userId?: string): void {
-    if (this.status === ReleaseStatus.RELEASED || this.status === ReleaseStatus.ABORTED) {
+    if (
+      this.status === ReleaseStatus.RELEASED ||
+      this.status === ReleaseStatus.ABORTED
+    ) {
       throw new Error(
         `Cannot abort ${this.status} release. ` +
-        `Release is in terminal state.`,
+          `Release is in terminal state.`,
       );
     }
 

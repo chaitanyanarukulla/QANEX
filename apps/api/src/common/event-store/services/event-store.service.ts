@@ -89,16 +89,14 @@ export class EventStoreService {
     const startTime = Date.now();
 
     try {
-      const storedEvents = events.map(event =>
+      const storedEvents = events.map((event) =>
         StoredDomainEvent.fromDomainEvent(event, tenantId),
       );
 
       await this.eventRepository.insert(storedEvents);
 
       const duration = Date.now() - startTime;
-      this.logger.debug(
-        `Appended ${events.length} events in ${duration}ms`,
-      );
+      this.logger.debug(`Appended ${events.length} events in ${duration}ms`);
     } catch (error) {
       this.logger.error(
         `Failed to append ${events.length} events: ${(error as any).message}`,
@@ -136,7 +134,7 @@ export class EventStoreService {
         `Retrieved ${storedEvents.length} events for aggregate ${aggregateId} in ${duration}ms`,
       );
 
-      return storedEvents.map(stored => stored.toDomainEvent());
+      return storedEvents.map((stored) => stored.toDomainEvent());
     } catch (error) {
       this.logger.error(
         `Failed to retrieve events for aggregate ${aggregateId}: ${(error as any).message}`,
@@ -154,10 +152,7 @@ export class EventStoreService {
    * @param since - Timestamp to start from
    * @returns Events that occurred after the timestamp
    */
-  async getEventsSince(
-    tenantId: string,
-    since: Date,
-  ): Promise<any[]> {
+  async getEventsSince(tenantId: string, since: Date): Promise<any[]> {
     try {
       const storedEvents = await this.eventRepository
         .createQueryBuilder('event')
@@ -166,7 +161,7 @@ export class EventStoreService {
         .orderBy('event.occurredAt', 'ASC')
         .getMany();
 
-      return storedEvents.map(stored => stored.toDomainEvent());
+      return storedEvents.map((stored) => stored.toDomainEvent());
     } catch (error) {
       this.logger.error(
         `Failed to retrieve events since ${since}: ${(error as any).message}`,
@@ -184,10 +179,7 @@ export class EventStoreService {
    * @param eventType - Type of event (e.g., 'ReleaseCreated')
    * @returns All events of the specified type
    */
-  async getEventsByType(
-    tenantId: string,
-    eventType: string,
-  ): Promise<any[]> {
+  async getEventsByType(tenantId: string, eventType: string): Promise<any[]> {
     try {
       const storedEvents = await this.eventRepository
         .createQueryBuilder('event')
@@ -196,7 +188,7 @@ export class EventStoreService {
         .orderBy('event.occurredAt', 'ASC')
         .getMany();
 
-      return storedEvents.map(stored => stored.toDomainEvent());
+      return storedEvents.map((stored) => stored.toDomainEvent());
     } catch (error) {
       this.logger.error(
         `Failed to retrieve events of type ${eventType}: ${(error as any).message}`,
@@ -226,7 +218,7 @@ export class EventStoreService {
         .orderBy('event.occurredAt', 'ASC')
         .getMany();
 
-      return storedEvents.map(stored => stored.toDomainEvent());
+      return storedEvents.map((stored) => stored.toDomainEvent());
     } catch (error) {
       this.logger.error(
         `Failed to retrieve events for aggregate type ${aggregateType}: ${(error as any).message}`,
@@ -281,9 +273,12 @@ export class EventStoreService {
         .set({ snapshotId })
         .where('aggregateId = :aggregateId', { aggregateId })
         .andWhere('tenantId = :tenantId', { tenantId })
-        .andWhere('occurredAt > (SELECT occurredAt FROM stored_domain_events WHERE eventId = :afterEventId)', {
-          afterEventId,
-        })
+        .andWhere(
+          'occurredAt > (SELECT occurredAt FROM stored_domain_events WHERE eventId = :afterEventId)',
+          {
+            afterEventId,
+          },
+        )
         .execute();
 
       this.logger.debug(

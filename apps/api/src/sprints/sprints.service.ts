@@ -40,7 +40,8 @@ export class SprintsService {
     // If startDate/endDate not provided, default to 2-week sprint
     const now = new Date();
     const defaultStart = startDate || now;
-    const defaultEnd = endDate || new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+    const defaultEnd =
+      endDate || new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
 
     const aggregate = SprintAggregate.create({
       id: '', // Will be set by repository on insert
@@ -807,7 +808,9 @@ export class SprintsService {
    */
   private reconstructAggregate(entity: Sprint): SprintAggregate {
     // Create aggregate instance directly
-    const { SprintCapacity } = require('./domain/value-objects/sprint-capacity.vo');
+    const {
+      SprintCapacity,
+    } = require('./domain/value-objects/sprint-capacity.vo');
     const { SprintStatus } = require('./domain/value-objects/sprint-status.vo');
 
     const capacity = new SprintCapacity(entity.capacity);

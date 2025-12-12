@@ -43,8 +43,7 @@ export class BugReopened implements DomainEvent {
     this.reason = data.reason;
     this.userId = data.userId;
     this.occurredAt = data.occurredAt ?? new Date();
-    this.eventId =
-      data.eventId ?? `BugReopened-${aggregateId}-${Date.now()}`;
+    this.eventId = data.eventId ?? `BugReopened-${aggregateId}-${Date.now()}`;
   }
 
   /**

@@ -36,13 +36,13 @@ export class ReleaseReadinessAdapter {
   >();
   private readonly CACHE_TTL_MS = 30000; // 30 seconds
 
-  constructor(
+  constructor() {
     // TODO: Inject services from other contexts
     // - private requirementsService: RequirementsService,
     // - private bugsService: BugsService,
     // - private testManagementService: TestManagementService,
     // - private securityService: SecurityService,
-  ) {}
+  }
 
   /**
    * Get aggregated readiness data for a release.
@@ -75,17 +75,13 @@ export class ReleaseReadinessAdapter {
 
     try {
       // Fetch data from all contexts in parallel for performance
-      const [
-        testData,
-        requirementsData,
-        bugData,
-        securityData,
-      ] = await Promise.all([
-        this.getTestManagementData(tenantId),
-        this.getRequirementsData(tenantId),
-        this.getBugData(tenantId),
-        this.getSecurityData(tenantId),
-      ]);
+      const [testData, requirementsData, bugData, securityData] =
+        await Promise.all([
+          this.getTestManagementData(tenantId),
+          this.getRequirementsData(tenantId),
+          this.getBugData(tenantId),
+          this.getSecurityData(tenantId),
+        ]);
 
       // Aggregate into single DTO
       const readinessData: ReleaseReadinessDataDto = {
@@ -103,8 +99,8 @@ export class ReleaseReadinessAdapter {
 
       this.logger.debug(
         `Successfully aggregated readiness data: test=${readinessData.testPassRate}%, ` +
-        `req=${readinessData.requirementsReadinessPercentage}%, ` +
-        `critical_bugs=${readinessData.bugCounts.critical}`,
+          `req=${readinessData.requirementsReadinessPercentage}%, ` +
+          `critical_bugs=${readinessData.bugCounts.critical}`,
       );
 
       return readinessData;
@@ -166,9 +162,7 @@ export class ReleaseReadinessAdapter {
    *
    * @private
    */
-  private async getBugData(
-    tenantId: string,
-  ): Promise<{
+  private async getBugData(tenantId: string): Promise<{
     counts: { critical: number; high: number; medium: number; low: number };
   }> {
     // TODO: Implement when BugsService available
@@ -249,11 +243,11 @@ export class ReleaseReadinessAdapter {
    */
   invalidateCache(tenantId: string): void {
     // Remove all cache entries for this tenant
-    const keysToDelete = Array.from(this.readinessCache.keys()).filter(key =>
+    const keysToDelete = Array.from(this.readinessCache.keys()).filter((key) =>
       key.startsWith(`${tenantId}:`),
     );
 
-    keysToDelete.forEach(key => this.readinessCache.delete(key));
+    keysToDelete.forEach((key) => this.readinessCache.delete(key));
 
     this.logger.debug(
       `Invalidated readiness cache for tenant ${tenantId} (${keysToDelete.length} entries)`,

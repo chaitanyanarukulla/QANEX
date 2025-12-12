@@ -1,5 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { DomainEventPublisher, DomainEventSubscriber } from '../domain-event.publisher';
+import {
+  DomainEventPublisher,
+  DomainEventSubscriber,
+} from '../domain-event.publisher';
 import { DomainEvent } from '../aggregate-root.interface';
 import { ReleaseReadinessAchieved } from '../../../releases/domain/events/release-readiness-achieved.event';
 
@@ -32,9 +35,7 @@ import { ReleaseReadinessAchieved } from '../../../releases/domain/events/releas
  */
 @Injectable()
 export class ReleaseReadinessAchievedSubscriber implements DomainEventSubscriber {
-  private readonly logger = new Logger(
-    ReleaseReadinessAchievedSubscriber.name,
-  );
+  private readonly logger = new Logger(ReleaseReadinessAchievedSubscriber.name);
 
   constructor(private eventPublisher: DomainEventPublisher) {
     // Subscribe to ReleaseReadinessAchieved events

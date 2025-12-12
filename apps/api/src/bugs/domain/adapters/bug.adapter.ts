@@ -35,10 +35,10 @@ export class BugAdapter {
   >();
   private readonly CACHE_TTL_MS = 60000; // 1 minute
 
-  constructor(
+  constructor() {
     // TODO: Inject services from other contexts
     // - private bugsService: BugsService,
-  ) {}
+  }
 
   /**
    * Get aggregated bug metrics for a tenant
@@ -85,7 +85,7 @@ export class BugAdapter {
 
       this.logger.debug(
         `Aggregated bug metrics: critical=${metrics.counts.critical}, ` +
-        `high=${metrics.counts.high}, blocked=${metrics.isBlocked}`,
+          `high=${metrics.counts.high}, blocked=${metrics.isBlocked}`,
       );
 
       return metrics;

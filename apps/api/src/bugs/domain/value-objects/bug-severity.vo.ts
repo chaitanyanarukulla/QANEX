@@ -72,8 +72,7 @@ export class BugSeverityHelper {
         'Major feature broken or severe data corruption - high priority',
       [BugSeverityLevel.MEDIUM]:
         'Feature partially broken or degraded - standard priority',
-      [BugSeverityLevel.LOW]:
-        'Minor issue or cosmetic problem - low priority',
+      [BugSeverityLevel.LOW]: 'Minor issue or cosmetic problem - low priority',
     };
     return descriptions[severity] || 'Unknown severity';
   }
@@ -82,10 +81,7 @@ export class BugSeverityHelper {
    * Compare two severities
    * @returns negative if a < b, 0 if a === b, positive if a > b
    */
-  static compare(
-    a: BugSeverityLevel,
-    b: BugSeverityLevel,
-  ): number {
+  static compare(a: BugSeverityLevel, b: BugSeverityLevel): number {
     return this.getWeight(b) - this.getWeight(a); // Reverse for descending
   }
 

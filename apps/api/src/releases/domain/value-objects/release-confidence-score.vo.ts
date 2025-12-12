@@ -59,7 +59,7 @@ import { ValueObject } from '../../../common/domain/aggregate-root.interface';
 export class ReleaseConfidenceScore implements ValueObject<ReleaseConfidenceScore> {
   // Pillar scores (0-100)
   private readonly qt: number; // Quality & Testing
-  private readonly b: number;  // Bugs
+  private readonly b: number; // Bugs
   private readonly rp: number; // Requirements & Planning
   private readonly so: number; // Security & Operations
 
@@ -120,10 +120,13 @@ export class ReleaseConfidenceScore implements ValueObject<ReleaseConfidenceScor
       throw new Error(`Invalid ${name}: ${value}. Must be a finite number.`);
     }
 
-    if (value < ReleaseConfidenceScore.SCORE_MIN || value > ReleaseConfidenceScore.SCORE_MAX) {
+    if (
+      value < ReleaseConfidenceScore.SCORE_MIN ||
+      value > ReleaseConfidenceScore.SCORE_MAX
+    ) {
       throw new Error(
         `Invalid ${name}: ${value}. Must be between ${ReleaseConfidenceScore.SCORE_MIN} ` +
-        `and ${ReleaseConfidenceScore.SCORE_MAX}.`,
+          `and ${ReleaseConfidenceScore.SCORE_MAX}.`,
       );
     }
   }
@@ -132,15 +135,25 @@ export class ReleaseConfidenceScore implements ValueObject<ReleaseConfidenceScor
    * Calculate total RCS using weighted formula.
    * Formula: (QT × 0.4) + (B × 0.3) + (RP × 0.2) + (SO × 0.1)
    */
-  private calculateTotalScore(qt: number, b: number, rp: number, so: number): number {
-    const weighted = (qt * 0.4) + (b * 0.3) + (rp * 0.2) + (so * 0.1);
+  private calculateTotalScore(
+    qt: number,
+    b: number,
+    rp: number,
+    so: number,
+  ): number {
+    const weighted = qt * 0.4 + b * 0.3 + rp * 0.2 + so * 0.1;
     return Math.round(weighted);
   }
 
   /**
    * Evaluate which release gates pass/fail.
    */
-  private evaluateGates(qt: number, b: number, rp: number, so: number): ReleaseGateDetails {
+  private evaluateGates(
+    qt: number,
+    b: number,
+    rp: number,
+    so: number,
+  ): ReleaseGateDetails {
     return {
       rcsScorePassed: this.totalScore >= ReleaseConfidenceScore.RCS_THRESHOLD,
       testCoveragePassed: qt >= ReleaseConfidenceScore.QT_THRESHOLD,
@@ -477,7 +490,8 @@ export class ReleaseConfidenceScore implements ValueObject<ReleaseConfidenceScor
     );
 
     // Update gate after total calculation
-    rcs.gateDetails.rcsScorePassed = rcs.totalScore >= ReleaseConfidenceScore.RCS_THRESHOLD;
+    rcs.gateDetails.rcsScorePassed =
+      rcs.totalScore >= ReleaseConfidenceScore.RCS_THRESHOLD;
 
     return rcs;
   }

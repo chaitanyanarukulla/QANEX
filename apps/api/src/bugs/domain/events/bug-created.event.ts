@@ -49,8 +49,7 @@ export class BugCreated implements DomainEvent {
     this.tags = data.tags || [];
     this.userId = data.userId;
     this.occurredAt = data.occurredAt ?? new Date();
-    this.eventId =
-      data.eventId ?? `BugCreated-${aggregateId}-${Date.now()}`;
+    this.eventId = data.eventId ?? `BugCreated-${aggregateId}-${Date.now()}`;
   }
 
   /**

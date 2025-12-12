@@ -1,7 +1,10 @@
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Requirement as RequirementEntity, RequirementState } from './requirement.entity';
+import {
+  Requirement as RequirementEntity,
+  RequirementState,
+} from './requirement.entity';
 import {
   SprintItem,
   SprintItemStatus,
@@ -430,10 +433,14 @@ export class RequirementsServiceRefactored {
       const typeStr = (task.type || 'task').toLowerCase();
       const priorityStr = (task.priority || 'MEDIUM').toUpperCase();
 
-      const itemType = (['feature', 'bug'].includes(typeStr) ? typeStr : 'task') as SprintItemType;
-      const itemPriority = (['CRITICAL', 'HIGH', 'LOW'].includes(priorityStr)
-        ? priorityStr
-        : 'MEDIUM') as SprintItemPriority;
+      const itemType = (
+        ['feature', 'bug'].includes(typeStr) ? typeStr : 'task'
+      ) as SprintItemType;
+      const itemPriority = (
+        ['CRITICAL', 'HIGH', 'LOW'].includes(priorityStr)
+          ? priorityStr
+          : 'MEDIUM'
+      ) as SprintItemPriority;
 
       const savedItem = await this.sprintItemRepo.save(
         this.sprintItemRepo.create({
@@ -620,7 +627,9 @@ export class RequirementsServiceRefactored {
    *
    * @private
    */
-  private reconstructAggregate(entity: RequirementEntity): RequirementAggregate {
+  private reconstructAggregate(
+    entity: RequirementEntity,
+  ): RequirementAggregate {
     return new RequirementAggregate({
       id: entity.id,
       title: entity.title,

@@ -204,10 +204,7 @@ export class RQSScore implements ValueObject<RQSScore> {
    */
   getAverageDimensionScore(): number {
     const sum =
-      this.clarity +
-      this.completeness +
-      this.testability +
-      this.consistency;
+      this.clarity + this.completeness + this.testability + this.consistency;
     return Math.round(sum / 4);
   }
 
@@ -235,9 +232,7 @@ export class RQSScore implements ValueObject<RQSScore> {
       this.testability === other.testability &&
       this.consistency === other.consistency &&
       this.feedback.length === other.feedback.length &&
-      this.feedback.every(
-        (f, i) => f === (other as any).feedback[i],
-      )
+      this.feedback.every((f, i) => f === (other as any).feedback[i])
     );
   }
 

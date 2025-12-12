@@ -96,9 +96,7 @@ export class RequirementsService {
         });
       });
 
-    this.logger.debug(
-      `Created requirement ${saved.id} with domain aggregate`,
-    );
+    this.logger.debug(`Created requirement ${saved.id} with domain aggregate`);
     return saved;
   }
 

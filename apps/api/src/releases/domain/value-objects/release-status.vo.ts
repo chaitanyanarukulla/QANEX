@@ -34,9 +34,21 @@ export class ReleaseStatusHelper {
    */
   static getValidNextStates(currentStatus: ReleaseStatus): ReleaseStatus[] {
     const validTransitions: Record<ReleaseStatus, ReleaseStatus[]> = {
-      [ReleaseStatus.PLANNED]: [ReleaseStatus.ACTIVE, ReleaseStatus.BLOCKED, ReleaseStatus.ABORTED],
-      [ReleaseStatus.ACTIVE]: [ReleaseStatus.FROZEN, ReleaseStatus.BLOCKED, ReleaseStatus.ABORTED],
-      [ReleaseStatus.FROZEN]: [ReleaseStatus.RELEASED, ReleaseStatus.BLOCKED, ReleaseStatus.ABORTED],
+      [ReleaseStatus.PLANNED]: [
+        ReleaseStatus.ACTIVE,
+        ReleaseStatus.BLOCKED,
+        ReleaseStatus.ABORTED,
+      ],
+      [ReleaseStatus.ACTIVE]: [
+        ReleaseStatus.FROZEN,
+        ReleaseStatus.BLOCKED,
+        ReleaseStatus.ABORTED,
+      ],
+      [ReleaseStatus.FROZEN]: [
+        ReleaseStatus.RELEASED,
+        ReleaseStatus.BLOCKED,
+        ReleaseStatus.ABORTED,
+      ],
       [ReleaseStatus.RELEASED]: [],
       [ReleaseStatus.BLOCKED]: [ReleaseStatus.ACTIVE, ReleaseStatus.ABORTED],
       [ReleaseStatus.ABORTED]: [],
@@ -64,7 +76,9 @@ export class ReleaseStatusHelper {
    * Check if status is terminal (no further transitions)
    */
   static isTerminal(status: ReleaseStatus): boolean {
-    return status === ReleaseStatus.RELEASED || status === ReleaseStatus.ABORTED;
+    return (
+      status === ReleaseStatus.RELEASED || status === ReleaseStatus.ABORTED
+    );
   }
 
   /**

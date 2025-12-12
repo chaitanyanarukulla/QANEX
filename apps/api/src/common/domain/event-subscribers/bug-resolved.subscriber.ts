@@ -1,5 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { DomainEventPublisher, DomainEventSubscriber } from '../domain-event.publisher';
+import {
+  DomainEventPublisher,
+  DomainEventSubscriber,
+} from '../domain-event.publisher';
 import { DomainEvent } from '../aggregate-root.interface';
 import { BugResolved } from '../../../bugs/domain/events/bug-resolved.event';
 
@@ -54,7 +57,9 @@ export class BugResolvedSubscriber implements DomainEventSubscriber {
   async handle(event: DomainEvent): Promise<void> {
     const bugEvent = event as BugResolved;
     try {
-      this.logger.debug(`Processing BugResolved event for bug ${bugEvent.bugId}`);
+      this.logger.debug(
+        `Processing BugResolved event for bug ${bugEvent.bugId}`,
+      );
 
       // Handle critical/P0 bugs that might un-block releases
       const isCritical = bugEvent.severity === 'CRITICAL';
@@ -84,7 +89,9 @@ export class BugResolvedSubscriber implements DomainEventSubscriber {
       // Send notifications
       await this.sendResolutionNotifications(bugEvent);
 
-      this.logger.log(`Bug ${bugEvent.bugId} resolved - awaiting QA verification`);
+      this.logger.log(
+        `Bug ${bugEvent.bugId} resolved - awaiting QA verification`,
+      );
     } catch (error) {
       // Error handling: log but don't block bug resolution
       this.logger.error(

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SprintsService } from './sprints.service';
 import { SprintsController } from './sprints.controller';
@@ -7,7 +7,10 @@ import { SprintItem } from './sprint-item.entity';
 import { EventStoreModule } from '../common/event-store/event-store.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Sprint, SprintItem]), EventStoreModule],
+  imports: [
+    TypeOrmModule.forFeature([Sprint, SprintItem]),
+    forwardRef(() => EventStoreModule),
+  ],
   providers: [SprintsService],
   controllers: [SprintsController],
   exports: [SprintsService],

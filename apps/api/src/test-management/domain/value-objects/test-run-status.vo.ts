@@ -87,7 +87,8 @@ export class TestRunStatusHelper {
    */
   static isExecuting(status: TestRunStatusType): boolean {
     return (
-      status === TestRunStatusType.CREATED || status === TestRunStatusType.RUNNING
+      status === TestRunStatusType.CREATED ||
+      status === TestRunStatusType.RUNNING
     );
   }
 

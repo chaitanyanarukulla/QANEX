@@ -1,5 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { DomainEventPublisher, DomainEventSubscriber } from '../domain-event.publisher';
+import {
+  DomainEventPublisher,
+  DomainEventSubscriber,
+} from '../domain-event.publisher';
 import { DomainEvent } from '../aggregate-root.interface';
 import { TestRunCompleted } from '../../../test-management/domain/events/test-run-completed.event';
 
@@ -93,7 +96,7 @@ export class TestRunCompletedSubscriber implements DomainEventSubscriber {
 
       this.logger.log(
         `Test run completed: ${testEvent.passedTests}/${testEvent.passedTests + testEvent.failedTests} passed ` +
-        `(${testEvent.passRate}% pass rate)`,
+          `(${testEvent.passRate}% pass rate)`,
       );
     } catch (error) {
       // Error handling: log but don't block test completion
@@ -173,9 +176,7 @@ export class TestRunCompletedSubscriber implements DomainEventSubscriber {
    *
    * @private
    */
-  private async createFailedTestTriage(
-    event: TestRunCompleted,
-  ): Promise<void> {
+  private async createFailedTestTriage(event: TestRunCompleted): Promise<void> {
     // TODO: Implement when Bug/Sprint service available
     // - Get list of failed tests
     // - For each failure, create bug/issue

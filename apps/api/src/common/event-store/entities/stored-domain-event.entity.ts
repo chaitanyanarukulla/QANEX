@@ -1,4 +1,10 @@
-import { Entity, Column, PrimaryColumn, CreateDateColumn, Index } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryColumn,
+  CreateDateColumn,
+  Index,
+} from 'typeorm';
 
 /**
  * StoredDomainEvent Entity
@@ -150,10 +156,7 @@ export class StoredDomainEvent {
    * @param tenantId - Tenant identifier
    * @returns StoredDomainEvent entity ready for persistence
    */
-  static fromDomainEvent(
-    event: any,
-    tenantId: string,
-  ): StoredDomainEvent {
+  static fromDomainEvent(event: any, tenantId: string): StoredDomainEvent {
     const stored = new StoredDomainEvent();
     stored.eventId = event.eventId;
     stored.tenantId = tenantId;
@@ -188,7 +191,16 @@ export class StoredDomainEvent {
     // Include event-specific data
     for (const key in event) {
       if (
-        !['eventId', 'eventType', 'aggregateId', 'aggregateType', 'tenantId', 'occurredAt', 'userId', 'readonly'].includes(key)
+        ![
+          'eventId',
+          'eventType',
+          'aggregateId',
+          'aggregateType',
+          'tenantId',
+          'occurredAt',
+          'userId',
+          'readonly',
+        ].includes(key)
       ) {
         serialized[key] = event[key];
       }

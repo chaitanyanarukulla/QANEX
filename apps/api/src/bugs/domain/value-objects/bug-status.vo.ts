@@ -51,10 +51,7 @@ export class BugStatusHelper {
         BugStatusType.INVALID,
       ],
       [BugStatusType.RESOLVED]: [BugStatusType.VERIFIED, BugStatusType.INVALID],
-      [BugStatusType.VERIFIED]: [
-        BugStatusType.CLOSED,
-        BugStatusType.OPEN,
-      ], // Can reopen if QA finds issues
+      [BugStatusType.VERIFIED]: [BugStatusType.CLOSED, BugStatusType.OPEN], // Can reopen if QA finds issues
       [BugStatusType.CLOSED]: [],
       [BugStatusType.DEFERRED]: [BugStatusType.TRIAGED, BugStatusType.OPEN], // Can reactivate
       [BugStatusType.INVALID]: [],
@@ -117,11 +114,13 @@ export class BugStatusHelper {
       [BugStatusType.OPEN]: 'Bug reported and waiting for triage',
       [BugStatusType.TRIAGED]: 'Bug prioritized and waiting for assignment',
       [BugStatusType.IN_PROGRESS]: 'Bug is being fixed by developer',
-      [BugStatusType.RESOLVED]: 'Fix implemented and waiting for QA verification',
+      [BugStatusType.RESOLVED]:
+        'Fix implemented and waiting for QA verification',
       [BugStatusType.VERIFIED]: 'QA verified the fix, ready for release',
       [BugStatusType.CLOSED]: 'Bug fixed and released to production',
       [BugStatusType.DEFERRED]: 'Bug postponed for future release',
-      [BugStatusType.INVALID]: 'Bug determined to be non-issue or working as designed',
+      [BugStatusType.INVALID]:
+        'Bug determined to be non-issue or working as designed',
     };
 
     return descriptions[status] || 'Unknown status';

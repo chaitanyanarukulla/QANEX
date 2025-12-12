@@ -1,6 +1,4 @@
-import {
-  BaseDomainAggregate,
-} from '../../common/domain/aggregate-root.interface';
+import { BaseDomainAggregate } from '../../common/domain/aggregate-root.interface';
 import {
   BugSeverityLevel,
   BugSeverityHelper,
@@ -9,10 +7,7 @@ import {
   BugPriorityLevel,
   BugPriorityHelper,
 } from './value-objects/bug-priority.vo';
-import {
-  BugStatusType,
-  BugStatusHelper,
-} from './value-objects/bug-status.vo';
+import { BugStatusType, BugStatusHelper } from './value-objects/bug-status.vo';
 import { BugCreated } from './events/bug-created.event';
 import { BugTriaged } from './events/bug-triaged.event';
 import { BugResolved } from './events/bug-resolved.event';
@@ -170,7 +165,7 @@ export class Bug extends BaseDomainAggregate {
     if (BugStatusHelper.isTerminal(this.status)) {
       throw new Error(
         `Cannot triage ${this.status} bug. ` +
-        `Only OPEN and TRIAGED bugs can be triaged.`,
+          `Only OPEN and TRIAGED bugs can be triaged.`,
       );
     }
 
@@ -210,10 +205,12 @@ export class Bug extends BaseDomainAggregate {
    * @throws Error if invalid state transition
    */
   public markInProgress(userId?: string): void {
-    if (!BugStatusHelper.isValidTransition(this.status, BugStatusType.IN_PROGRESS)) {
+    if (
+      !BugStatusHelper.isValidTransition(this.status, BugStatusType.IN_PROGRESS)
+    ) {
       throw new Error(
         `Cannot mark ${this.status} bug as in progress. ` +
-        `Valid next states: ${BugStatusHelper.getValidNextStates(this.status).join(', ')}`,
+          `Valid next states: ${BugStatusHelper.getValidNextStates(this.status).join(', ')}`,
       );
     }
 
@@ -227,10 +224,12 @@ export class Bug extends BaseDomainAggregate {
    * @throws Error if invalid state transition
    */
   public markResolved(resolutionNotes: string, userId?: string): void {
-    if (!BugStatusHelper.isValidTransition(this.status, BugStatusType.RESOLVED)) {
+    if (
+      !BugStatusHelper.isValidTransition(this.status, BugStatusType.RESOLVED)
+    ) {
       throw new Error(
         `Cannot mark ${this.status} bug as resolved. ` +
-        `Valid next states: ${BugStatusHelper.getValidNextStates(this.status).join(', ')}`,
+          `Valid next states: ${BugStatusHelper.getValidNextStates(this.status).join(', ')}`,
       );
     }
 
@@ -255,10 +254,12 @@ export class Bug extends BaseDomainAggregate {
    * @throws Error if invalid state transition
    */
   public markVerified(userId?: string): void {
-    if (!BugStatusHelper.isValidTransition(this.status, BugStatusType.VERIFIED)) {
+    if (
+      !BugStatusHelper.isValidTransition(this.status, BugStatusType.VERIFIED)
+    ) {
       throw new Error(
         `Cannot mark ${this.status} bug as verified. ` +
-        `Valid next states: ${BugStatusHelper.getValidNextStates(this.status).join(', ')}`,
+          `Valid next states: ${BugStatusHelper.getValidNextStates(this.status).join(', ')}`,
       );
     }
 
@@ -275,7 +276,7 @@ export class Bug extends BaseDomainAggregate {
     if (!BugStatusHelper.isValidTransition(this.status, BugStatusType.CLOSED)) {
       throw new Error(
         `Cannot close ${this.status} bug. ` +
-        `Valid next states: ${BugStatusHelper.getValidNextStates(this.status).join(', ')}`,
+          `Valid next states: ${BugStatusHelper.getValidNextStates(this.status).join(', ')}`,
       );
     }
 
@@ -293,7 +294,7 @@ export class Bug extends BaseDomainAggregate {
     if (!BugStatusHelper.isValidTransition(this.status, BugStatusType.OPEN)) {
       throw new Error(
         `Cannot reopen ${this.status} bug. ` +
-        `Valid next states: ${BugStatusHelper.getValidNextStates(this.status).join(', ')}`,
+          `Valid next states: ${BugStatusHelper.getValidNextStates(this.status).join(', ')}`,
       );
     }
 
@@ -315,10 +316,12 @@ export class Bug extends BaseDomainAggregate {
    * @throws Error if invalid state transition
    */
   public defer(reason: string, userId?: string): void {
-    if (!BugStatusHelper.isValidTransition(this.status, BugStatusType.DEFERRED)) {
+    if (
+      !BugStatusHelper.isValidTransition(this.status, BugStatusType.DEFERRED)
+    ) {
       throw new Error(
         `Cannot defer ${this.status} bug. ` +
-        `Valid next states: ${BugStatusHelper.getValidNextStates(this.status).join(', ')}`,
+          `Valid next states: ${BugStatusHelper.getValidNextStates(this.status).join(', ')}`,
       );
     }
 
@@ -332,10 +335,12 @@ export class Bug extends BaseDomainAggregate {
    * @throws Error if invalid state transition
    */
   public markInvalid(reason: string, userId?: string): void {
-    if (!BugStatusHelper.isValidTransition(this.status, BugStatusType.INVALID)) {
+    if (
+      !BugStatusHelper.isValidTransition(this.status, BugStatusType.INVALID)
+    ) {
       throw new Error(
         `Cannot mark ${this.status} bug as invalid. ` +
-        `Valid next states: ${BugStatusHelper.getValidNextStates(this.status).join(', ')}`,
+          `Valid next states: ${BugStatusHelper.getValidNextStates(this.status).join(', ')}`,
       );
     }
 
@@ -354,9 +359,7 @@ export class Bug extends BaseDomainAggregate {
     assignedTo?: string;
   }): void {
     if (BugStatusHelper.isTerminal(this.status)) {
-      throw new Error(
-        `Cannot update triage on ${this.status} bug.`,
-      );
+      throw new Error(`Cannot update triage on ${this.status} bug.`);
     }
 
     if (params.severity) this.severity = params.severity;

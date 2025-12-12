@@ -71,9 +71,7 @@ export class DomainEventPublisher {
    */
   subscribe(subscriber: DomainEventSubscriber): void {
     this.subscribers.add(subscriber);
-    this.logger.debug(
-      `Subscriber registered: ${subscriber.constructor.name}`,
-    );
+    this.logger.debug(`Subscriber registered: ${subscriber.constructor.name}`);
   }
 
   /**
