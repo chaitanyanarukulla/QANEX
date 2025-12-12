@@ -8,13 +8,13 @@ import { RagService } from '../ai/rag.service';
 import { RequirementsService } from '../requirements/requirements.service';
 import { RequirementState } from '../requirements/requirement.entity';
 
-interface AiRisk {
+interface _AiRisk {
   risk: string;
   severity: 'LOW' | 'MEDIUM' | 'HIGH';
   mitigation: string;
 }
 
-interface AiGap {
+interface _AiGap {
   gap: string;
   suggestion: string;
 }
@@ -27,7 +27,7 @@ interface AiTask {
   estimatedHours: number;
 }
 
-interface AiRequirement {
+interface _AiRequirement {
   title: string;
   description: string;
   priority: string;
@@ -146,7 +146,6 @@ export class DocumentsAiService {
       review.risks = result.risks || [];
       review.gaps = result.gaps || [];
 
-      let epicCount = 0;
       let reqCount = 0;
       let taskCount = 0;
 
@@ -156,7 +155,6 @@ export class DocumentsAiService {
         result.epics &&
         Array.isArray(result.epics)
       ) {
-        epicCount = result.epics.length;
         for (const epicData of result.epics) {
           // 1. Create Epic (Requirement type FEATURE)
           const epic = await this.requirementsService.create(
