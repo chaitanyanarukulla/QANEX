@@ -123,8 +123,9 @@ describe('Requirements Flow (e2e)', () => {
       .post(`/requirements/${createdReqId}/move-tasks-backlog`)
       .expect(201);
 
-    // Verify requirement state
-    expect(response.body.success).toBe(true);
+    // Verify response has count
+    expect(response.body).toHaveProperty('count');
+    expect(typeof response.body.count).toBe('number');
 
     // Verify requirement is now BACKLOGGED
     const fetchResponse = await request(app.getHttpServer())
