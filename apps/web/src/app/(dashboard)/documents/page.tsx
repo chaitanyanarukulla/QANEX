@@ -245,7 +245,11 @@ export default function DocumentsPage() {
                                         {doc.title}
                                     </h3>
                                     <p className="mt-2 text-sm text-muted-foreground line-clamp-2">
-                                        {doc.content.substring(0, 100) || 'No content...'}
+                                        {doc.requirementsCount !== undefined && (
+                                            <span className="inline-flex items-center rounded-sm bg-secondary px-2 py-1 text-xs font-medium text-secondary-foreground">
+                                                {doc.requirementsCount} Requirements
+                                            </span>
+                                        )}
                                     </p>
                                 </div>
                             </div>

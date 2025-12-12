@@ -79,32 +79,25 @@ export abstract class BaseAiProvider implements AiProvider {
       context || '',
     );
 
-    try {
-      const response = await this.complete(prompt, {
-        temperature: 0.2,
-        maxTokens: 2000,
-        responseFormat: 'json',
-      });
+    // try {
+    const response = await this.complete(prompt, {
+      temperature: 0.2,
+      maxTokens: 2000,
+      responseFormat: 'json',
+    });
 
-      return this.parseJsonResponse<RequirementAnalysis>(response, {
-        score: 50,
-        clarity: 50,
-        completeness: 50,
-        testability: 50,
-        consistency: 50,
-        feedback: ['Unable to fully analyze requirement'],
-      });
-    } catch (error) {
-      this.logger.error('Failed to analyze requirement', error);
-      return {
-        score: 0,
-        clarity: 0,
-        completeness: 0,
-        testability: 0,
-        consistency: 0,
-        feedback: ['AI analysis failed. Please try again.'],
-      };
-    }
+    return this.parseJsonResponse<RequirementAnalysis>(response, {
+      score: 50,
+      clarity: 50,
+      completeness: 50,
+      testability: 50,
+      consistency: 50,
+      feedback: ['Unable to fully analyze requirement'],
+    });
+    // } catch (error) {
+    //   this.logger.error('Failed to analyze requirement', error);
+    //   throw error; // Rethrow to let the controller handle it
+    // }
   }
 
   /**

@@ -14,6 +14,7 @@ export enum RequirementState {
   PUBLISHED = 'PUBLISHED',
   NEEDS_REVISION = 'NEEDS_REVISION',
   READY = 'READY',
+  APPROVED = 'APPROVED',
 }
 
 @Entity('requirements')
@@ -66,6 +67,9 @@ export class Requirement {
 
   @Column({ nullable: true })
   sourceDocumentId?: string;
+
+  @ManyToOne('Document', 'requirements')
+  sourceDocument?: any;
 
   @Column({ nullable: true })
   sprintId?: string;

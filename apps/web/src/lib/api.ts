@@ -69,7 +69,7 @@ export interface Requirement {
   id: string;
   title: string;
   content: string; // matches backend entity
-  state: 'DRAFT' | 'PUBLISHED' | 'NEEDS_REVISION' | 'READY';
+  state: 'DRAFT' | 'PUBLISHED' | 'NEEDS_REVISION' | 'READY' | 'APPROVED';
   priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   type?: 'FUNCTIONAL' | 'NON_FUNCTIONAL' | 'BUG' | 'FEATURE' | 'ENHANCEMENT';
   acceptanceCriteria?: string[];
@@ -81,6 +81,7 @@ export interface Requirement {
   parent?: Requirement;
   children?: Requirement[];
   sourceDocumentId?: string;
+  sourceDocument?: Document;
   createdAt: string;
   updatedAt: string;
 }
@@ -118,6 +119,7 @@ export interface Document {
   createdAt: string;
   updatedAt: string;
   aiReview?: DocumentAIReview;
+  requirementsCount?: number;
 }
 
 export enum DocumentStatus {
@@ -364,6 +366,9 @@ export const requirementsApi = {
     api<Requirement>(`/requirements/${id}`, { method: 'PATCH', body: data }),
   delete: (id: string) => api(`/requirements/${id}`, { method: 'DELETE' }),
   analyze: (id: string) => api<Requirement>(`/requirements/${id}/analyze`, { method: 'POST' }),
+  approve: (id: string) => api<Requirement>(`/requirements/${id}/approve`, { method: 'POST' }),
+  generateTasks: (id: string) => api<{ count: number; tasks: unknown[] }>(`/requirements/${id}/generate-tasks`, { method: 'POST' }),
+  assignToSprint: (id: string, sprintId: string) => api<Requirement>(`/requirements/${id}/assign/${sprintId}`, { method: 'POST' }),
 };
 
 export interface BugAnalysisResult {

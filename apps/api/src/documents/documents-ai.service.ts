@@ -45,7 +45,7 @@ interface AiEpic {
     priority?: string;
     type?: string;
     acceptanceCriteria?: string[];
-    tasks?: AiTask[];
+    userStory?: string;
   }>;
 }
 
@@ -91,7 +91,8 @@ export class DocumentsAiService {
       Content:
       ${document.content}
 
-      Goal: Break down the document into Epics (Features), then Requirements for each Epic, and finally Implementation Tasks (FE/BE) for each Requirement.
+      Goal: Break down the document into Epics (Features), then detailed Requirements for each Epic.
+      DO NOT generate implementation tasks (FE/BE) at this stage. Focus on detailed user stories and acceptance criteria.
 
       Output JSON format:
       {
@@ -111,18 +112,10 @@ export class DocumentsAiService {
               { 
                 "title": "Requirement Title", 
                 "description": "Detailed functional listing",
+                "userStory": "As a... I want... So that...",
                 "priority": "LOW" | "MEDIUM" | "HIGH" | "CRITICAL",
                 "type": "FUNCTIONAL" | "NON_FUNCTIONAL" | "BUG" | "FEATURE" | "ENHANCEMENT",
-                "acceptanceCriteria": ["Criteria 1", "Criteria 2"],
-                "tasks": [
-                    {
-                        "title": "FE: Task title" or "BE: Task title",
-                        "description": "Task description",
-                        "type": "task" | "feature" | "bug",
-                        "suggestedRole": "Backend" | "Frontend" | "QA" | "DevOps",
-                        "estimatedHours": number
-                    }
-                ]
+                "acceptanceCriteria": ["Criteria 1", "Criteria 2"]
               }
             ]
           }
@@ -174,7 +167,6 @@ export class DocumentsAiService {
       });
 
       let reqCount = 0;
-      let taskCount = 0;
 
       // Sync Requirements only in REQUIREMENTS mode
       if (
@@ -207,13 +199,14 @@ export class DocumentsAiService {
           if (epicData.requirements && Array.isArray(epicData.requirements)) {
             for (const reqData of epicData.requirements) {
               reqCount++;
-              taskCount += reqData.tasks?.length || 0;
-
               await this.requirementsService.create(
                 {
                   title: reqData.title || 'Untitled Requirement',
                   content:
-                    reqData.description || 'No description provided by AI',
+                    (reqData.userStory
+                      ? `**User Story:**\n${reqData.userStory}\n\n`
+                      : '') +
+                    (reqData.description || 'No description provided by AI'),
                   state: RequirementState.DRAFT,
                   priority: (reqData.priority &&
                   ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].includes(
@@ -225,7 +218,6 @@ export class DocumentsAiService {
                   acceptanceCriteria: reqData.acceptanceCriteria || [],
                   sourceDocumentId: document.id,
                   parentId: epic.id, // Link to Epic
-                  tasks: reqData.tasks || [],
                 },
                 {
                   tenantId,
@@ -239,11 +231,10 @@ export class DocumentsAiService {
           }
         }
       }
-
       review.summary =
         (result.summary || '') +
         (mode === 'REQUIREMENTS'
-          ? `\n\nGenerated ${reqCount} requirements and ${taskCount} tasks.`
+          ? `\n\nGenerated ${reqCount} requirements. Awaiting approval for task generation.`
           : '\n\nAI Review completed (Risks & Gaps identified).');
       await this.reviewRepo.save(review);
 

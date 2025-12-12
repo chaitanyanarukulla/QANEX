@@ -2,21 +2,28 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Loader2, Bot, Save, Trash2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Bot, Save, Trash2, Check, ListTodo, PlusCircle, MinusCircle } from 'lucide-react';
 import Link from 'next/link';
 import { requirementsApi, sprintsApi, Requirement, Sprint } from '@/lib/api';
+import { useToast } from '@/components/ui/use-toast';
 
 export default function RequirementDetailPage() {
     const params = useParams();
     const router = useRouter();
     const id = params?.id as string;
+    const { showToast } = useToast();
 
     const [requirement, setRequirement] = useState<Requirement | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+    // Edit Mode State
+    const [isEditing, setIsEditing] = useState(false);
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
+    const [acceptanceCriteria, setAcceptanceCriteria] = useState<string[]>([]);
+
     const [error, setError] = useState<string | null>(null);
 
     const [sprints, setSprints] = useState<Sprint[]>([]);
@@ -28,6 +35,7 @@ export default function RequirementDetailPage() {
             setRequirement(data);
             setTitle(data.title);
             setContent(data.content);
+            setAcceptanceCriteria(data.acceptanceCriteria || []);
             setError(null);
         } catch (err) {
             console.error('Failed to load requirement:', err);
@@ -64,6 +72,18 @@ export default function RequirementDetailPage() {
         }
     };
 
+    const handleEdit = () => {
+        setIsEditing(true);
+    };
+
+    const handleCancel = () => {
+        setIsEditing(false);
+        if (requirement) {
+            setTitle(requirement.title);
+            setContent(requirement.content);
+            setAcceptanceCriteria(requirement.acceptanceCriteria || []);
+        }
+    };
 
     const handleSave = async () => {
         if (!requirement) return;
@@ -73,28 +93,18 @@ export default function RequirementDetailPage() {
                 title,
                 content,
                 state: requirement.state,
+                acceptanceCriteria,
             });
             setRequirement(updated);
+            setIsEditing(false);
+            showToast('Requirement updated', 'success');
             setError(null);
         } catch (err) {
             console.error('Failed to save requirement:', err);
+            showToast('Failed to save requirement', 'error');
             setError('Failed to save requirement');
         } finally {
             setIsSaving(false);
-        }
-    };
-
-    const handleAnalyze = async () => {
-        try {
-            setIsAnalyzing(true);
-            const updated = await requirementsApi.analyze(id);
-            setRequirement(updated);
-            setError(null);
-        } catch (err) {
-            console.error('Failed to analyze requirement:', err);
-            setError('Failed to analyze requirement');
-        } finally {
-            setIsAnalyzing(false);
         }
     };
 
@@ -108,6 +118,61 @@ export default function RequirementDetailPage() {
             setError('Failed to delete requirement');
         }
     };
+
+    const handleGenerateTasks = async () => {
+        try {
+            setIsAnalyzing(true);
+            const result = await requirementsApi.generateTasks(id);
+            if (result.count > 0) {
+                showToast(`Successfully generated ${result.count} tasks`, 'success');
+            } else {
+                showToast('No tasks were generated. AI might have deemed them unnecessary.', 'info');
+            }
+
+            // Reload to get tasks
+            await loadRequirement();
+            await loadSprints();
+            setError(null);
+        } catch (err) {
+            console.error('Failed to generate tasks:', err);
+            showToast('Failed to generate tasks. Please try again.', 'error');
+            setError('Failed to generate tasks');
+        } finally {
+            setIsAnalyzing(false);
+        }
+    };
+
+    const handleApprove = async () => {
+        try {
+            setIsSaving(true);
+            const updated = await requirementsApi.approve(id);
+            setRequirement(updated);
+            showToast('Requirement approved', 'success');
+            setError(null);
+        } catch (err) {
+            console.error('Failed to approve requirement:', err);
+            showToast('Failed to approve requirement', 'error');
+            setError('Failed to approve requirement');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const addAcceptanceCriteria = () => {
+        setAcceptanceCriteria([...acceptanceCriteria, '']);
+    };
+
+    const updateAcceptanceCriteria = (index: number, value: string) => {
+        const newCriteria = [...acceptanceCriteria];
+        newCriteria[index] = value;
+        setAcceptanceCriteria(newCriteria);
+    };
+
+    const removeAcceptanceCriteria = (index: number) => {
+        const newCriteria = acceptanceCriteria.filter((_, i) => i !== index);
+        setAcceptanceCriteria(newCriteria);
+    };
+
 
     if (isLoading) {
         return (
@@ -135,6 +200,7 @@ export default function RequirementDetailPage() {
         PUBLISHED: 'bg-blue-500/20 text-blue-600 dark:text-blue-400',
         NEEDS_REVISION: 'bg-yellow-500/20 text-yellow-600 dark:text-yellow-400',
         READY: 'bg-green-500/20 text-green-600 dark:text-green-400',
+        APPROVED: 'bg-green-600/20 text-green-700 dark:text-green-300',
     };
 
     const rqsColor = (score?: number) => {
@@ -157,44 +223,82 @@ export default function RequirementDetailPage() {
                     <ArrowLeft className="h-5 w-5" />
                 </Link>
                 <div className="flex-1">
-                    <input
-                        type="text"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        className="w-full bg-transparent text-3xl font-bold placeholder:text-muted-foreground/50 focus:outline-none"
-                    />
+                    {isEditing ? (
+                        <input
+                            type="text"
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            className="w-full bg-background border rounded-md px-3 py-2 text-3xl font-bold placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary"
+                        />
+                    ) : (
+                        <h1 className="text-3xl font-bold">{title}</h1>
+                    )}
                 </div>
                 <div className="flex gap-2">
-                    <button
-                        onClick={handleSave}
-                        disabled={isSaving}
-                        className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground disabled:opacity-50"
-                    >
-                        {isSaving ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                            <Save className="mr-2 h-4 w-4" />
-                        )}
-                        Save
-                    </button>
-                    <button
-                        onClick={handleAnalyze}
-                        disabled={isAnalyzing}
-                        className="inline-flex items-center justify-center rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-purple-700 disabled:opacity-50"
-                    >
-                        {isAnalyzing ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                            <Bot className="mr-2 h-4 w-4" />
-                        )}
-                        Analyze
-                    </button>
-                    <button
-                        onClick={handleDelete}
-                        className="inline-flex items-center justify-center rounded-md border border-red-500/20 bg-red-500/10 px-4 py-2 text-sm font-medium text-red-600 shadow-sm transition-colors hover:bg-red-500/20"
-                    >
-                        <Trash2 className="h-4 w-4" />
-                    </button>
+                    {/* View Mode Actions */}
+                    {!isEditing && (
+                        <>
+                            {/* Approve / Generate Tasks - ONLY visible when not editing */}
+                            {requirement && (requirement.state === 'DRAFT' || requirement.state === 'NEEDS_REVISION') && (
+                                <button
+                                    onClick={handleApprove}
+                                    disabled={isSaving}
+                                    className="inline-flex items-center justify-center rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-green-700 disabled:opacity-50"
+                                >
+                                    {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
+                                    Approve
+                                </button>
+                            )}
+                            {requirement && requirement.state === 'APPROVED' && (
+                                <button
+                                    onClick={handleGenerateTasks}
+                                    disabled={isAnalyzing}
+                                    className="inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-blue-700 disabled:opacity-50"
+                                >
+                                    {isAnalyzing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ListTodo className="mr-2 h-4 w-4" />}
+                                    Generate Tasks
+                                </button>
+                            )}
+
+                            {/* Edit Button */}
+                            <button
+                                onClick={handleEdit}
+                                className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-pencil mr-2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /><path d="m15 5 4 4" /></svg>
+                                Edit
+                            </button>
+
+                            {/* Delete Button */}
+                            <button
+                                onClick={handleDelete}
+                                className="inline-flex items-center justify-center rounded-md border border-red-500/20 bg-red-500/10 px-4 py-2 text-sm font-medium text-red-600 shadow-sm transition-colors hover:bg-red-500/20"
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </button>
+                        </>
+                    )}
+
+                    {/* Edit Mode Actions */}
+                    {isEditing && (
+                        <>
+                            <button
+                                onClick={handleSave}
+                                disabled={isSaving}
+                                className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 disabled:opacity-50"
+                            >
+                                {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                                Save
+                            </button>
+                            <button
+                                onClick={handleCancel}
+                                disabled={isSaving}
+                                className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground disabled:opacity-50"
+                            >
+                                Cancel
+                            </button>
+                        </>
+                    )}
                 </div>
             </div>
 
@@ -252,24 +356,60 @@ export default function RequirementDetailPage() {
 
                     <div className="min-h-[200px] rounded-lg border bg-card p-4">
                         <h3 className="text-sm font-semibold text-muted-foreground mb-2">Content</h3>
-                        <textarea
-                            value={content}
-                            onChange={(e) => setContent(e.target.value)}
-                            className="w-full h-full min-h-[200px] resize-none bg-transparent focus:outline-none"
-                            placeholder="Describe the requirement in detail..."
-                        />
+                        {isEditing ? (
+                            <textarea
+                                value={content}
+                                onChange={(e) => setContent(e.target.value)}
+                                className="w-full h-full min-h-[200px] bg-background border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                                placeholder="Describe the requirement in detail..."
+                            />
+                        ) : (
+                            <div className="whitespace-pre-wrap">{content}</div>
+                        )}
                     </div>
 
-                    {requirement.acceptanceCriteria && requirement.acceptanceCriteria.length > 0 && (
-                        <div className="rounded-lg border bg-card p-4">
-                            <h3 className="text-sm font-semibold text-muted-foreground mb-4">Acceptance Criteria</h3>
-                            <ul className="list-disc pl-5 space-y-2">
-                                {requirement.acceptanceCriteria.map((ac, idx) => (
-                                    <li key={idx} className="text-sm">{ac}</li>
-                                ))}
-                            </ul>
+                    <div className="rounded-lg border bg-card p-4">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-sm font-semibold text-muted-foreground">Acceptance Criteria</h3>
+                            {isEditing && (
+                                <button onClick={addAcceptanceCriteria} type="button" className="text-sm text-primary hover:underline flex items-center gap-1">
+                                    <PlusCircle className="h-3 w-3" /> Add
+                                </button>
+                            )}
                         </div>
-                    )}
+
+                        {isEditing ? (
+                            <div className="space-y-2">
+                                {acceptanceCriteria.map((ac, idx) => (
+                                    <div key={idx} className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={ac}
+                                            onChange={(e) => updateAcceptanceCriteria(idx, e.target.value)}
+                                            className="flex-1 bg-background border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                                            placeholder="Enter acceptance criteria..."
+                                        />
+                                        <button onClick={() => removeAcceptanceCriteria(idx)} className="text-red-500 hover:text-red-600">
+                                            <MinusCircle className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                ))}
+                                {acceptanceCriteria.length === 0 && (
+                                    <p className="text-sm text-muted-foreground italic">No criteria added. Click Add to create one.</p>
+                                )}
+                            </div>
+                        ) : (
+                            <ul className="list-disc pl-5 space-y-2">
+                                {requirement.acceptanceCriteria && requirement.acceptanceCriteria.length > 0 ? (
+                                    requirement.acceptanceCriteria.map((ac, idx) => (
+                                        <li key={idx} className="text-sm">{ac}</li>
+                                    ))
+                                ) : (
+                                    <li className="text-sm text-muted-foreground italic list-none">No acceptance criteria defined.</li>
+                                )}
+                            </ul>
+                        )}
+                    </div>
 
                     {/* Children Requirements (for Epics) */}
                     {requirement.children && requirement.children.length > 0 && (
@@ -312,6 +452,7 @@ export default function RequirementDetailPage() {
                                             className="text-xs bg-muted/50 border rounded px-2 py-1 w-full"
                                             value={task.sprintId || ''}
                                             onChange={(e) => handleTaskSprintChange(task.id, e.target.value)}
+                                            disabled={isEditing}
                                         >
                                             <option value="">Unassigned (Backlog)</option>
                                             {sprints.map(s => (
@@ -324,7 +465,7 @@ export default function RequirementDetailPage() {
                                 </div>
                             ))}
                             {(!requirement.sprintItems || requirement.sprintItems.length === 0) && (
-                                <p className="text-sm text-muted-foreground italic">No tasks generated yet. Run analysis to generate tasks.</p>
+                                <p className="text-sm text-muted-foreground italic">No tasks generated yet. Approve and generate tasks to see them here.</p>
                             )}
                         </div>
                     </div>

@@ -68,6 +68,9 @@ export class Document {
   @OneToOne(() => DocumentAIReview, (review) => review.document)
   aiReview?: DocumentAIReview;
 
+  @OneToMany('Requirement', 'sourceDocument')
+  requirements?: any[];
+
   @CreateDateColumn()
   createdAt!: Date;
 

@@ -43,11 +43,16 @@ export class DocumentsService {
   }
 
   async findAll(tenantId: string): Promise<Document[]> {
-    return this.documentRepo.find({
-      where: { tenantId },
-      order: { updatedAt: 'DESC' },
-      relations: ['aiReview'],
-    });
+    return this.documentRepo
+      .createQueryBuilder('document')
+      .leftJoinAndSelect('document.aiReview', 'aiReview')
+      .loadRelationCountAndMap(
+        'document.requirementsCount',
+        'document.requirements',
+      )
+      .where('document.tenantId = :tenantId', { tenantId })
+      .orderBy('document.updatedAt', 'DESC')
+      .getMany();
   }
 
   async findOne(id: string, tenantId: string): Promise<Document> {

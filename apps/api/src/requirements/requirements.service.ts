@@ -14,7 +14,7 @@ import { CreateRequirementDto } from './dto/create-requirement.dto';
 import { UpdateRequirementDto } from './dto/update-requirement.dto';
 import { IAuthUser } from '../auth/interfaces/auth-user.interface';
 
-interface TaskDto {
+export interface TaskDto {
   title: string;
   description: string;
   type?: string;
@@ -90,12 +90,16 @@ export class RequirementsService {
   async findAll(tenantId: string): Promise<Requirement[]> {
     return this.repo.find({
       where: { tenantId },
+      relations: ['sprintItems', 'sourceDocument'],
       order: { updatedAt: 'DESC' },
     });
   }
 
   async findOne(id: string, tenantId: string): Promise<Requirement> {
-    const requirement = await this.repo.findOne({ where: { id, tenantId } });
+    const requirement = await this.repo.findOne({
+      where: { id, tenantId },
+      relations: ['sprintItems', 'parent', 'children'],
+    });
     if (!requirement) {
       throw new NotFoundException(`Requirement ${id} not found`);
     }
@@ -162,5 +166,104 @@ export class RequirementsService {
 
     // Optional: Also remove from RAG index
     // this.ragService.removeRequirement(id).catch(console.error);
+  }
+
+  async addTasks(
+    id: string,
+    tasks: TaskDto[],
+    tenantId: string,
+  ): Promise<SprintItem[]> {
+    const requirement = await this.findOne(id, tenantId);
+
+    const createdItems: SprintItem[] = [];
+
+    for (const task of tasks) {
+      const typeStr = (task.type || 'task').toLowerCase();
+      const priorityStr = (task.priority || 'MEDIUM').toUpperCase();
+
+      const itemType = ['feature', 'bug', 'task'].includes(typeStr)
+        ? typeStr
+        : 'task';
+      const itemPriority = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].includes(
+        priorityStr,
+      )
+        ? priorityStr
+        : 'MEDIUM';
+
+      const savedItem = await this.sprintItemRepo.save(
+        this.sprintItemRepo.create({
+          title: task.title,
+          description: task.description || '',
+          type: itemType as SprintItemType,
+          status: SprintItemStatus.TODO,
+          priority: itemPriority as SprintItemPriority,
+          suggestedRole: task.suggestedRole,
+          estimatedHours: task.estimatedHours,
+          requirementId: requirement.id,
+          tenantId,
+        }),
+      );
+      createdItems.push(savedItem);
+    }
+
+    return createdItems;
+  }
+
+  async generateTasks(id: string, tenantId: string): Promise<SprintItem[]> {
+    const requirement = await this.findOne(id, tenantId);
+
+    // Only allow for APPROVED requirements (optional check, but good for workflow enforcement)
+    // if (requirement.state !== RequirementState.APPROVED) {
+    //   throw new BadRequestException('Requirement must be approved before generating tasks');
+    // }
+
+    const { provider, config } = await this.aiFactory.getProvider(tenantId);
+
+    const prompt = `
+      You are a Technical Lead.
+      Analyze the following APPROVED requirement and generate detailed implementation tasks.
+      
+      Requirement: ${requirement.title}
+      Details: ${requirement.content}
+      Acceptance Criteria: ${JSON.stringify(requirement.acceptanceCriteria)}
+
+      Goal: Create a list of specific Frontend (FE), Backend (BE), and QA tasks needed to implement this requirement.
+      
+      Output JSON format:
+      {
+        "tasks": [
+            {
+                "title": "FE|BE|QA: Task Title",
+                "description": "Detailed technical instruction",
+                "type": "task" | "feature" | "bug",
+                "suggestedRole": "Frontend" | "Backend" | "QA" | "DevOps",
+                "estimatedHours": number
+            }
+        ]
+      }
+    `;
+
+    try {
+      const response = await provider.chat(
+        [{ role: 'user', content: prompt }],
+        {
+          model: config.model,
+          temperature: 0.2,
+          responseFormat: 'json',
+          maxTokens: 2048,
+        },
+        config.apiKey,
+      );
+
+      const result = JSON.parse(response.content) as { tasks: TaskDto[] };
+      // Use addTasks to save them
+      if (result.tasks && result.tasks.length > 0) {
+        return this.addTasks(id, result.tasks, tenantId);
+      }
+      return [];
+    } catch (error) {
+      console.error(`Failed to generate tasks for requirement ${id}`, error);
+      throw error;
+    }
   }
 }
