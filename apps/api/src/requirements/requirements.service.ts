@@ -300,7 +300,7 @@ export class RequirementsService {
     id: string,
     tenantId: string,
   ): Promise<{ count: number }> {
-    const requirement = await this.findOne(id, tenantId);
+    await this.findOne(id, tenantId);
 
     // Update all tasks linked to this requirement to have status BACKLOG and sprintId null
     // We can do this with a single update query
@@ -308,6 +308,7 @@ export class RequirementsService {
       { requirementId: id, tenantId },
       {
         status: SprintItemStatus.BACKLOG,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         sprintId: null as any,
       },
     );

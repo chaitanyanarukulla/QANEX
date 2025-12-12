@@ -1,8 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { Test, TestingModule } from '@nestjs/testing';
 import { ReleasesService } from './releases.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Release, ReleaseStatus } from './release.entity';
-import { NotFoundException } from '@nestjs/common';
 
 const mockRepo = {
   create: jest.fn(),
