@@ -1,4 +1,10 @@
-# Phase 3: Complete Service Migration to DDD - SUMMARY
+# [LEGACY - Historical Record Only] Phase 3: Complete Service Migration to DDD - SUMMARY
+
+⚠️ **This document is archived for historical reference and no longer reflects the current system design.**
+
+For current architecture details, see: [../ARCHITECTURE.md](../ARCHITECTURE.md)
+
+---
 
 **Status**: ✅ 100% COMPLETE
 **Milestone**: All 3 critical services successfully migrated to Domain-Driven Design

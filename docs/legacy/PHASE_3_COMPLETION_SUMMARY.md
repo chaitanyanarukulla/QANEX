@@ -1,4 +1,10 @@
-# Phase 3: Complete DDD & Event-Driven Architecture - FINAL SUMMARY
+# [LEGACY - Historical Record Only] Phase 3: Complete DDD & Event-Driven Architecture - FINAL SUMMARY
+
+⚠️ **This document is archived for historical reference and no longer reflects the current system design.**
+
+For current architecture details, see: [../ARCHITECTURE.md](../ARCHITECTURE.md)
+
+---
 
 **Status**: ✅ 99% COMPLETE (Ready for final deployment)
 **Duration**: 6 weeks (Weeks 1-6, starting from Week 1 of Phase 3)

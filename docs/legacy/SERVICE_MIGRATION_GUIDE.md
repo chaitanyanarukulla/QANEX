@@ -1,4 +1,10 @@
-# Service Migration Guide - DDD & Event Store Integration
+# [LEGACY - Historical Record Only] Service Migration Guide - DDD & Event Store Integration
+
+⚠️ **This document is archived for historical reference and no longer reflects the current system design.**
+
+For current architecture details, see: [../ARCHITECTURE.md](../ARCHITECTURE.md)
+
+---
 
 **Status**: Phase 3 Completion (90% → 95%)
 **Duration**: Weeks 6-7

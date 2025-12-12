@@ -188,6 +188,39 @@ OPENAI_API_KEY=sk-...
 
 For detailed setup of Local AI, refer to the [Microsoft Foundry Local](https://github.com/microsoft/Foundry-Local) documentation.
 
+## 📚 Documentation
+
+QANexus has comprehensive documentation for all aspects of the system:
+
+### Architecture & Design
+- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Complete system architecture, DDD patterns, bounded contexts, backend/frontend design
+- **[DOMAIN_WORKFLOWS.md](./DOMAIN_WORKFLOWS.md)** - Detailed domain lifecycle workflows with state machines (Documents, Requirements, Sprints, Releases, Bugs)
+
+### Development
+- **[DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md)** - Developer onboarding, API reference, extensibility patterns
+- **[TESTING.md](./TESTING.md)** - Testing framework, coverage goals, test execution
+
+### Implementation Guides
+- **[apps/api/src/common/domain/DDD_ARCHITECTURE.md](./apps/api/src/common/domain/DDD_ARCHITECTURE.md)** - Deep dive into DDD patterns and aggregate implementation
+- **[apps/api/src/common/event-store/EVENT_STORE_GUIDE.md](./apps/api/src/common/event-store/EVENT_STORE_GUIDE.md)** - Event store integration and usage patterns
+- **[apps/api/src/common/domain/PHASE_3_ROADMAP.md](./apps/api/src/common/domain/PHASE_3_ROADMAP.md)** - DDD implementation roadmap
+- **[apps/api/src/common/domain/ANTI_CORRUPTION_LAYERS.md](./apps/api/src/common/domain/ANTI_CORRUPTION_LAYERS.md)** - Anti-corruption layer patterns
+- **[apps/web/src/hooks/README.md](./apps/web/src/hooks/README.md)** - TanStack Query hooks and state management patterns
+
+### Operations
+- **[docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)** - Production deployment guide (Railway, Vercel, Neon)
+
+### User Guide
+- **[USER_MANUAL.md](./USER_MANUAL.md)** - End-user feature guide for product managers and QA engineers
+
+### Documentation Index
+- **[docs/DOCUMENTATION_CLEANUP_SUMMARY.md](./docs/DOCUMENTATION_CLEANUP_SUMMARY.md)** - Documentation structure and what to read when
+
+### Historical Records (Archive)
+- **[docs/legacy/](./docs/legacy/)** - Historical phase tracking and architecture evolution (for reference only)
+
+**→ Start here:** Read [ARCHITECTURE.md](./ARCHITECTURE.md) for system overview, then [DOMAIN_WORKFLOWS.md](./DOMAIN_WORKFLOWS.md) for feature workflows. For implementation details, see the Implementation Guides above.
+
 ## 📂 Project Structure
 
 ```

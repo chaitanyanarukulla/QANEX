@@ -3,6 +3,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { StoredDomainEvent } from './entities/stored-domain-event.entity';
 import { EventStoreService } from './services/event-store.service';
 import { EventMigrationHandler } from './handlers/event-migration.handler';
+import { EventStorePublisher } from './event-store-publisher';
+import { DomainEventPublisher } from '../domain/domain-event.publisher';
 
 /**
  * EventStore Module - Central event persistence layer
@@ -69,7 +71,17 @@ import { EventMigrationHandler } from './handlers/event-migration.handler';
  */
 @Module({
   imports: [TypeOrmModule.forFeature([StoredDomainEvent])],
-  providers: [EventStoreService, EventMigrationHandler],
-  exports: [EventStoreService, EventMigrationHandler],
+  providers: [
+    EventStoreService,
+    EventMigrationHandler,
+    DomainEventPublisher,
+    EventStorePublisher,
+  ],
+  exports: [
+    EventStoreService,
+    EventMigrationHandler,
+    DomainEventPublisher,
+    EventStorePublisher,
+  ],
 })
 export class EventStoreModule {}

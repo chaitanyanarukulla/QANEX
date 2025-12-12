@@ -1,4 +1,10 @@
-# Phase 3 Event Store Implementation Summary
+# [LEGACY - Historical Record Only] Phase 3 Event Store Implementation Summary
+
+⚠️ **This document is archived for historical reference and no longer reflects the current system design.**
+
+For current architecture details, see: [../ARCHITECTURE.md](../ARCHITECTURE.md)
+
+---
 
 **Status**: ✅ COMPLETE (Weeks 5-6)
 **Date**: 2025-12-12

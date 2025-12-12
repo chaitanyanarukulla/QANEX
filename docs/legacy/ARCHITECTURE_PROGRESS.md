@@ -1,4 +1,10 @@
-# QANexus Architecture Progress Report
+# [LEGACY - Historical Record Only] QANexus Architecture Progress Report
+
+⚠️ **This document is archived for historical reference and no longer reflects the current system design.**
+
+For current architecture details, see: [../ARCHITECTURE.md](../ARCHITECTURE.md)
+
+---
 
 **Status**: Phase 2 Complete ✅ | Phase 3 In Progress 🚀
 

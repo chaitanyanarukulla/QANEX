@@ -1,4 +1,10 @@
-# Phase 3 Final Validation & Compilation Report
+# [LEGACY - Historical Record Only] Phase 3 Final Validation & Compilation Report
+
+⚠️ **This document is archived for historical reference and no longer reflects the current system design.**
+
+For current architecture details, see: [../ARCHITECTURE.md](../ARCHITECTURE.md)
+
+---
 
 **Date**: December 12, 2025
 **Status**: ✅ **PRODUCTION READY**

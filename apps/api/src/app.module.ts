@@ -33,6 +33,9 @@ import { RequestLoggerMiddleware } from './common/middleware/request-logger.midd
 import { LoggerModule } from './common/logger/logger.module';
 import { ClsModule } from 'nestjs-cls';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { EventStoreModule } from './common/event-store/event-store.module';
+import { EventStorePublisher } from './common/event-store/event-store-publisher';
+import { DomainEventPublisher } from './common/domain/domain-event.publisher';
 
 @Module({
   imports: [
@@ -85,6 +88,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
       },
       inject: [ConfigService],
     }),
+    EventStoreModule,
     HealthModule,
     AuthModule,
     UsersModule,
@@ -118,6 +122,8 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
   controllers: [AppController],
   providers: [
     AppService,
+    DomainEventPublisher,
+    EventStorePublisher,
     {
       provide: APP_FILTER,
       useClass: AllExceptionsFilter,

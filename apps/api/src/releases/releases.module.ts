@@ -8,6 +8,7 @@ import { RequirementsModule } from '../requirements/requirements.module';
 import { BugsModule } from '../bugs/bugs.module';
 import { TestKeysModule } from '../test-keys/test-keys.module';
 import { SecurityOpsModule } from '../security-ops/security-ops.module';
+import { EventStoreModule } from '../common/event-store/event-store.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { SecurityOpsModule } from '../security-ops/security-ops.module';
     BugsModule,
     TestKeysModule,
     SecurityOpsModule,
+    EventStoreModule,
   ],
   providers: [ReleasesService, RcsService],
   controllers: [ReleasesController],
