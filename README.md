@@ -50,15 +50,20 @@ git clone https://github.com/your-org/qanexus.git
 cd qanexus
 ```
 
-### 2. Infrastructure Setup (Database)
+### 2. Infrastructure Setup (Database & Redis)
 Start PostgreSQL and Redis containers:
 ```bash
 docker-compose up -d
 ```
 > This starts a PostgreSQL instance on port `5432` and Redis on `6379`.
 
+Verify containers are running:
+```bash
+docker-compose ps
+```
+
 ### 3. Backend Setup
-Configure and run the API:
+Configure and run the API server:
 
 ```bash
 cd apps/api
@@ -68,15 +73,19 @@ npm install
 
 # Setup Environment Variables
 cp .env.example .env
-# Update .env with your DB credentials logic (default usually works with docker-compose)
+# Update .env with your DB credentials (defaults work with docker-compose)
 
-# Run Migrations (if applicable) & Start
+# Build the project
+npm run build
+
+# Start development server
 npm run start:dev
 ```
-*API will run at [http://localhost:3000/api](http://localhost:3000/api)*
+
+✅ **Backend running at**: [http://localhost:3000/api](http://localhost:3000/api)
 
 ### 4. Frontend Setup
-Configure and run the Web Interface:
+In a **new terminal**, configure and run the Web Interface:
 
 ```bash
 cd apps/web
@@ -84,48 +93,81 @@ cd apps/web
 # Install dependencies
 npm install
 
-## Testing
-We have established a standardized testing stack for this project.
+# Start development server
+npm run dev
+```
+
+✅ **Frontend running at**: [http://localhost:3001](http://localhost:3001)
+
+### 5. Verify Everything Works
+
+```bash
+# Check backend health
+curl http://localhost:3000/api/health
+
+# Check frontend
+curl http://localhost:3001
+
+# Or open in browser:
+# Backend: http://localhost:3000/api
+# Frontend: http://localhost:3001
+```
+
+### Quick Reference - All Services
+
+| Service | Port | Status URL | Start Command |
+|---------|------|-----------|---|
+| **PostgreSQL** | 5432 | N/A | `docker-compose up -d` |
+| **Redis** | 6379 | N/A | `docker-compose up -d` |
+| **Backend API** | 3000 | `http://localhost:3000/api/health` | `npm run start:dev` (from `apps/api`) |
+| **Frontend Web** | 3001 | `http://localhost:3001` | `npm run dev` (from `apps/web`) |
+
+### Stop All Services
+
+```bash
+# Stop Docker containers
+docker-compose down
+
+# Stop development servers (Ctrl+C in each terminal)
+```
+
+## 🧪 Running Tests
+
+We have established a standardized testing stack for this project:
 - **Frontend**: Jest + React Testing Library
 - **Backend**: Jest + NestJS Testing
 
 **Current Coverage Goal**: 75%
 
-To run tests:
-```bash
-# Backend
-cd apps/api && npm run test:cov
-
-# Frontend
-cd apps/web && npm run test:cov
-```
-
-See [TESTING.md](./TESTING.md) for detailed instructions.
-
-## Development Server
-# Run Development Server
-npm run dev
-```
-*Web App will run at [http://localhost:3001](http://localhost:3001)* (or port 3000 if API is on a different port).
-
-## 🧪 Running Tests
-
-### Backend
+### Run Backend Tests
 ```bash
 cd apps/api
+
 # Unit Tests
 npm run test
+
+# Unit Tests with Coverage
+npm run test:cov
 
 # E2E Tests
 npm run test:e2e
 ```
 
-### Frontend
+### Run Frontend Tests
 ```bash
 cd apps/web
+
+# Run tests
+npm run test
+
+# With coverage
+npm run test:cov
+
+# Linting
 npm run lint
-npm run build # Checks for build errors
 ```
+
+See [TESTING.md](./TESTING.md) for detailed instructions.
 
 ## 🤖 AI Configuration
 
