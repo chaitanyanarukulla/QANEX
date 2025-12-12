@@ -20,21 +20,33 @@ export class RequestLoggerMiddleware implements NestMiddleware {
       const { statusCode } = res;
       const duration = Date.now() - start;
       const traceId = this.cls.getId();
+      /* eslint-disable @typescript-eslint/no-explicit-any */
+      /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+      const reqAny = req as any;
+      const tenantId = reqAny.user?.tenantId || req.headers['x-tenant-id'];
+      const userId = reqAny.user?.id || reqAny.user?.userId;
+      /* eslint-enable @typescript-eslint/no-explicit-any */
+      /* eslint-enable @typescript-eslint/no-unsafe-assignment */
 
-      this.logger.info('Request finished', {
-        context: 'HTTP',
-        trace_id: traceId,
-        req: {
-          method,
-          url: originalUrl,
-          ip,
-          userAgent,
+      this.logger.info(
+        `${method} ${originalUrl} ${statusCode} - ${duration}ms`,
+        {
+          context: 'HTTP',
+          trace_id: traceId,
+          tenantId,
+          userId,
+          req: {
+            method,
+            url: originalUrl,
+            ip,
+            userAgent,
+          },
+          res: {
+            statusCode,
+          },
+          duration,
         },
-        res: {
-          statusCode,
-        },
-        duration,
-      });
+      );
     });
 
     next();

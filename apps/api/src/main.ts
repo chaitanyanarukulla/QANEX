@@ -64,7 +64,8 @@ async function bootstrap() {
   logger.log(`AI Provider: ${process.env.AI_PROVIDER || 'mock'}`);
 }
 
-void bootstrap().catch((err) => {
-  console.error('Failed to start application:', err);
+void bootstrap().catch((error) => {
+  const logger = new Logger('Bootstrap');
+  logger.error('Failed to start application', error);
   process.exit(1);
 });

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {
@@ -14,6 +14,8 @@ import { RagService } from '../ai/rag.service';
 
 @Injectable()
 export class DocumentsService {
+  private readonly logger = new Logger(DocumentsService.name);
+
   constructor(
     @InjectRepository(Document)
     private documentRepo: Repository<Document>,
@@ -21,7 +23,7 @@ export class DocumentsService {
     private versionRepo: Repository<DocumentVersion>,
     private documentsAiService: DocumentsAiService,
     private ragService: RagService,
-  ) {}
+  ) { }
 
   async create(
     data: {
@@ -78,6 +80,19 @@ export class DocumentsService {
     // Auto-versioning logic could go here if status changes to FINAL or content changes on FINAL doc
     // For now, simple update
     const oldStatus = document.status;
+    if (data.status && data.status !== document.status) {
+      this.logger.log(
+        `[Document] Status Change: ${document.status} -> ${data.status}`,
+        {
+          context: 'DocumentsService',
+          tenantId,
+          documentId: id,
+          oldStatus: document.status,
+          newStatus: data.status,
+        },
+      );
+    }
+
     Object.assign(document, data);
     const savedDoc = await this.documentRepo.save(document);
 
@@ -85,7 +100,6 @@ export class DocumentsService {
     if (data.status && data.status !== oldStatus) {
       // AI_ANALYZING status change no longer auto-triggers analysis
       // User must explicitly click "Run AI Analysis" button
-      // This gives users control over when AI analysis actually runs
 
       if (data.status === DocumentStatus.READY_FOR_IMPLEMENTATION) {
         // Trigger AI Requirements Generation (Epics -> Reqs -> Tasks)

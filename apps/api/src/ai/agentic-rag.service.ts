@@ -46,20 +46,41 @@ export class AgenticRagService {
     const { provider, config } = await this.aiFactory.getProvider(tenantId);
 
     // Step 1: Plan - Generate search queries
+    const planStart = Date.now();
     const searchQueries = await this.generateSearchQueries(
       query,
       provider,
       config,
     );
     this.logger.debug(
-      `Generated search queries: ${JSON.stringify(searchQueries)}`,
+      `[AI-RAG] Plan generated ${searchQueries.length} queries in ${Date.now() - planStart}ms: ${JSON.stringify(searchQueries)}`,
     );
 
     // Step 2: Retrieve - Search for relevant context
+    const retrieveStart = Date.now();
     const context = await this.retrieveContext(searchQueries, tenantId);
+    this.logger.debug(
+      `[AI-RAG] Retrieval completed in ${Date.now() - retrieveStart}ms. Context length: ${context.length}`,
+    );
 
     // Step 3: Synthesize - Generate answer
-    return this.synthesizeAnswer(query, context, provider, config);
+    const synthStart = Date.now();
+    const answer = await this.synthesizeAnswer(
+      query,
+      context,
+      provider,
+      config,
+    );
+
+    this.logger.log({
+      message: `[AI-RAG] Answer synthesized in ${Date.now() - synthStart}ms`,
+      context: 'AgenticRagService',
+      tenantId,
+      query,
+      duration: Date.now() - planStart, // Total duration
+    });
+
+    return answer;
   }
 
   /**

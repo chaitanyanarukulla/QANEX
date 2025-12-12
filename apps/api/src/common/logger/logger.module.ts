@@ -20,8 +20,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
           transports: [
             new winston.transports.Console({
               format: winston.format.combine(
-                winston.format.timestamp(),
+                winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
                 winston.format.ms(),
+                winston.format.colorize({ all: true }), // Colorize everything for better visibility
                 winston.format.printf(
                   ({
                     timestamp,
@@ -41,7 +42,19 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
                         ...meta,
                       });
                     }
-                    return `${String(timestamp)} [${String((context as any) || 'Application')}] ${String(level)}: ${String(message)} ${trace_id ? `[Trace: ${String(trace_id as any)}]` : ''} ${Object.keys(meta).length ? JSON.stringify(meta) : ''}`;
+
+                    // Dev Format: [TIMESTAMP] LEVEL [Context] Message [TraceId]
+                    const contextStr = context
+                      ? `[${String(context as any)}]`
+                      : '';
+                    const traceStr = trace_id
+                      ? `[${String(trace_id as any)}]`
+                      : '';
+                    const metaStr = Object.keys(meta).length
+                      ? `\n${JSON.stringify(meta, null, 2)}`
+                      : '';
+
+                    return `${String(timestamp)} ${String(level)} ${contextStr} ${String(message)} ${traceStr}${metaStr}`;
                   },
                 ),
               ),

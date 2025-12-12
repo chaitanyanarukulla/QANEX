@@ -1,17 +1,9 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google"; // Changed from Geist, Geist_Mono
 import "./globals.css";
 import { ToastProvider } from "@/components/ui/use-toast";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const inter = Inter({ subsets: ["latin"] }); // Standard Inter font
 
 export const metadata: Metadata = {
   title: "QANexus - AI-Powered Quality Assurance",
@@ -25,7 +17,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full bg-background antialiased dark">
-      <body className={`${geistSans.variable} ${geistMono.variable} h-full`}>
+      <body className={`${inter.className} h-full`}>
         <ToastProvider>
           {children}
         </ToastProvider>

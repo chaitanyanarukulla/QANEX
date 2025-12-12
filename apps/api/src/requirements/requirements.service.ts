@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Requirement } from './requirement.entity';
@@ -25,6 +25,8 @@ export interface TaskDto {
 
 @Injectable()
 export class RequirementsService {
+  private readonly logger = new Logger(RequirementsService.name);
+
   constructor(
     @InjectRepository(Requirement)
     private readonly repo: Repository<Requirement>,
@@ -243,6 +245,13 @@ export class RequirementsService {
       }
     `;
 
+    const start = Date.now();
+    this.logger.log(`[AI-Req] Generating tasks for requirement ${id}`, {
+      context: 'RequirementsService',
+      tenantId,
+      requirementId: id,
+    });
+
     try {
       const response = await provider.chat(
         [{ role: 'user', content: prompt }],
@@ -256,13 +265,33 @@ export class RequirementsService {
       );
 
       const result = JSON.parse(response.content) as { tasks: TaskDto[] };
+      const count = result.tasks?.length || 0;
+
+      this.logger.log(
+        `[AI-Req] Generated ${count} tasks in ${Date.now() - start}ms`,
+        {
+          context: 'RequirementsService',
+          tenantId,
+          requirementId: id,
+          taskCount: count,
+        },
+      );
+
       // Use addTasks to save them
       if (result.tasks && result.tasks.length > 0) {
         return this.addTasks(id, result.tasks, tenantId);
       }
       return [];
     } catch (error) {
-      console.error(`Failed to generate tasks for requirement ${id}`, error);
+      this.logger.error(
+        `[AI-Req] Failed to generate tasks for requirement ${id}`,
+        {
+          error: (error as Error).message,
+          stack: (error as Error).stack,
+          tenantId,
+          requirementId: id,
+        },
+      );
       throw error;
     }
   }
