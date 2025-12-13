@@ -208,7 +208,7 @@ export class Release extends BaseDomainAggregate {
    * @throws InvalidStateError if not PLANNED
    * @throws ReadinessNotEvaluatedError if readiness not evaluated
    */
-  public activate(userId?: string): void {
+  public activate(_userId?: string): void {
     if (this.status !== ReleaseStatus.PLANNED) {
       throw new Error(
         `Cannot activate ${this.status} release. Only PLANNED releases can be activated.`,
@@ -232,7 +232,7 @@ export class Release extends BaseDomainAggregate {
    *
    * @throws InvalidStateError if not ACTIVE
    */
-  public freeze(userId?: string): void {
+  public freeze(_userId?: string): void {
     if (this.status !== ReleaseStatus.ACTIVE) {
       throw new Error(
         `Cannot freeze ${this.status} release. Only ACTIVE releases can be frozen.`,
@@ -254,7 +254,7 @@ export class Release extends BaseDomainAggregate {
    * @throws InvalidStateError if gates not passed
    * @throws CannotReleaseError if critical issues present
    */
-  public release(userId?: string): void {
+  public release(_userId?: string): void {
     if (!this.readinessScore) {
       throw new Error(
         'Cannot release without readiness evaluation. ' +
@@ -343,7 +343,7 @@ export class Release extends BaseDomainAggregate {
    *
    * @throws InvalidStateError if release is already in terminal state
    */
-  public abort(reason: string, userId?: string): void {
+  public abort(reason: string, _userId?: string): void {
     if (
       this.status === ReleaseStatus.RELEASED ||
       this.status === ReleaseStatus.ABORTED
