@@ -38,7 +38,7 @@ export class ReleaseReadinessEvaluatedSubscriber implements DomainEventSubscribe
   }
 
   isSubscribedTo(_event: DomainEvent): boolean {
-    return event.eventType === 'ReleaseReadinessEvaluated';
+    return _event.eventType === 'ReleaseReadinessEvaluated';
   }
 
   /**
@@ -55,7 +55,7 @@ export class ReleaseReadinessEvaluatedSubscriber implements DomainEventSubscribe
    * @param event ReleaseReadinessEvaluated event
    */
   async handle(_event: DomainEvent): Promise<void> {
-    const releaseEvent = event as ReleaseReadinessEvaluated;
+    const releaseEvent = _event as ReleaseReadinessEvaluated;
     try {
       this.logger.debug(
         `Processing ReleaseReadinessEvaluated event for ${releaseEvent.releaseId}`,
@@ -125,7 +125,7 @@ export class ReleaseReadinessEvaluatedSubscriber implements DomainEventSubscribe
     _event: ReleaseReadinessEvaluated,
   ): Promise<void> {
     this.logger.warn(
-      `Release ${event.releaseId} is BLOCKED (RCS: ${event.score}) - immediate action required`,
+      `Release ${_event.releaseId} is BLOCKED (RCS: ${_event.score}) - immediate action required`,
     );
 
     // TODO: Implement when Notification service available
@@ -144,7 +144,7 @@ export class ReleaseReadinessEvaluatedSubscriber implements DomainEventSubscribe
     _event: ReleaseReadinessEvaluated,
   ): Promise<void> {
     this.logger.warn(
-      `Release ${event.releaseId} has WARNING status (RCS: ${event.score})`,
+      `Release ${_event.releaseId} has WARNING status (RCS: ${_event.score})`,
     );
 
     // TODO: Implement when Notification service available
@@ -158,7 +158,7 @@ export class ReleaseReadinessEvaluatedSubscriber implements DomainEventSubscribe
    * @private
    */
   private async storeEvaluationAudit(
-    event: ReleaseReadinessEvaluated,
+    _event: ReleaseReadinessEvaluated,
   ): Promise<void> {
     // TODO: Implement compliance audit trail
     // This is required for SOC2, ISO27001, etc.

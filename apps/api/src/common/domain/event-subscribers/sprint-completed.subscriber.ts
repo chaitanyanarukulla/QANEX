@@ -37,7 +37,7 @@ export class SprintCompletedSubscriber implements DomainEventSubscriber {
   }
 
   isSubscribedTo(_event: DomainEvent): boolean {
-    return event.eventType === 'SprintCompleted';
+    return _event.eventType === 'SprintCompleted';
   }
 
   /**
@@ -56,7 +56,7 @@ export class SprintCompletedSubscriber implements DomainEventSubscriber {
    * @param event SprintCompleted event
    */
   async handle(_event: DomainEvent): Promise<void> {
-    const sprintEvent = event as SprintCompleted;
+    const sprintEvent = _event as SprintCompleted;
     try {
       this.logger.debug(
         `Processing SprintCompleted event for sprint ${sprintEvent.sprintId}`,
@@ -117,7 +117,7 @@ export class SprintCompletedSubscriber implements DomainEventSubscriber {
   private calculateVelocity(_event: SprintCompleted): number {
     // Velocity is the completed story points
     // Note: This is simplified; more sophisticated velocity might exclude bugs/tech debt
-    return event.completedStoryPoints || 0;
+    return _event.completedStoryPoints || 0;
   }
 
   /**
@@ -144,7 +144,7 @@ export class SprintCompletedSubscriber implements DomainEventSubscriber {
    * @private
    */
   private async generateRetrospectiveData(
-    event: SprintCompleted,
+    _event: SprintCompleted,
   ): Promise<void> {
     // TODO: Implement retrospective generation
     // - Identify high/low performers
@@ -167,7 +167,7 @@ export class SprintCompletedSubscriber implements DomainEventSubscriber {
     // - Factor in known constraints
     // - Return recommended story point capacity for next sprint
 
-    return velocity;
+    return _velocity;
   }
 
   /**
@@ -175,7 +175,7 @@ export class SprintCompletedSubscriber implements DomainEventSubscriber {
    * @private
    */
   private async sendCompletionNotifications(
-    event: SprintCompleted,
+    _event: SprintCompleted,
     _velocity: number,
   ): Promise<void> {
     // TODO: Implement notifications
