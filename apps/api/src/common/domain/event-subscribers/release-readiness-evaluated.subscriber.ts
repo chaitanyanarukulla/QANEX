@@ -37,7 +37,7 @@ export class ReleaseReadinessEvaluatedSubscriber implements DomainEventSubscribe
     this.eventPublisher.subscribe(this);
   }
 
-  isSubscribedTo(event: DomainEvent): boolean {
+  isSubscribedTo(_event: DomainEvent): boolean {
     return event.eventType === 'ReleaseReadinessEvaluated';
   }
 

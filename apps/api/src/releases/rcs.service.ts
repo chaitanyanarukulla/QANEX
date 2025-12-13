@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+
 import { BugSeverity, BugStatus } from '../bugs/bug.entity';
 import { RequirementState } from '../requirements/requirement.entity';
 import { ReleasesService } from './releases.service';

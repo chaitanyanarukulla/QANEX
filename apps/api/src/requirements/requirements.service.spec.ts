@@ -210,7 +210,7 @@ describe('RequirementsService', () => {
       mockSprintItemRepo.update.mockResolvedValue({ affected: 5 });
       mockReqRepo.update.mockResolvedValue({});
 
-      const result = await service.moveTasksToBacklog('r1', 't1');
+      const _result = await service.moveTasksToBacklog('r1', 't1');
       expect(mockSprintItemRepo.update).toHaveBeenCalledWith(
         { requirementId: 'r1', tenantId: 't1' },
         expect.objectContaining({ status: 'backlog' }),

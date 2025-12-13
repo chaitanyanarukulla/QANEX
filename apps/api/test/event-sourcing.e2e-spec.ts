@@ -2,7 +2,7 @@ import { TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import * as request from 'supertest';
+// import * as request from 'supertest';
 import { EventStoreService } from '../src/common/event-store/services/event-store.service';
 import { EventStorePublisher } from '../src/common/event-store/event-store-publisher';
 import { EventMigrationHandler } from '../src/common/event-store/handlers/event-migration.handler';
@@ -26,7 +26,7 @@ describe('Event Sourcing (E2E)', () => {
   let eventStore: EventStoreService;
   let eventStorePublisher: EventStorePublisher;
   let migrationHandler: EventMigrationHandler;
-  let domainEventPublisher: DomainEventPublisher;
+  // let domainEventPublisher: DomainEventPublisher;
   let storedEventRepository: Repository<StoredDomainEvent>;
 
   const tenantId = 'test-tenant-1';
@@ -57,8 +57,8 @@ describe('Event Sourcing (E2E)', () => {
     migrationHandler = moduleFixture.get<EventMigrationHandler>(
       EventMigrationHandler,
     );
-    domainEventPublisher =
-      moduleFixture.get<DomainEventPublisher>(DomainEventPublisher);
+    // domainEventPublisher =
+    moduleFixture.get<DomainEventPublisher>(DomainEventPublisher);
     storedEventRepository = moduleFixture.get('StoredDomainEventRepository');
   });
 

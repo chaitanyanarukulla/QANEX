@@ -37,7 +37,7 @@ export class BugResolvedSubscriber implements DomainEventSubscriber {
     this.eventPublisher.subscribe(this);
   }
 
-  isSubscribedTo(event: DomainEvent): boolean {
+  isSubscribedTo(_event: DomainEvent): boolean {
     return event.eventType === 'BugResolved';
   }
 

@@ -34,7 +34,7 @@ export class SprintStartedSubscriber implements DomainEventSubscriber {
   /**
    * Check if subscriber is interested in this event
    */
-  isSubscribedTo(event: DomainEvent): boolean {
+  isSubscribedTo(_event: DomainEvent): boolean {
     return (
       event instanceof SprintStarted || event.eventType === 'SprintStarted'
     );

@@ -34,7 +34,7 @@ export class TestRunCompletedSubscriber implements DomainEventSubscriber {
     this.eventPublisher.subscribe(this);
   }
 
-  isSubscribedTo(event: DomainEvent): boolean {
+  isSubscribedTo(_event: DomainEvent): boolean {
     return event.eventType === 'TestRunCompleted';
   }
 
