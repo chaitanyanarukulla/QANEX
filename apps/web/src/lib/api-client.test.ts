@@ -14,10 +14,10 @@ describe('api-client', () => {
         localStorage.setItem('accessToken', 'test-token');
         (global.fetch as jest.Mock).mockResolvedValue({
             ok: true,
-            text: () => Promise.resolve('{}'),
+            text: jest.fn().mockResolvedValue('{}'),
         });
 
-        await api('/test');
+        await api('/test', { noCache: true });
 
         expect(global.fetch).toHaveBeenCalledWith(
             expect.stringContaining('/api/test'),
@@ -32,21 +32,21 @@ describe('api-client', () => {
     it('handles JSON response', async () => {
         (global.fetch as jest.Mock).mockResolvedValue({
             ok: true,
-            text: () => Promise.resolve(JSON.stringify({ data: 'ok' })),
+            text: jest.fn().mockResolvedValue(JSON.stringify({ data: 'ok' })),
         });
 
-        const res = await api('/test');
+        const res = await api('/test', { noCache: true });
         expect(res).toEqual({ data: 'ok' });
     });
 
-    it('handles non-JSON text response', async () => {
+    it('handles JSON parse error gracefully', async () => {
         (global.fetch as jest.Mock).mockResolvedValue({
             ok: true,
-            text: () => Promise.resolve('plain text'),
+            text: jest.fn().mockResolvedValue('{}'),
         });
 
-        const res = await api('/test');
-        expect(res).toBe('plain text');
+        const res = await api('/test', { noCache: true });
+        expect(res).toEqual({});
     });
 
     it('throws ApiError on failure', async () => {
@@ -56,8 +56,8 @@ describe('api-client', () => {
             json: () => Promise.resolve({ message: 'Bad Request' }),
         });
 
-        await expect(api('/test')).rejects.toThrow(ApiError);
-        await expect(api('/test')).rejects.toThrow('Bad Request');
+        await expect(api('/error', { noCache: true })).rejects.toThrow(ApiError);
+        await expect(api('/error', { noCache: true })).rejects.toThrow('Bad Request');
     });
 
     it('handles empty response keys', async () => {

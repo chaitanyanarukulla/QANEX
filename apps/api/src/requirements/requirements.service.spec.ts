@@ -154,6 +154,7 @@ describe('RequirementsService', () => {
 
       mockReqRepo.create.mockReturnValue(savedReq);
       mockReqRepo.save.mockResolvedValue(savedReq);
+      mockReqRepo.findOne.mockResolvedValue(savedReq);
       mockSprintItemRepo.create.mockReturnValue({});
       mockSprintItemRepo.save.mockResolvedValue({});
 

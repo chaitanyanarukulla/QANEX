@@ -87,7 +87,7 @@ describe('EventStoreService', () => {
 
       await service.appendEvent(mockEvent, 'tenant-1');
 
-      expect(repositorySpy).toHaveBeenCalled();
+      expect(repository.insert).toHaveBeenCalled();
     });
 
     it('should throw error if append fails', async () => {

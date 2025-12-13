@@ -103,12 +103,24 @@ describe('SprintsService', () => {
     it('should update status and auto-set dates when ACTIVE', async () => {
       const sprint = {
         id: 's1',
+        tenantId: 't1',
+        name: 'Sprint 1',
+        capacity: 10,
         status: SprintStatus.PLANNED,
         startDate: null,
         endDate: null,
+        sprintItems: [
+          {
+            id: 'item-1',
+            title: 'Task 1',
+            status: SprintItemStatus.BACKLOG,
+            type: SprintItemType.TASK,
+          },
+        ],
       };
       mockSprintRepo.findOne.mockResolvedValue(sprint);
       mockSprintRepo.save.mockImplementation((s) => Promise.resolve(s));
+      mockSprintItemRepo.find.mockResolvedValue(sprint.sprintItems);
 
       const result = await service.updateStatus(
         's1',

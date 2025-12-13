@@ -824,6 +824,12 @@ export class SprintsService {
     );
     aggregate.createdAt = entity.createdAt;
     aggregate.updatedAt = entity.updatedAt;
+
+    // Populate items if available
+    if (entity.sprintItems && Array.isArray(entity.sprintItems)) {
+      aggregate.items = entity.sprintItems;
+    }
+
     return aggregate;
   }
 }
