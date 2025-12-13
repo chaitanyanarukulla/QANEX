@@ -262,7 +262,7 @@ export class TestRun extends BaseDomainAggregate {
    *
    * @throws Error if invalid state transition
    */
-  public stop(reason?: string, userId?: string): void {
+  public stop(_reason?: string, _userId?: string): void {
     if (
       !TestRunStatusHelper.isValidTransition(
         this.status,
@@ -281,7 +281,7 @@ export class TestRun extends BaseDomainAggregate {
    *
    * @throws Error if invalid state transition
    */
-  public cancel(reason: string, userId?: string): void {
+  public cancel(_reason: string, _userId?: string): void {
     if (
       !TestRunStatusHelper.isValidTransition(
         this.status,
