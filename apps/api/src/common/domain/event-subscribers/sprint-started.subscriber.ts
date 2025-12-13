@@ -94,7 +94,8 @@ export class SprintStartedSubscriber implements DomainEventSubscriber {
       // });
 
       this.logger.log(
-        `Sprint ${sprintEvent.aggregateId} started: ${sprintEvent.itemCount} items, ${sprintEvent.totalStoryPoints} story points`,
+        `Sprint ${sprintEvent.sprintId} started. ` +
+          `End date: ${sprintEvent.endDate.toISOString()}, Capacity: ${sprintEvent.capacity} story points`,
       );
     } catch (error) {
       // Error handling: log but don't block sprint operations

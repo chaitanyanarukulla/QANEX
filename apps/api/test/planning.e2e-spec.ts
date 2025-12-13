@@ -84,11 +84,11 @@ describe('Planning Flow (e2e)', () => {
     await sprintItemRepo.save(task2);
 
     // 3. Test Endpoint
-    const response = await request(app.getHttpServer())
+    const _otherTenantResponse = await request(app.getHttpServer())
       .get('/sprints/backlog/structured')
       .expect(200);
 
-    const { requirements, standaloneTasks } = response.body;
+    const { requirements, standaloneTasks } = _otherTenantResponse.body;
 
     // Verify Requirements
     expect(Array.isArray(requirements)).toBe(true);

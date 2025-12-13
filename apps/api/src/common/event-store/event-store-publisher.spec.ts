@@ -76,6 +76,10 @@ describe('EventStorePublisher', () => {
     it('should persist event before publishing (maintain order)', async () => {
       const callOrder: string[] = [];
 
+      const _consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const _consoleEndSpy = jest
+        .spyOn(console, 'groupEnd')
+        .mockImplementation();
       jest.spyOn(eventStore, 'appendEvent').mockImplementation(async () => {
         callOrder.push('persist');
       });

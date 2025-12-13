@@ -42,7 +42,7 @@ export class RequirementApprovedSubscriber implements DomainEventSubscriber {
    *
    * @param event RequirementApproved event
    */
-  async handle(_event: RequirementApproved): Promise<void> {
+  async handle(event: RequirementApproved): Promise<void> {
     try {
       this.logger.debug(
         `Processing RequirementApproved event for ${event.aggregateId}`,
