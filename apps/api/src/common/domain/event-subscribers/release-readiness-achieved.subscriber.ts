@@ -43,7 +43,7 @@ export class ReleaseReadinessAchievedSubscriber implements DomainEventSubscriber
   }
 
   isSubscribedTo(_event: DomainEvent): boolean {
-    return event.eventType === 'ReleaseReadinessAchieved';
+    return _event.eventType === 'ReleaseReadinessAchieved';
   }
 
   /**
@@ -61,7 +61,7 @@ export class ReleaseReadinessAchievedSubscriber implements DomainEventSubscriber
    * @param event ReleaseReadinessAchieved event
    */
   async handle(_event: DomainEvent): Promise<void> {
-    const releaseEvent = event as ReleaseReadinessAchieved;
+    const releaseEvent = _event as ReleaseReadinessAchieved;
     try {
       this.logger.debug(
         `🚀 RELEASE READY FOR DEPLOYMENT: ${releaseEvent.releaseId} (v${releaseEvent.version}, RCS: ${releaseEvent.score}/100)`,
@@ -183,7 +183,7 @@ export class ReleaseReadinessAchievedSubscriber implements DomainEventSubscriber
    * @private
    */
   private async sendDeploymentReadyNotifications(
-    event: ReleaseReadinessAchieved,
+    _event: ReleaseReadinessAchieved,
   ): Promise<void> {
     // TODO: Implement multi-channel notifications
     // Level 1 (Release Manager): Email + Slack + SMS
@@ -223,7 +223,7 @@ export class ReleaseReadinessAchievedSubscriber implements DomainEventSubscriber
    * @private
    */
   private async prestageDeploymentResources(
-    event: ReleaseReadinessAchieved,
+    _event: ReleaseReadinessAchieved,
   ): Promise<void> {
     // TODO: Implement resource prestaging
     // - Pull container images to deployment nodes
