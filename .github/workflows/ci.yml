@@ -37,16 +37,9 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: |
-            apps/api/package-lock.json
-            apps/web/package-lock.json
+          cache-dependency-path: package-lock.json
 
-      - name: Install API dependencies
-        working-directory: apps/api
-        run: npm ci
-
-      - name: Install Web dependencies
-        working-directory: apps/web
+      - name: Install dependencies
         run: npm ci
 
       - name: Lint API
@@ -88,10 +81,9 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: apps/api/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
-        working-directory: apps/api
         run: npm ci
 
       - name: Run tests with coverage
@@ -100,6 +92,7 @@ jobs:
           DATABASE_URL: postgres://test:test@localhost:5432/qanexus_test
           JWT_SECRET: test-secret
           AI_PROVIDER: mock
+          NODE_OPTIONS: "--max_old_space_size=4096"
         run: npm run test:cov
 
       #- name: Run E2E tests
@@ -126,10 +119,9 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: apps/web/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
-        working-directory: apps/web
         run: npm ci
 
       - name: Run tests with coverage
@@ -152,10 +144,9 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: apps/api/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
-        working-directory: apps/api
         run: npm ci
 
       - name: Build
@@ -185,10 +176,9 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: apps/web/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
-        working-directory: apps/web
         run: npm ci
 
       - name: Build
