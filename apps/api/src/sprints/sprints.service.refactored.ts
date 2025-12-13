@@ -17,7 +17,7 @@
 
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, MoreThan, LessThan } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Sprint, SprintStatus } from './sprint.entity';
 import { SprintItem, SprintItemStatus } from './sprint-item.entity';
 import { Sprint as SprintAggregate } from './domain/sprint.aggregate';

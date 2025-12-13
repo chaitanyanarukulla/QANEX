@@ -1,7 +1,4 @@
-import {
-  BaseDomainAggregate,
-  DomainEvent,
-} from '../../common/domain/aggregate-root.interface';
+import { BaseDomainAggregate } from '../../common/domain/aggregate-root.interface';
 import { SprintCreated } from './events/sprint-created.event';
 import { SprintStarted } from './events/sprint-started.event';
 import { SprintCompleted } from './events/sprint-completed.event';
