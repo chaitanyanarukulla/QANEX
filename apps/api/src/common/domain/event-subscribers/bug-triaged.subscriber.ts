@@ -53,7 +53,7 @@ export class BugTriagedSubscriber implements DomainEventSubscriber {
    *
    * @param event BugTriaged event
    */
-  async handle(event: DomainEvent): Promise<void> {
+  async handle(_event: DomainEvent): Promise<void> {
     const bugEvent = event as BugTriaged;
     try {
       this.logger.debug(
@@ -103,7 +103,7 @@ export class BugTriagedSubscriber implements DomainEventSubscriber {
    *
    * @private
    */
-  private async handleCriticalBug(event: BugTriaged): Promise<void> {
+  private async handleCriticalBug(_event: BugTriaged): Promise<void> {
     this.logger.warn(
       `CRITICAL BUG TRIAGED: ${event.bugId} - severity=${event.severity}, priority=${event.priority}`,
     );
@@ -124,7 +124,7 @@ export class BugTriagedSubscriber implements DomainEventSubscriber {
    * Assign bug to developer and notify them
    * @private
    */
-  private async assignBugToDeveloper(event: BugTriaged): Promise<void> {
+  private async assignBugToDeveloper(_event: BugTriaged): Promise<void> {
     // TODO: Implement when Notification service available
     // - Send assignment notification to developer
     // - Add to developer's task queue
@@ -136,7 +136,7 @@ export class BugTriagedSubscriber implements DomainEventSubscriber {
    * Send triage notifications to team
    * @private
    */
-  private async sendTriageNotifications(event: BugTriaged): Promise<void> {
+  private async sendTriageNotifications(_event: BugTriaged): Promise<void> {
     // TODO: Implement notifications
     // Level 1 (Critical/P0): Email + Slack + SMS
     // Level 2 (High/P1): Email + Slack
@@ -148,7 +148,7 @@ export class BugTriagedSubscriber implements DomainEventSubscriber {
    * Add bug to sprint backlog if in active sprint
    * @private
    */
-  private async addBugToSprintBacklog(event: BugTriaged): Promise<void> {
+  private async addBugToSprintBacklog(_event: BugTriaged): Promise<void> {
     // TODO: Implement when Sprint service available
     // - Find active sprint
     // - Create bug story in sprint

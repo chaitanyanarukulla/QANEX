@@ -52,7 +52,7 @@ export class TestRunCompletedSubscriber implements DomainEventSubscriber {
    *
    * @param event TestRunCompleted event
    */
-  async handle(event: DomainEvent): Promise<void> {
+  async handle(_event: DomainEvent): Promise<void> {
     const testEvent = event as TestRunCompleted;
     try {
       this.logger.debug(
@@ -136,7 +136,7 @@ export class TestRunCompletedSubscriber implements DomainEventSubscriber {
    * Calculate test metrics for trends and reporting
    * @private
    */
-  private async calculateTestMetrics(event: TestRunCompleted): Promise<{
+  private async calculateTestMetrics(_event: TestRunCompleted): Promise<{
     passRate: number;
     trend: 'IMPROVING' | 'DECLINING' | 'STABLE';
     qualityScore: number;
@@ -176,7 +176,9 @@ export class TestRunCompletedSubscriber implements DomainEventSubscriber {
    *
    * @private
    */
-  private async createFailedTestTriage(event: TestRunCompleted): Promise<void> {
+  private async createFailedTestTriage(
+    _event: TestRunCompleted,
+  ): Promise<void> {
     // TODO: Implement when Bug/Sprint service available
     // - Get list of failed tests
     // - For each failure, create bug/issue

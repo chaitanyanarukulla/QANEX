@@ -54,7 +54,7 @@ export class SprintStartedSubscriber implements DomainEventSubscriber {
    *
    * @param event SprintStarted event
    */
-  async handle(event: DomainEvent): Promise<void> {
+  async handle(_event: DomainEvent): Promise<void> {
     const sprintEvent = event as SprintStarted;
     try {
       this.logger.debug(
@@ -113,7 +113,7 @@ export class SprintStartedSubscriber implements DomainEventSubscriber {
    *
    * @private
    */
-  private async sendNotifications(sprintData: any): Promise<void> {
+  private async sendNotifications(_sprintData: any): Promise<void> {
     // TODO: Implement multi-channel notifications
     // - Email notification
     // - Slack/Teams webhook

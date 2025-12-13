@@ -1,8 +1,8 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { BugsService } from './bugs.service';
-import { Bug, BugStatus, BugSeverity, BugPriority } from './bug.entity';
+import { Bug, BugStatus, BugPriority } from './bug.entity';
 import { AiProviderFactory } from '../ai/providers';
 import { RagService } from '../ai/rag.service';
 

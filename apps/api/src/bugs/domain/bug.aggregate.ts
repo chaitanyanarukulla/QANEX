@@ -204,7 +204,7 @@ export class Bug extends BaseDomainAggregate {
    *
    * @throws Error if invalid state transition
    */
-  public markInProgress(userId?: string): void {
+  public markInProgress(_userId?: string): void {
     if (
       !BugStatusHelper.isValidTransition(this.status, BugStatusType.IN_PROGRESS)
     ) {
@@ -223,7 +223,7 @@ export class Bug extends BaseDomainAggregate {
    *
    * @throws Error if invalid state transition
    */
-  public markResolved(resolutionNotes: string, userId?: string): void {
+  public markResolved(resolutionNotes: string, _userId?: string): void {
     if (
       !BugStatusHelper.isValidTransition(this.status, BugStatusType.RESOLVED)
     ) {
@@ -253,7 +253,7 @@ export class Bug extends BaseDomainAggregate {
    *
    * @throws Error if invalid state transition
    */
-  public markVerified(userId?: string): void {
+  public markVerified(_userId?: string): void {
     if (
       !BugStatusHelper.isValidTransition(this.status, BugStatusType.VERIFIED)
     ) {
@@ -272,7 +272,7 @@ export class Bug extends BaseDomainAggregate {
    *
    * @throws Error if invalid state transition
    */
-  public markClosed(userId?: string): void {
+  public markClosed(_userId?: string): void {
     if (!BugStatusHelper.isValidTransition(this.status, BugStatusType.CLOSED)) {
       throw new Error(
         `Cannot close ${this.status} bug. ` +
@@ -315,7 +315,7 @@ export class Bug extends BaseDomainAggregate {
    *
    * @throws Error if invalid state transition
    */
-  public defer(reason: string, userId?: string): void {
+  public defer(_reason: string, _userId?: string): void {
     if (
       !BugStatusHelper.isValidTransition(this.status, BugStatusType.DEFERRED)
     ) {
@@ -334,7 +334,7 @@ export class Bug extends BaseDomainAggregate {
    *
    * @throws Error if invalid state transition
    */
-  public markInvalid(reason: string, userId?: string): void {
+  public markInvalid(_reason: string, _userId?: string): void {
     if (
       !BugStatusHelper.isValidTransition(this.status, BugStatusType.INVALID)
     ) {

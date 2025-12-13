@@ -60,7 +60,7 @@ export class ReleaseReadinessAchievedSubscriber implements DomainEventSubscriber
    *
    * @param event ReleaseReadinessAchieved event
    */
-  async handle(event: DomainEvent): Promise<void> {
+  async handle(_event: DomainEvent): Promise<void> {
     const releaseEvent = event as ReleaseReadinessAchieved;
     try {
       this.logger.debug(
@@ -200,7 +200,7 @@ export class ReleaseReadinessAchievedSubscriber implements DomainEventSubscriber
    * @private
    */
   private async recommendDeploymentWindow(
-    releaseId: string,
+    _releaseId: string,
   ): Promise<{ startTime: Date; endTime: Date; reason: string }> {
     // TODO: Implement deployment window recommendation
     // - Check for scheduled maintenance windows

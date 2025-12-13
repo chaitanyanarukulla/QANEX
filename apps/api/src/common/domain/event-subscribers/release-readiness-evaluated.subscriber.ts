@@ -54,7 +54,7 @@ export class ReleaseReadinessEvaluatedSubscriber implements DomainEventSubscribe
    *
    * @param event ReleaseReadinessEvaluated event
    */
-  async handle(event: DomainEvent): Promise<void> {
+  async handle(_event: DomainEvent): Promise<void> {
     const releaseEvent = event as ReleaseReadinessEvaluated;
     try {
       this.logger.debug(
@@ -121,7 +121,9 @@ export class ReleaseReadinessEvaluatedSubscriber implements DomainEventSubscribe
    * Handle BLOCKED status: critical issues detected
    * @private
    */
-  private async handleBlocked(event: ReleaseReadinessEvaluated): Promise<void> {
+  private async handleBlocked(
+    _event: ReleaseReadinessEvaluated,
+  ): Promise<void> {
     this.logger.warn(
       `Release ${event.releaseId} is BLOCKED (RCS: ${event.score}) - immediate action required`,
     );
@@ -138,7 +140,9 @@ export class ReleaseReadinessEvaluatedSubscriber implements DomainEventSubscribe
    * Handle WARNING status: some gates at risk but not blocking
    * @private
    */
-  private async handleWarning(event: ReleaseReadinessEvaluated): Promise<void> {
+  private async handleWarning(
+    _event: ReleaseReadinessEvaluated,
+  ): Promise<void> {
     this.logger.warn(
       `Release ${event.releaseId} has WARNING status (RCS: ${event.score})`,
     );

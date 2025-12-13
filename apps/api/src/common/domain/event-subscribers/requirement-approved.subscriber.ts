@@ -42,7 +42,7 @@ export class RequirementApprovedSubscriber implements DomainEventSubscriber {
    *
    * @param event RequirementApproved event
    */
-  async handle(event: RequirementApproved): Promise<void> {
+  async handle(_event: RequirementApproved): Promise<void> {
     try {
       this.logger.debug(
         `Processing RequirementApproved event for ${event.aggregateId}`,
@@ -103,7 +103,7 @@ export class RequirementApprovedSubscriber implements DomainEventSubscriber {
    * @private
    */
   private extractTasks(
-    requirement: any,
+    _requirement: any,
   ): Array<{ title: string; description: string; estimatedPoints: number }> {
     const tasks: Array<{
       title: string;

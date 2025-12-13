@@ -54,7 +54,7 @@ export class BugResolvedSubscriber implements DomainEventSubscriber {
    *
    * @param event BugResolved event
    */
-  async handle(event: DomainEvent): Promise<void> {
+  async handle(_event: DomainEvent): Promise<void> {
     const bugEvent = event as BugResolved;
     try {
       this.logger.debug(
@@ -107,7 +107,7 @@ export class BugResolvedSubscriber implements DomainEventSubscriber {
    *
    * @private
    */
-  private async handleCriticalBugResolved(event: BugResolved): Promise<void> {
+  private async handleCriticalBugResolved(_event: BugResolved): Promise<void> {
     this.logger.debug(
       `CRITICAL BUG RESOLVED: ${event.bugId} - Re-evaluating release readiness`,
     );
@@ -141,7 +141,7 @@ export class BugResolvedSubscriber implements DomainEventSubscriber {
    *
    * @private
    */
-  private async calculateResolutionMetrics(event: BugResolved): Promise<{
+  private async calculateResolutionMetrics(_event: BugResolved): Promise<{
     resolutionTime: number;
     slaMetricHours: number;
     meetsTargetTime: boolean;
@@ -163,7 +163,9 @@ export class BugResolvedSubscriber implements DomainEventSubscriber {
    * Send resolution notifications to QA and stakeholders
    * @private
    */
-  private async sendResolutionNotifications(event: BugResolved): Promise<void> {
+  private async sendResolutionNotifications(
+    _event: BugResolved,
+  ): Promise<void> {
     // TODO: Implement notifications
     // - QA lead: Bug ready for verification with resolution notes
     // - Bug reporter: Status update on bug fix
@@ -175,7 +177,7 @@ export class BugResolvedSubscriber implements DomainEventSubscriber {
    * Update bug resolution time SLA tracking
    * @private
    */
-  private async updateSLAMetrics(event: BugResolved): Promise<void> {
+  private async updateSLAMetrics(_event: BugResolved): Promise<void> {
     // TODO: Implement SLA tracking
     // - Priority P0: Should be resolved within 1 day
     // - Priority P1: Within 3 days

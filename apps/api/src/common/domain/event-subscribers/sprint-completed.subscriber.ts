@@ -55,7 +55,7 @@ export class SprintCompletedSubscriber implements DomainEventSubscriber {
    *
    * @param event SprintCompleted event
    */
-  async handle(event: DomainEvent): Promise<void> {
+  async handle(_event: DomainEvent): Promise<void> {
     const sprintEvent = event as SprintCompleted;
     try {
       this.logger.debug(
@@ -114,7 +114,7 @@ export class SprintCompletedSubscriber implements DomainEventSubscriber {
    *
    * @private
    */
-  private calculateVelocity(event: SprintCompleted): number {
+  private calculateVelocity(_event: SprintCompleted): number {
     // Velocity is the completed story points
     // Note: This is simplified; more sophisticated velocity might exclude bugs/tech debt
     return event.completedStoryPoints || 0;
@@ -127,8 +127,8 @@ export class SprintCompletedSubscriber implements DomainEventSubscriber {
    * @private
    */
   private async updateVelocityTrend(
-    sprintId: string,
-    currentVelocity: number,
+    _sprintId: string,
+    _currentVelocity: number,
   ): Promise<void> {
     // TODO: Implement when Analytics service available
     // - Get last 5 sprint velocities
@@ -160,7 +160,7 @@ export class SprintCompletedSubscriber implements DomainEventSubscriber {
    *
    * @private
    */
-  private async predictNextSprintCapacity(velocity: number): Promise<number> {
+  private async predictNextSprintCapacity(_velocity: number): Promise<number> {
     // TODO: Implement capacity prediction
     // - Use historical velocity data
     // - Account for team capacity changes
@@ -176,7 +176,7 @@ export class SprintCompletedSubscriber implements DomainEventSubscriber {
    */
   private async sendCompletionNotifications(
     event: SprintCompleted,
-    velocity: number,
+    _velocity: number,
   ): Promise<void> {
     // TODO: Implement notifications
     // - Scrum master: Sprint completion summary
@@ -189,7 +189,7 @@ export class SprintCompletedSubscriber implements DomainEventSubscriber {
    * Archive sprint data for historical analysis
    * @private
    */
-  private async archiveSprintData(event: SprintCompleted): Promise<void> {
+  private async archiveSprintData(_event: SprintCompleted): Promise<void> {
     // TODO: Implement sprint archival
     // - Move sprint to archive
     // - Snapshot all metrics
