@@ -11,11 +11,12 @@ WORKDIR /app
 # Install dependencies needed for native modules
 RUN apk add --no-cache libc6-compat
 
-# Copy package files from apps/api (context is repo root)
-COPY apps/api/package.json apps/api/package-lock.json* ./
+# Copy root package files and workspace configuration
+COPY package.json package-lock.json* ./
+COPY apps/api/package.json ./apps/api/
 
-# Install all dependencies (including dev for building)
-RUN npm ci
+# Install all dependencies for the workspace (including dev for building)
+RUN npm ci --workspace=api
 
 # ============================================
 # Stage 2: Builder
@@ -24,17 +25,20 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy dependencies from deps stage
+# Copy root package files
+COPY package.json package-lock.json* ./
+
+# Copy node_modules from deps stage
 COPY --from=deps /app/node_modules ./node_modules
 
-# Copy source code from apps/api
-COPY apps/api/ .
+# Copy workspace structure
+COPY apps/api/ ./apps/api/
 
-# Build the application
-RUN npm run build
+# Build the API application
+RUN npm run build --workspace=api
 
-# Remove dev dependencies
-RUN npm prune --production
+# Remove dev dependencies, keeping only production deps
+RUN npm prune --production --workspace=api
 
 # ============================================
 # Stage 3: Production Runner
@@ -51,10 +55,10 @@ RUN adduser --system --uid 1001 nestjs
 ENV NODE_ENV=production
 ENV PORT=3000
 
-# Copy built application
-COPY --from=builder --chown=nestjs:nodejs /app/dist ./dist
+# Copy built application from builder stage
+COPY --from=builder --chown=nestjs:nodejs /app/apps/api/dist ./dist
 COPY --from=builder --chown=nestjs:nodejs /app/node_modules ./node_modules
-COPY --from=builder --chown=nestjs:nodejs /app/package.json ./
+COPY --from=builder --chown=nestjs:nodejs /app/apps/api/package.json ./
 
 # Switch to non-root user
 USER nestjs
