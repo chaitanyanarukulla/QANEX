@@ -8,21 +8,33 @@ import {
 import { TestCase } from '../test-keys/test-case.entity';
 import { TestResult, TestResultStatus } from '../test-keys/test-result.entity';
 
-const mockCandidateRepo = {
+const mockCandidateRepo: {
+  find: jest.Mock;
+  create: jest.Mock;
+  save: jest.Mock;
+  update: jest.Mock;
+} = {
   find: jest.fn(),
   create: jest.fn(),
   save: jest.fn(),
   update: jest.fn(),
 };
 
-const mockTestCaseRepo = {
+const mockTestCaseRepo: {
+  find: jest.Mock;
+  findOne: jest.Mock;
+  count: jest.Mock;
+  update: jest.Mock;
+} = {
   find: jest.fn(),
   findOne: jest.fn(),
   count: jest.fn(),
   update: jest.fn(),
 };
 
-const mockTestResultRepo = {
+const mockTestResultRepo: {
+  find: jest.Mock;
+} = {
   find: jest.fn(),
 };
 

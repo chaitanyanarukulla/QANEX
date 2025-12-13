@@ -5,16 +5,23 @@ import { TenantsService } from '../tenants/tenants.service';
 import { JwtService } from '@nestjs/jwt';
 import { OrgRole } from '../users/user-tenant.entity';
 
-const mockUsersService = {
+const mockUsersService: {
+  findByEmail: jest.Mock;
+  create: jest.Mock;
+} = {
   findByEmail: jest.fn(),
   create: jest.fn(),
 };
 
-const mockTenantsService = {
+const mockTenantsService: {
+  create: jest.Mock;
+} = {
   create: jest.fn(),
 };
 
-const mockJwtService = {
+const mockJwtService: {
+  sign: jest.Mock;
+} = {
   sign: jest.fn().mockReturnValue('mock-token'),
 };
 
@@ -38,7 +45,6 @@ describe('AuthService', () => {
   describe('validateUser', () => {
     it('should find user by email', async () => {
       mockUsersService.findByEmail.mockResolvedValue({ id: 'u1' });
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const res = await service.validateUser('test@test.com', 'sub');
       expect(res).toEqual({ id: 'u1' });
     });

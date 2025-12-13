@@ -3,7 +3,13 @@ import { TenantsService } from './tenants.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Tenant } from './tenant.entity';
 
-const mockRepo = {
+const mockRepo: {
+  create: jest.Mock;
+  save: jest.Mock;
+  find: jest.Mock;
+  findOneBy: jest.Mock;
+  update: jest.Mock;
+} = {
   create: jest.fn(),
   save: jest.fn(),
   find: jest.fn(),

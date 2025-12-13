@@ -3,7 +3,15 @@ import { ProjectsService } from './projects.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Project } from './project.entity';
 
-const mockTypeOrmRepo = {
+const mockTypeOrmRepo: {
+  find: jest.Mock;
+  findOne: jest.Mock;
+  create: jest.Mock;
+  save: jest.Mock;
+  count: jest.Mock;
+  delete: jest.Mock;
+  metadata: { name: string };
+} = {
   find: jest.fn(),
   findOne: jest.fn(),
   create: jest.fn(),

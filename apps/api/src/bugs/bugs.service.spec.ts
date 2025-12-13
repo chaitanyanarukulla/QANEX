@@ -6,7 +6,14 @@ import { Bug, BugStatus, BugSeverity, BugPriority } from './bug.entity';
 import { AiProviderFactory } from '../ai/providers';
 import { RagService } from '../ai/rag.service';
 
-const mockBugRepo = {
+const mockBugRepo: {
+  create: jest.Mock;
+  save: jest.Mock;
+  find: jest.Mock;
+  findOne: jest.Mock;
+  update: jest.Mock;
+  delete: jest.Mock;
+} = {
   create: jest.fn(),
   save: jest.fn(),
   find: jest.fn(),
@@ -15,11 +22,15 @@ const mockBugRepo = {
   delete: jest.fn(),
 };
 
-const mockAiFactory = {
+const mockAiFactory: {
+  getProvider: jest.Mock;
+} = {
   getProvider: jest.fn(),
 };
 
-const mockRagService = {
+const mockRagService: {
+  indexBug: jest.Mock;
+} = {
   indexBug: jest.fn().mockResolvedValue(undefined),
 };
 

@@ -11,14 +11,25 @@ import {
 import { EventStorePublisher } from '../common/event-store/event-store-publisher';
 import { DomainEventPublisher } from '../common/domain/domain-event.publisher';
 
-const mockSprintRepo = {
+const mockSprintRepo: {
+  create: jest.Mock;
+  save: jest.Mock;
+  find: jest.Mock;
+  findOne: jest.Mock;
+} = {
   create: jest.fn(),
   save: jest.fn(),
   find: jest.fn(),
   findOne: jest.fn(),
 };
 
-const mockSprintItemRepo = {
+const mockSprintItemRepo: {
+  create: jest.Mock;
+  save: jest.Mock;
+  find: jest.Mock;
+  findOne: jest.Mock;
+  delete: jest.Mock;
+} = {
   create: jest.fn(),
   save: jest.fn(),
   find: jest.fn(),
@@ -26,12 +37,18 @@ const mockSprintItemRepo = {
   delete: jest.fn(),
 };
 
-const mockEventStorePublisher = {
+const mockEventStorePublisher: {
+  publishAll: jest.Mock;
+  publish: jest.Mock;
+} = {
   publishAll: jest.fn().mockResolvedValue(undefined),
   publish: jest.fn().mockResolvedValue(undefined),
 };
 
-const mockDomainEventPublisher = {
+const mockDomainEventPublisher: {
+  subscribe: jest.Mock;
+  publish: jest.Mock;
+} = {
   subscribe: jest.fn(),
   publish: jest.fn(),
 };

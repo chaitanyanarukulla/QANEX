@@ -1,10 +1,20 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-assignment */
 import { Test, TestingModule } from '@nestjs/testing';
 import { SprintsController } from './sprints.controller';
 import { SprintsService } from './sprints.service';
 import { SprintStatus } from './sprint.entity';
 
-const mockService = {
+const mockService: {
+  create: jest.Mock;
+  findAll: jest.Mock;
+  findOne: jest.Mock;
+  update: jest.Mock;
+  updateStatus: jest.Mock;
+  addItem: jest.Mock;
+  getBacklogItems: jest.Mock;
+  getStructuredBacklog: jest.Mock;
+  getSprintItems: jest.Mock;
+  planSprint: jest.Mock;
+} = {
   create: jest.fn(),
   findAll: jest.fn(),
   findOne: jest.fn(),

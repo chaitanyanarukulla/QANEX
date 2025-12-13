@@ -1,10 +1,15 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-assignment */
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { OrgRole } from './user-tenant.entity';
 
-const mockService = {
+const mockService: {
+  create: jest.Mock;
+  findAll: jest.Mock;
+  updateRole: jest.Mock;
+  removeMember: jest.Mock;
+  update: jest.Mock;
+} = {
   create: jest.fn(),
   findAll: jest.fn(),
   updateRole: jest.fn(),

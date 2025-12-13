@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-assignment */
 import { Test, TestingModule } from '@nestjs/testing';
 import { DocumentsController } from './documents.controller';
 import { DocumentsService } from './documents.service';
@@ -7,7 +6,14 @@ import { ConfluenceService } from './confluence.service';
 import { DocumentsAiService } from './documents-ai.service';
 import { DocumentSource } from './entities/document.entity';
 
-const mockDocumentsService = {
+const mockDocumentsService: {
+  create: jest.Mock;
+  findAll: jest.Mock;
+  findOne: jest.Mock;
+  update: jest.Mock;
+  remove: jest.Mock;
+  createVersion: jest.Mock;
+} = {
   create: jest.fn(),
   findAll: jest.fn(),
   findOne: jest.fn(),
@@ -16,15 +22,21 @@ const mockDocumentsService = {
   createVersion: jest.fn(),
 };
 
-const mockDocumentsAiService = {
+const mockDocumentsAiService: {
+  analyzeDocument: jest.Mock;
+} = {
   analyzeDocument: jest.fn(),
 };
 
-const mockFileUploadService = {
+const mockFileUploadService: {
+  extractText: jest.Mock;
+} = {
   extractText: jest.fn(),
 };
 
-const mockConfluenceService = {
+const mockConfluenceService: {
+  getPage: jest.Mock;
+} = {
   getPage: jest.fn(),
 };
 

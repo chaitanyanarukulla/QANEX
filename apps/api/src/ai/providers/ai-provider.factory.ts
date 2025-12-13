@@ -148,7 +148,12 @@ export class AiProviderFactory {
    */
   async getEmbeddingProvider(tenantId: string): Promise<{
     provider: AiProvider;
-    config: { apiKey?: string; model?: string; embeddingModel?: string; endpoint?: string };
+    config: {
+      apiKey?: string;
+      model?: string;
+      embeddingModel?: string;
+      endpoint?: string;
+    };
   }> {
     const tenant = await this.tenantRepo.findOne({ where: { id: tenantId } });
     const aiConfig = tenant?.settings?.aiConfig as TenantAiConfig | undefined;
@@ -207,7 +212,8 @@ export class AiProviderFactory {
     // Use provider-specific embedding method with API key
     if (provider.providerType === 'openai') {
       return (provider as OpenAIProvider).embedWithKey(texts, config.apiKey!, {
-        model: options?.model || config.embeddingModel || 'text-embedding-3-small',
+        model:
+          options?.model || config.embeddingModel || 'text-embedding-3-small',
       });
     } else if (provider.providerType === 'gemini') {
       return (provider as GeminiProvider).embedWithKey(texts, config.apiKey!, {

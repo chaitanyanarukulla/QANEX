@@ -1,9 +1,13 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { Test, TestingModule } from '@nestjs/testing';
 import { TenantsController } from './tenants.controller';
 import { TenantsService } from './tenants.service';
 
-const mockService = {
+const mockService: {
+  create: jest.Mock;
+  findAll: jest.Mock;
+  findOne: jest.Mock;
+  update: jest.Mock;
+} = {
   create: jest.fn(),
   findAll: jest.fn(),
   findOne: jest.fn(),

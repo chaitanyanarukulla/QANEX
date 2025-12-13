@@ -6,14 +6,25 @@ import { UserTenant } from './user-tenant.entity';
 import { PlanLimitsService } from '../billing/plan-limits.service';
 import { NotFoundException } from '@nestjs/common';
 
-const mockUserRepo = {
+const mockUserRepo: {
+  create: jest.Mock;
+  save: jest.Mock;
+  findOne: jest.Mock;
+  findOneBy: jest.Mock;
+} = {
   create: jest.fn(),
   save: jest.fn(),
   findOne: jest.fn(),
   findOneBy: jest.fn(),
 };
 
-const mockUserTenantRepo = {
+const mockUserTenantRepo: {
+  create: jest.Mock;
+  save: jest.Mock;
+  count: jest.Mock;
+  findOne: jest.Mock;
+  remove: jest.Mock;
+} = {
   create: jest.fn(),
   save: jest.fn(),
   count: jest.fn(),
@@ -21,7 +32,9 @@ const mockUserTenantRepo = {
   remove: jest.fn(),
 };
 
-const mockPlanLimitsService = {
+const mockPlanLimitsService: {
+  assertCanAddUser: jest.Mock;
+} = {
   assertCanAddUser: jest.fn(),
 };
 

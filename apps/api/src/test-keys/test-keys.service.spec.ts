@@ -6,7 +6,14 @@ import { TestCase } from './test-case.entity';
 import { TestRun, TestRunStatus } from './test-run.entity';
 import { TestResult, TestResultStatus } from './test-result.entity';
 
-const mockTestCaseRepo = {
+const mockTestCaseRepo: {
+  create: jest.Mock;
+  save: jest.Mock;
+  find: jest.Mock;
+  findOne: jest.Mock;
+  update: jest.Mock;
+  delete: jest.Mock;
+} = {
   create: jest.fn(),
   save: jest.fn(),
   find: jest.fn(),
@@ -15,7 +22,13 @@ const mockTestCaseRepo = {
   delete: jest.fn(),
 };
 
-const mockTestRunRepo = {
+const mockTestRunRepo: {
+  create: jest.Mock;
+  save: jest.Mock;
+  find: jest.Mock;
+  findOne: jest.Mock;
+  update: jest.Mock;
+} = {
   create: jest.fn(),
   save: jest.fn(),
   find: jest.fn(),
@@ -23,7 +36,12 @@ const mockTestRunRepo = {
   update: jest.fn(),
 };
 
-const mockTestResultRepo = {
+const mockTestResultRepo: {
+  create: jest.Mock;
+  save: jest.Mock;
+  find: jest.Mock;
+  findOne: jest.Mock;
+} = {
   create: jest.fn(),
   save: jest.fn(),
   find: jest.fn(),

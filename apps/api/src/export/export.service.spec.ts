@@ -4,11 +4,15 @@ import { ExportService } from './export.service';
 import { Requirement } from '../requirements/requirement.entity';
 import { Bug } from '../bugs/bug.entity';
 
-const mockRequirementRepo = {
+const mockRequirementRepo: {
+  find: jest.Mock;
+} = {
   find: jest.fn(),
 };
 
-const mockBugRepo = {
+const mockBugRepo: {
+  find: jest.Mock;
+} = {
   find: jest.fn(),
 };
 

@@ -3,7 +3,12 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { FeatureFlagsService } from './feature-flags.service';
 import { FeatureFlag } from './feature-flag.entity';
 
-const mockFlagRepo = {
+const mockFlagRepo: {
+  findOne: jest.Mock;
+  create: jest.Mock;
+  save: jest.Mock;
+  find: jest.Mock;
+} = {
   findOne: jest.fn(),
   create: jest.fn(),
   save: jest.fn(),

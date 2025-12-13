@@ -3,7 +3,10 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { FeedbackService } from './feedback.service';
 import { Feedback } from './feedback.entity';
 
-const mockRepo = {
+const mockRepo: {
+  create: jest.Mock;
+  save: jest.Mock;
+} = {
   create: jest.fn(),
   save: jest.fn(),
 };

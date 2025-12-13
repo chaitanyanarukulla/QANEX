@@ -9,7 +9,14 @@ import { NotFoundException } from '@nestjs/common';
 import { EventStorePublisher } from '../common/event-store/event-store-publisher';
 import { DomainEventPublisher } from '../common/domain/domain-event.publisher';
 
-const mockReqRepo = {
+const mockReqRepo: {
+  create: jest.Mock;
+  save: jest.Mock;
+  find: jest.Mock;
+  findOne: jest.Mock;
+  update: jest.Mock;
+  delete: jest.Mock;
+} = {
   create: jest.fn(),
   save: jest.fn(),
   find: jest.fn(),
@@ -18,31 +25,48 @@ const mockReqRepo = {
   delete: jest.fn(),
 };
 
-const mockSprintItemRepo = {
+const mockSprintItemRepo: {
+  create: jest.Mock;
+  save: jest.Mock;
+  update: jest.Mock;
+} = {
   create: jest.fn(),
   save: jest.fn(),
   update: jest.fn(),
 };
 
-const mockRagService = {
+const mockRagService: {
+  indexRequirement: jest.Mock;
+} = {
   indexRequirement: jest.fn().mockResolvedValue(null),
 };
 
-const mockAiFactory = {
+const mockAiFactory: {
+  getProvider: jest.Mock;
+} = {
   getProvider: jest.fn(),
 };
 
-const mockAiProvider = {
+const mockAiProvider: {
+  analyzeRequirement: jest.Mock;
+  chat: jest.Mock;
+} = {
   analyzeRequirement: jest.fn(),
   chat: jest.fn(),
 };
 
-const mockEventStorePublisher = {
+const mockEventStorePublisher: {
+  publishAll: jest.Mock;
+  publish: jest.Mock;
+} = {
   publishAll: jest.fn().mockResolvedValue(undefined),
   publish: jest.fn().mockResolvedValue(undefined),
 };
 
-const mockDomainEventPublisher = {
+const mockDomainEventPublisher: {
+  subscribe: jest.Mock;
+  publish: jest.Mock;
+} = {
   subscribe: jest.fn(),
   publish: jest.fn(),
 };
@@ -186,7 +210,7 @@ describe('RequirementsService', () => {
       mockSprintItemRepo.update.mockResolvedValue({ affected: 5 });
       mockReqRepo.update.mockResolvedValue({});
 
-      constresult = await service.moveTasksToBacklog('r1', 't1');
+      const result = await service.moveTasksToBacklog('r1', 't1');
       expect(mockSprintItemRepo.update).toHaveBeenCalledWith(
         { requirementId: 'r1', tenantId: 't1' },
         expect.objectContaining({ status: 'backlog' }),

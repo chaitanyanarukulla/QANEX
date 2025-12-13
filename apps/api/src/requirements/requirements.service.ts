@@ -59,8 +59,8 @@ export class RequirementsService {
     const aggregate = RequirementAggregate.create({
       title: reqData.title,
       content: reqData.content,
-      priority: (reqData.priority || 'MEDIUM') as any,
-      type: (reqData.type || 'FUNCTIONAL') as any,
+      priority: reqData.priority || 'MEDIUM',
+      type: reqData.type || 'FUNCTIONAL',
       acceptanceCriteria: reqData.acceptanceCriteria || [],
       tenantId: user.tenantId,
     });
@@ -88,11 +88,11 @@ export class RequirementsService {
     // 5. Background: Index in RAG
     this.ragService
       .indexRequirement(saved.id, user.tenantId, saved.title, saved.content)
-      .catch((e) => {
+      .catch((error: unknown) => {
         this.logger.error('RAG Index failed', {
           context: 'RequirementsService',
-          error: (e as Error)?.message || 'Unknown error',
-          stack: (e as Error)?.stack,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
         });
       });
 
@@ -132,12 +132,10 @@ export class RequirementsService {
     // Update index
     this.ragService
       .indexRequirement(saved.id, user.tenantId, saved.title, saved.content)
-      .catch((e) => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const error = e;
+      .catch((error: unknown) => {
         this.logger.error('Background task failed', {
           context: 'RequirementsService',
-          error: error?.message || 'Unknown error',
+          error: error instanceof Error ? error.message : 'Unknown error',
         });
       });
 
@@ -299,12 +297,12 @@ export class RequirementsService {
         return this.addTasks(id, result.tasks, tenantId);
       }
       return [];
-    } catch (error) {
+    } catch (error: unknown) {
       this.logger.error(
         `[AI-Req] Failed to generate tasks for requirement ${id}`,
         {
-          error: (error as Error).message,
-          stack: (error as Error).stack,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
           tenantId,
           requirementId: id,
         },
@@ -326,7 +324,7 @@ export class RequirementsService {
       {
         status: SprintItemStatus.BACKLOG,
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        sprintId: null as any,
+        sprintId: null as any, // TypeORM requires this cast for nullable relations
       },
     );
 
@@ -380,9 +378,9 @@ export class RequirementsService {
       );
 
       return saved;
-    } catch (error) {
+    } catch (error: unknown) {
       this.logger.error(
-        `Failed to approve requirement: ${(error as Error).message}`,
+        `Failed to approve requirement: ${error instanceof Error ? error.message : 'Unknown error'}`,
       );
       throw error;
     }
@@ -402,8 +400,8 @@ export class RequirementsService {
       title: entity.title,
       content: entity.content,
       status: entity.state,
-      priority: entity.priority as any,
-      type: entity.type as any,
+      priority: entity.priority,
+      type: entity.type,
       acceptanceCriteria: entity.acceptanceCriteria || [],
       rqs: entity.rqs,
       tenantId: entity.tenantId,

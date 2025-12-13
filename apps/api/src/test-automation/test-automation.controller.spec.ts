@@ -1,14 +1,20 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-assignment */
 import { Test, TestingModule } from '@nestjs/testing';
 import { TestAutomationController } from './test-automation.controller';
 import { TestAutomationService } from './test-automation.service';
 import { AutomationCandidateService } from './automation-candidate.service';
 
-const mockAutomationService = {
+const mockAutomationService: {
+  generatePr: jest.Mock;
+} = {
   generatePr: jest.fn(),
 };
 
-const mockCandidateService = {
+const mockCandidateService: {
+  getCandidates: jest.Mock;
+  getAutomationCandidatesWithAI: jest.Mock;
+  getAutomationCoverage: jest.Mock;
+  createCandidate: jest.Mock;
+} = {
   getCandidates: jest.fn(),
   getAutomationCandidatesWithAI: jest.fn(),
   getAutomationCoverage: jest.fn(),

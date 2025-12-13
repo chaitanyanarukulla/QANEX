@@ -7,7 +7,14 @@ import { DocumentsAiService } from './documents-ai.service';
 import { RagService } from '../ai/rag.service';
 import { NotFoundException } from '@nestjs/common';
 
-const mockDocumentRepo = {
+const mockDocumentRepo: {
+  create: jest.Mock;
+  save: jest.Mock;
+  find: jest.Mock;
+  findOne: jest.Mock;
+  createQueryBuilder: jest.Mock;
+  delete: jest.Mock;
+} = {
   create: jest.fn(),
   save: jest.fn(),
   find: jest.fn(),
@@ -22,17 +29,25 @@ const mockDocumentRepo = {
   delete: jest.fn(),
 };
 
-const mockVersionRepo = {
+const mockVersionRepo: {
+  create: jest.Mock;
+  save: jest.Mock;
+  count: jest.Mock;
+} = {
   create: jest.fn(),
   save: jest.fn(),
   count: jest.fn(),
 };
 
-const mockAiService = {
+const mockAiService: {
+  analyzeDocument: jest.Mock;
+} = {
   analyzeDocument: jest.fn().mockResolvedValue({}),
 };
 
-const mockRagService = {
+const mockRagService: {
+  indexItem: jest.Mock;
+} = {
   indexItem: jest.fn().mockResolvedValue({}),
 };
 

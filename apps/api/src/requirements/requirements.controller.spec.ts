@@ -1,10 +1,19 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
 import { Test, TestingModule } from '@nestjs/testing';
 import { RequirementsController } from './requirements.controller';
 import { RequirementsService } from './requirements.service';
 import { RequirementState } from './requirement.entity';
 
-const mockService = {
+const mockService: {
+  create: jest.Mock;
+  findAll: jest.Mock;
+  findOne: jest.Mock;
+  update: jest.Mock;
+  remove: jest.Mock;
+  analyze: jest.Mock;
+  assignToSprint: jest.Mock;
+  generateTasks: jest.Mock;
+  moveTasksToBacklog: jest.Mock;
+} = {
   create: jest.fn(),
   findAll: jest.fn(),
   findOne: jest.fn(),

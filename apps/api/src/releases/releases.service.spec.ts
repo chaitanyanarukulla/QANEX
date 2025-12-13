@@ -6,7 +6,13 @@ import { Release, ReleaseStatus } from './release.entity';
 import { EventStorePublisher } from '../common/event-store/event-store-publisher';
 import { DomainEventPublisher } from '../common/domain/domain-event.publisher';
 
-const mockRepo = {
+const mockRepo: {
+  create: jest.Mock;
+  save: jest.Mock;
+  find: jest.Mock;
+  findOne: jest.Mock;
+  update: jest.Mock;
+} = {
   create: jest.fn(),
   save: jest.fn(),
   find: jest.fn(),
@@ -14,12 +20,18 @@ const mockRepo = {
   update: jest.fn(),
 };
 
-const mockEventStorePublisher = {
+const mockEventStorePublisher: {
+  publishAll: jest.Mock;
+  publish: jest.Mock;
+} = {
   publishAll: jest.fn().mockResolvedValue(undefined),
   publish: jest.fn().mockResolvedValue(undefined),
 };
 
-const mockDomainEventPublisher = {
+const mockDomainEventPublisher: {
+  subscribe: jest.Mock;
+  publish: jest.Mock;
+} = {
   subscribe: jest.fn(),
   publish: jest.fn(),
 };
