@@ -22,14 +22,6 @@
  */
 
 declare const jest: any;
-declare namespace jest {
-  interface Mock<T = any, Y extends any[] = any[]> {
-    mock: {
-      calls: Y[];
-      results: Array<{ type: string; value: T }>;
-    };
-  }
-}
 
 /**
  * Create a mock TypeORM repository suitable for TenantScopedRepository wrapping
@@ -110,7 +102,7 @@ export function createMockTenantRepository<
  * ```
  */
 export function assertTenantIsolation(
-  mockFn: jest.Mock,
+  mockFn: any,
   tenantId: string,
   callIndex = 0,
 ) {
@@ -130,10 +122,7 @@ export function assertTenantIsolation(
 /**
  * Assert that a create/update operation properly handles tenantId
  */
-export function assertTenantInData(
-  mockFn: jest.Mock,
-  expectedTenantId: string,
-) {
+export function assertTenantInData(mockFn: any, expectedTenantId: string) {
   const call = mockFn.mock.calls[0];
   if (!call) {
     throw new Error(`Mock function not called`);
