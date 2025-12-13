@@ -100,8 +100,8 @@ export class SprintCompletedSubscriber implements DomainEventSubscriber {
     } catch (error) {
       // Error handling: log but don't block sprint completion
       this.logger.error(
-        `Failed to process sprint completion for ${sprintEvent.sprintId}: ${(error as any).message}`,
-        (error as any).stack,
+        `Failed to process sprint completion for ${sprintEvent.sprintId}: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
       );
     }
   }

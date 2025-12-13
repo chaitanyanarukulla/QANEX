@@ -93,8 +93,8 @@ export class ReleaseReadinessEvaluatedSubscriber implements DomainEventSubscribe
     } catch (error) {
       // Error handling: log but don't block release evaluation
       this.logger.error(
-        `Failed to process release readiness for ${releaseEvent.releaseId}: ${(error as any).message}`,
-        (error as any).stack,
+        `Failed to process release readiness for ${releaseEvent.releaseId}: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
       );
     }
   }

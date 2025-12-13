@@ -90,9 +90,12 @@ export class BugAdapter {
 
       return metrics;
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
       this.logger.error(
-        `Failed to fetch bug metrics for tenant ${tenantId}: ${(error as any).message}`,
-        (error as any).stack,
+        `Failed to fetch bug metrics for tenant ${tenantId}: ${errorMessage}`,
+        errorStack,
       );
 
       // Return conservative data (assume worst case)

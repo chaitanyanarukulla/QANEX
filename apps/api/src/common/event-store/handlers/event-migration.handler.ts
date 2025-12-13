@@ -146,7 +146,7 @@ export class EventMigrationHandler {
       } catch (error) {
         this.logger.error(
           `Failed to migrate ${eventType} from ${fromVersion}: ${(error as any).message}`,
-          (error as any).stack,
+          error instanceof Error ? error.stack : undefined,
         );
         throw new Error(
           `Event migration failed for ${eventType} (${migrationKey}): ${(error as any).message}`,
@@ -213,7 +213,7 @@ export class EventMigrationHandler {
     } catch (error) {
       this.logger.error(
         `Error validating event schema: ${(error as any).message}`,
-        (error as any).stack,
+        error instanceof Error ? error.stack : undefined,
       );
       return false;
     }

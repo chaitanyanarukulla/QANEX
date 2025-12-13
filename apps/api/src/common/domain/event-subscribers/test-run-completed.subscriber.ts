@@ -101,8 +101,8 @@ export class TestRunCompletedSubscriber implements DomainEventSubscriber {
     } catch (error) {
       // Error handling: log but don't block test completion
       this.logger.error(
-        `Failed to process test completion for ${testEvent.testRunId}: ${(error as any).message}`,
-        (error as any).stack,
+        `Failed to process test completion for ${testEvent.testRunId}: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
       );
     }
   }

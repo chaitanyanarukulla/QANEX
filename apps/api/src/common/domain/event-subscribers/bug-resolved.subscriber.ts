@@ -37,7 +37,7 @@ export class BugResolvedSubscriber implements DomainEventSubscriber {
     this.eventPublisher.subscribe(this);
   }
 
-  isSubscribedTo(_event: DomainEvent): boolean {
+  isSubscribedTo(event: DomainEvent): boolean {
     return event.eventType === 'BugResolved';
   }
 
@@ -54,7 +54,7 @@ export class BugResolvedSubscriber implements DomainEventSubscriber {
    *
    * @param event BugResolved event
    */
-  async handle(_event: DomainEvent): Promise<void> {
+  async handle(event: DomainEvent): Promise<void> {
     const bugEvent = event as BugResolved;
     try {
       this.logger.debug(
@@ -94,9 +94,12 @@ export class BugResolvedSubscriber implements DomainEventSubscriber {
       );
     } catch (error) {
       // Error handling: log but don't block bug resolution
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
       this.logger.error(
-        `Failed to process bug resolution for ${bugEvent.bugId}: ${(error as any).message}`,
-        (error as any).stack,
+        `Failed to process bug resolution for ${bugEvent.bugId}: ${errorMessage}`,
+        errorStack,
       );
     }
   }
@@ -107,7 +110,7 @@ export class BugResolvedSubscriber implements DomainEventSubscriber {
    *
    * @private
    */
-  private async handleCriticalBugResolved(_event: BugResolved): Promise<void> {
+  private async handleCriticalBugResolved(event: BugResolved): Promise<void> {
     this.logger.debug(
       `CRITICAL BUG RESOLVED: ${event.bugId} - Re-evaluating release readiness`,
     );

@@ -106,8 +106,8 @@ export class ReleaseReadinessAchievedSubscriber implements DomainEventSubscriber
     } catch (error) {
       // Critical error handling - must log and escalate
       this.logger.error(
-        `CRITICAL: Failed to enable deployment for ${releaseEvent.releaseId}: ${(error as any).message}`,
-        (error as any).stack,
+        `CRITICAL: Failed to enable deployment for ${releaseEvent.releaseId}: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
       );
 
       // TODO: Escalate to on-call engineer

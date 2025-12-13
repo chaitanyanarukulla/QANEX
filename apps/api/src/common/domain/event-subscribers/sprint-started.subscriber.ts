@@ -100,8 +100,8 @@ export class SprintStartedSubscriber implements DomainEventSubscriber {
     } catch (error) {
       // Error handling: log but don't block sprint operations
       this.logger.error(
-        `Failed to process sprint start for ${sprintEvent.aggregateId}: ${(error as any).message}`,
-        (error as any).stack,
+        `Failed to process sprint start for ${sprintEvent.aggregateId}: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
       );
 
       // TODO: Could publish SprintStartNotificationFailed event for alerting

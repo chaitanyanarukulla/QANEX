@@ -68,7 +68,7 @@ export class EventStoreService {
     } catch (error) {
       this.logger.error(
         `Failed to append event ${event.eventType}: ${(error as any).message}`,
-        (error as any).stack,
+        error instanceof Error ? error.stack : undefined,
       );
       throw error;
     }
@@ -100,7 +100,7 @@ export class EventStoreService {
     } catch (error) {
       this.logger.error(
         `Failed to append ${events.length} events: ${(error as any).message}`,
-        (error as any).stack,
+        error instanceof Error ? error.stack : undefined,
       );
       throw error;
     }
@@ -138,7 +138,7 @@ export class EventStoreService {
     } catch (error) {
       this.logger.error(
         `Failed to retrieve events for aggregate ${aggregateId}: ${(error as any).message}`,
-        (error as any).stack,
+        error instanceof Error ? error.stack : undefined,
       );
       throw error;
     }
@@ -165,7 +165,7 @@ export class EventStoreService {
     } catch (error) {
       this.logger.error(
         `Failed to retrieve events since ${since}: ${(error as any).message}`,
-        (error as any).stack,
+        error instanceof Error ? error.stack : undefined,
       );
       throw error;
     }
@@ -192,7 +192,7 @@ export class EventStoreService {
     } catch (error) {
       this.logger.error(
         `Failed to retrieve events of type ${eventType}: ${(error as any).message}`,
-        (error as any).stack,
+        error instanceof Error ? error.stack : undefined,
       );
       throw error;
     }
@@ -222,7 +222,7 @@ export class EventStoreService {
     } catch (error) {
       this.logger.error(
         `Failed to retrieve events for aggregate type ${aggregateType}: ${(error as any).message}`,
-        (error as any).stack,
+        error instanceof Error ? error.stack : undefined,
       );
       throw error;
     }
@@ -244,7 +244,7 @@ export class EventStoreService {
     } catch (error) {
       this.logger.error(
         `Failed to count events: ${(error as any).message}`,
-        (error as any).stack,
+        error instanceof Error ? error.stack : undefined,
       );
       throw error;
     }
@@ -287,7 +287,7 @@ export class EventStoreService {
     } catch (error) {
       this.logger.error(
         `Failed to record snapshot: ${(error as any).message}`,
-        (error as any).stack,
+        error instanceof Error ? error.stack : undefined,
       );
       throw error;
     }
@@ -317,7 +317,7 @@ export class EventStoreService {
     } catch (error) {
       this.logger.error(
         `Failed to redact event: ${(error as any).message}`,
-        (error as any).stack,
+        error instanceof Error ? error.stack : undefined,
       );
       throw error;
     }
@@ -343,7 +343,7 @@ export class EventStoreService {
     } catch (error) {
       this.logger.error(
         `Failed to clear tenant events: ${(error as any).message}`,
-        (error as any).stack,
+        error instanceof Error ? error.stack : undefined,
       );
       throw error;
     }

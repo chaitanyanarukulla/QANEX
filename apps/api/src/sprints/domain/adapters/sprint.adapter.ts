@@ -82,13 +82,16 @@ export class SprintAdapter {
 
       return sprintItem;
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
       this.logger.error(
-        `Failed to map requirement ${requirementId}: ${(error as any).message}`,
-        (error as any).stack,
+        `Failed to map requirement ${requirementId}: ${errorMessage}`,
+        errorStack,
       );
 
       throw new Error(
-        `Cannot convert requirement to sprint item: ${(error as any).message}`,
+        `Cannot convert requirement to sprint item: ${errorMessage}`,
       );
     }
   }
@@ -161,9 +164,12 @@ export class SprintAdapter {
       // Mock: return 8 for now
       return 8;
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
       this.logger.error(
-        `Failed to estimate story points: ${(error as any).message}`,
-        (error as any).stack,
+        `Failed to estimate story points: ${errorMessage}`,
+        errorStack,
       );
 
       // Default to medium estimate on failure

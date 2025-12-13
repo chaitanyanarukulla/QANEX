@@ -107,8 +107,8 @@ export class EventStorePublisher {
       await this.eventPublisher.publish(event);
     } catch (error) {
       this.logger.error(
-        `Failed to publish event ${event.eventType}: ${(error as any).message}`,
-        (error as any).stack,
+        `Failed to publish event ${event.eventType}: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
       );
 
       // Re-throw to prevent partial failures
@@ -149,8 +149,8 @@ export class EventStorePublisher {
       }
     } catch (error) {
       this.logger.error(
-        `Failed to publish batch of ${events.length} events: ${(error as any).message}`,
-        (error as any).stack,
+        `Failed to publish batch of ${events.length} events: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
       );
 
       // Re-throw to prevent partial failures
@@ -206,8 +206,8 @@ export class EventStorePublisher {
       return events;
     } catch (error) {
       this.logger.error(
-        `Failed to replay events for aggregate ${aggregateId}: ${(error as any).message}`,
-        (error as any).stack,
+        `Failed to replay events for aggregate ${aggregateId}: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
       );
 
       throw error;
@@ -233,8 +233,8 @@ export class EventStorePublisher {
       return events;
     } catch (error) {
       this.logger.error(
-        `Failed to get events since ${since}: ${(error as any).message}`,
-        (error as any).stack,
+        `Failed to get events since ${since}: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
       );
 
       throw error;
@@ -260,8 +260,8 @@ export class EventStorePublisher {
       return events;
     } catch (error) {
       this.logger.error(
-        `Failed to get events of type ${eventType}: ${(error as any).message}`,
-        (error as any).stack,
+        `Failed to get events of type ${eventType}: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
       );
 
       throw error;
@@ -292,8 +292,8 @@ export class EventStorePublisher {
       return events;
     } catch (error) {
       this.logger.error(
-        `Failed to get events for aggregate type ${aggregateType}: ${(error as any).message}`,
-        (error as any).stack,
+        `Failed to get events for aggregate type ${aggregateType}: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
       );
 
       throw error;

@@ -105,9 +105,12 @@ export class ReleaseReadinessAdapter {
 
       return readinessData;
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
       this.logger.error(
-        `Failed to fetch readiness data for tenant ${tenantId}: ${(error as any).message}`,
-        (error as any).stack,
+        `Failed to fetch readiness data for tenant ${tenantId}: ${errorMessage}`,
+        errorStack,
       );
 
       // Return degraded data (graceful degradation)

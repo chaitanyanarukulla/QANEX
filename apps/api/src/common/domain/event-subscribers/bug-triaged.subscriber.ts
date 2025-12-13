@@ -90,9 +90,12 @@ export class BugTriagedSubscriber implements DomainEventSubscriber {
       );
     } catch (error) {
       // Error handling: log but don't block triage
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
       this.logger.error(
-        `Failed to process bug triage for ${bugEvent.bugId}: ${(error as any).message}`,
-        (error as any).stack,
+        `Failed to process bug triage for ${bugEvent.bugId}: ${errorMessage}`,
+        errorStack,
       );
     }
   }
