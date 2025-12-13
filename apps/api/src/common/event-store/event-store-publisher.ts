@@ -233,7 +233,7 @@ export class EventStorePublisher {
       return events;
     } catch (error) {
       this.logger.error(
-        `Failed to get events since ${since}: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to get events since ${since.toISOString()}: ${error instanceof Error ? error.message : String(error)}`,
         error instanceof Error ? error.stack : undefined,
       );
 

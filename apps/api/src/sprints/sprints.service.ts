@@ -12,6 +12,7 @@ import {
 import { Sprint as SprintAggregate } from './domain/sprint.aggregate';
 import { EventStorePublisher } from '../common/event-store/event-store-publisher';
 import { DomainEventPublisher } from '../common/domain/domain-event.publisher';
+import { SprintCapacity } from './domain/value-objects/sprint-capacity.vo';
 
 @Injectable()
 export class SprintsService {
@@ -808,13 +809,6 @@ export class SprintsService {
    */
   private reconstructAggregate(entity: Sprint): SprintAggregate {
     // Create aggregate instance directly
-    const {
-      SprintCapacity,
-    } = require('./domain/value-objects/sprint-capacity.vo');
-    const {
-      SprintStatus: _SprintStatus,
-    } = require('./domain/value-objects/sprint-status.vo');
-
     const capacity = new SprintCapacity(entity.capacity);
     const status = (entity.status as any) || 'PLANNED';
 

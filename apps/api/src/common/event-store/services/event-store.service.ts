@@ -164,7 +164,7 @@ export class EventStoreService {
       return storedEvents.map((stored) => stored.toDomainEvent());
     } catch (error) {
       this.logger.error(
-        `Failed to retrieve events since ${since}: ${(error as any).message}`,
+        `Failed to retrieve events since ${since.toISOString()}: ${(error as any).message}`,
         error instanceof Error ? error.stack : undefined,
       );
       throw error;

@@ -23,6 +23,7 @@ import { SprintItem, SprintItemStatus } from './sprint-item.entity';
 import { Sprint as SprintAggregate } from './domain/sprint.aggregate';
 import { EventStorePublisher } from '../common/event-store/event-store-publisher';
 import { DomainEventPublisher } from '../common/domain/domain-event.publisher';
+import { SprintCapacity } from './domain/value-objects/sprint-capacity.vo';
 
 /**
  * MIGRATION PATTERN: Service Layer with Aggregate Support
@@ -323,10 +324,7 @@ export class SprintsServiceRefactored {
    */
   private reconstructAggregate(entity: Sprint): SprintAggregate {
     // Create aggregate instance directly from entity
-    const capacity =
-      new (require('./domain/value-objects/sprint-capacity.vo').SprintCapacity)(
-        entity.capacity,
-      );
+    const capacity = new SprintCapacity(entity.capacity);
     const status = (entity.status as any) || 'PLANNED';
 
     const aggregate = new SprintAggregate(
