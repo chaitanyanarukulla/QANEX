@@ -37,7 +37,7 @@ export class BugTriagedSubscriber implements DomainEventSubscriber {
   }
 
   isSubscribedTo(_event: DomainEvent): boolean {
-    return event.eventType === 'BugTriaged';
+    return _event.eventType === 'BugTriaged';
   }
 
   /**
@@ -54,7 +54,7 @@ export class BugTriagedSubscriber implements DomainEventSubscriber {
    * @param event BugTriaged event
    */
   async handle(_event: DomainEvent): Promise<void> {
-    const bugEvent = event as BugTriaged;
+    const bugEvent = _event as BugTriaged;
     try {
       this.logger.debug(
         `Processing BugTriaged event for bug ${bugEvent.bugId}`,
@@ -105,7 +105,7 @@ export class BugTriagedSubscriber implements DomainEventSubscriber {
    */
   private async handleCriticalBug(_event: BugTriaged): Promise<void> {
     this.logger.warn(
-      `CRITICAL BUG TRIAGED: ${event.bugId} - severity=${event.severity}, priority=${event.priority}`,
+      `CRITICAL BUG TRIAGED: ${_event.bugId} - severity=${_event.severity}, priority=${_event.priority}`,
     );
 
     // TODO: Implement when Release service available
