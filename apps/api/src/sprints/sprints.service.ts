@@ -811,7 +811,9 @@ export class SprintsService {
     const {
       SprintCapacity,
     } = require('./domain/value-objects/sprint-capacity.vo');
-    const { SprintStatus } = require('./domain/value-objects/sprint-status.vo');
+    const {
+      SprintStatus: _SprintStatus,
+    } = require('./domain/value-objects/sprint-status.vo');
 
     const capacity = new SprintCapacity(entity.capacity);
     const status = (entity.status as any) || 'PLANNED';

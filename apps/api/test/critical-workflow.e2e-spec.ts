@@ -121,7 +121,7 @@ describe('Critical Workflow (e2e): Requirements → Sprints → Tests → Releas
 
     it('should not allow other tenant to access requirement', async () => {
       // Override guard temporarily for this request
-      const otherTenantResponse = await request(app.getHttpServer())
+      const _otherTenantResponse = await request(app.getHttpServer())
         .get(`/requirements/${requirementId}`)
         .set('X-Tenant-Id', 'different-tenant')
         .expect(200); // Guard doesn't validate X-Tenant-Id in test context

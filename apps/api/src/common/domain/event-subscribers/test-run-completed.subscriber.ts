@@ -161,7 +161,7 @@ export class TestRunCompletedSubscriber implements DomainEventSubscriber {
    * @private
    */
   private async sendTestCompletionNotifications(
-    event: TestRunCompleted,
+    _event: TestRunCompleted,
   ): Promise<void> {
     // TODO: Implement notifications
     // - QA lead: Detailed results and failed test list

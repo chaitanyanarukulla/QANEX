@@ -80,8 +80,10 @@ describe('EventStoreService', () => {
         raw: [],
       });
 
-      const consoleSpy = jest.spyOn(console, 'time').mockImplementation();
-      const consoleEndSpy = jest.spyOn(console, 'timeEnd').mockImplementation();
+      const _consoleSpy = jest.spyOn(console, 'time').mockImplementation();
+      const _consoleEndSpy = jest
+        .spyOn(console, 'timeEnd')
+        .mockImplementation();
 
       await service.appendEvent(mockEvent, 'tenant-1');
 

@@ -129,7 +129,7 @@ describe('EventMigrationHandler', () => {
     });
 
     it('should throw error if migration fails', async () => {
-      handler.registerMigration('TestEvent', 'v1', 'v2', (event) => {
+      handler.registerMigration('TestEvent', 'v1', 'v2', (_event) => {
         throw new Error('Migration failed');
       });
 

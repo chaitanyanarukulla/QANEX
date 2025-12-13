@@ -82,7 +82,7 @@ export class ReleasesService {
     id: string,
     tenantId: string,
     readinessData: any,
-    userId?: string,
+    _userId?: string,
   ): Promise<Release> {
     // Step 1: Fetch and reconstruct aggregate
     const release = await this.findOne(id, tenantId);

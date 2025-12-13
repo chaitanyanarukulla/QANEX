@@ -129,7 +129,7 @@ export class BugResolvedSubscriber implements DomainEventSubscriber {
    * @private
    */
   private async createQAVerificationWorkflow(
-    event: BugResolved,
+    _event: BugResolved,
   ): Promise<void> {
     // TODO: Implement when QA/Sprint service available
     // - Create QA task in sprint

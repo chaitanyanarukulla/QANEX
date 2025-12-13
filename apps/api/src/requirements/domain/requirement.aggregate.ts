@@ -336,7 +336,7 @@ export class Requirement extends BaseDomainAggregate {
    *
    * @param reason - Reason for revision
    */
-  needsRevision(reason: string): void {
+  needsRevision(_reason: string): void {
     if (this.status === 'NEEDS_REVISION') {
       return; // Already in needs revision state
     }

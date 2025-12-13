@@ -48,7 +48,7 @@ export function createMockTenantRepository<
     /**
      * Helper: Mock a successful findAll response
      */
-    mockFindAll: (entities: T[], tenantId: string) => {
+    mockFindAll: (entities: T[], _tenantId: string) => {
       typeOrmRepo.find.mockResolvedValueOnce(entities);
       return typeOrmRepo;
     },
@@ -56,7 +56,7 @@ export function createMockTenantRepository<
     /**
      * Helper: Mock a successful findOne response
      */
-    mockFindOne: (entity: T, id: string, tenantId: string) => {
+    mockFindOne: (entity: T, _id: string, _tenantId: string) => {
       typeOrmRepo.findOne.mockResolvedValueOnce(entity);
       return typeOrmRepo;
     },

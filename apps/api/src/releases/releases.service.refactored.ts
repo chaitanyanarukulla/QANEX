@@ -183,7 +183,7 @@ export class ReleasesServiceRefactored {
     id: string,
     tenantId: string,
     readinessData: any,
-    userId?: string,
+    _userId?: string,
   ): Promise<Release> {
     // Step 1: Fetch existing release
     const release = await this.findOne(id, tenantId);

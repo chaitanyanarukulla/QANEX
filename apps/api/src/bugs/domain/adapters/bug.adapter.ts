@@ -162,7 +162,7 @@ export class BugAdapter {
    *
    * @private
    */
-  private aggregateBugMetrics(bugs: any[]): BugMetricsDto {
+  private aggregateBugMetrics(_bugs: any[]): BugMetricsDto {
     // TODO: Implement when Bug model available
     // Filter to active bugs only (not fixed/closed/invalid)
     // const activeBugs = bugs.filter(b => b.isActive());

@@ -128,7 +128,7 @@ export class SprintStartedSubscriber implements DomainEventSubscriber {
    *
    * @private
    */
-  private async calculateVelocityBaseline(sprintId: string): Promise<number> {
+  private async calculateVelocityBaseline(_sprintId: string): Promise<number> {
     // TODO: Implement velocity calculation from historical data
     // This helps predict sprint outcomes early
 
