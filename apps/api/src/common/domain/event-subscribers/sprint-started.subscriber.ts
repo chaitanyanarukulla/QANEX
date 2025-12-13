@@ -34,7 +34,7 @@ export class SprintStartedSubscriber implements DomainEventSubscriber {
   /**
    * Check if subscriber is interested in this event
    */
-  isSubscribedTo(_event: DomainEvent): boolean {
+  isSubscribedTo(event: DomainEvent): boolean {
     return (
       event instanceof SprintStarted || event.eventType === 'SprintStarted'
     );
@@ -54,7 +54,7 @@ export class SprintStartedSubscriber implements DomainEventSubscriber {
    *
    * @param event SprintStarted event
    */
-  async handle(_event: DomainEvent): Promise<void> {
+  async handle(event: DomainEvent): Promise<void> {
     const sprintEvent = event as SprintStarted;
     try {
       this.logger.debug(
@@ -95,7 +95,7 @@ export class SprintStartedSubscriber implements DomainEventSubscriber {
 
       this.logger.log(
         `Sprint ${sprintEvent.sprintId} started. ` +
-          `End date: ${sprintEvent.endDate.toISOString()}, Capacity: ${sprintEvent.capacity} story points`,
+          `Items: ${sprintEvent.itemCount}, Story Points: ${sprintEvent.totalStoryPoints}`,
       );
     } catch (error) {
       // Error handling: log but don't block sprint operations

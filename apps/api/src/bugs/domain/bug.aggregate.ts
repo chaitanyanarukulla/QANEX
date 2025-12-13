@@ -223,7 +223,7 @@ export class Bug extends BaseDomainAggregate {
    *
    * @throws Error if invalid state transition
    */
-  public markResolved(resolutionNotes: string, _userId?: string): void {
+  public markResolved(resolutionNotes: string, userId?: string): void {
     if (
       !BugStatusHelper.isValidTransition(this.status, BugStatusType.RESOLVED)
     ) {

@@ -10,7 +10,7 @@ const pdf = require('pdf-parse') as (
 export class FileUploadService {
   private readonly logger = new Logger(FileUploadService.name);
 
-  async extractText(file: Express.Multer.File): Promise<string> {
+  async extractText(file: any): Promise<string> {
     const mimeType = file.mimetype;
 
     this.logger.log(

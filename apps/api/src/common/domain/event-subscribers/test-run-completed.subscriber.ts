@@ -34,7 +34,7 @@ export class TestRunCompletedSubscriber implements DomainEventSubscriber {
     this.eventPublisher.subscribe(this);
   }
 
-  isSubscribedTo(_event: DomainEvent): boolean {
+  isSubscribedTo(event: DomainEvent): boolean {
     return event.eventType === 'TestRunCompleted';
   }
 
@@ -52,7 +52,7 @@ export class TestRunCompletedSubscriber implements DomainEventSubscriber {
    *
    * @param event TestRunCompleted event
    */
-  async handle(_event: DomainEvent): Promise<void> {
+  async handle(event: DomainEvent): Promise<void> {
     const testEvent = event as TestRunCompleted;
     try {
       this.logger.debug(
@@ -136,7 +136,7 @@ export class TestRunCompletedSubscriber implements DomainEventSubscriber {
    * Calculate test metrics for trends and reporting
    * @private
    */
-  private async calculateTestMetrics(_event: TestRunCompleted): Promise<{
+  private async calculateTestMetrics(event: TestRunCompleted): Promise<{
     passRate: number;
     trend: 'IMPROVING' | 'DECLINING' | 'STABLE';
     qualityScore: number;

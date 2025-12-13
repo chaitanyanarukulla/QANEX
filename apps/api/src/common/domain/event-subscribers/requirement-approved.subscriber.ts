@@ -86,7 +86,7 @@ export class RequirementApprovedSubscriber implements DomainEventSubscriber {
   /**
    * Check if subscriber is interested in this event
    */
-  isSubscribedTo(_event: DomainEvent): boolean {
+  isSubscribedTo(event: DomainEvent): boolean {
     return event.eventType === 'RequirementApproved';
   }
 

@@ -21,6 +21,16 @@
  * - Mocking common operations (find, create, save, etc.)
  */
 
+declare const jest: any;
+declare namespace jest {
+  interface Mock<T = any, Y extends any[] = any[]> {
+    mock: {
+      calls: Y[];
+      results: Array<{ type: string; value: T }>;
+    };
+  }
+}
+
 /**
  * Create a mock TypeORM repository suitable for TenantScopedRepository wrapping
  *

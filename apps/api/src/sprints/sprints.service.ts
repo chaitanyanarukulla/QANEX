@@ -100,7 +100,7 @@ export class SprintsService {
   async start(id: string, tenantId: string, userId?: string): Promise<Sprint> {
     // Step 1: Fetch and reconstruct aggregate
     const sprint = await this.findOne(id, tenantId);
-    const aggregate = this.reconstructAggregate(sprint);
+    const aggregate = await this.reconstructAggregateAsync(sprint);
 
     // Step 2: Apply domain logic (validates state transitions)
     aggregate.start(userId);
@@ -139,7 +139,7 @@ export class SprintsService {
   ): Promise<Sprint> {
     // Step 1: Fetch and reconstruct aggregate
     const sprint = await this.findOne(id, tenantId);
-    const aggregate = this.reconstructAggregate(sprint);
+    const aggregate = await this.reconstructAggregateAsync(sprint);
 
     // Step 2: Get actual metrics from sprint items
     const items = await this.sprintItemsRepository.find({
@@ -807,7 +807,7 @@ export class SprintsService {
    *
    * @private
    */
-  private reconstructAggregate(entity: Sprint): SprintAggregate {
+  private async reconstructAggregateAsync(entity: Sprint): Promise<SprintAggregate> {
     // Create aggregate instance directly
     const capacity = new SprintCapacity(entity.capacity);
     const status = (entity.status as any) || 'PLANNED';
@@ -825,10 +825,38 @@ export class SprintsService {
     aggregate.createdAt = entity.createdAt;
     aggregate.updatedAt = entity.updatedAt;
 
-    // Populate items if available
-    if (entity.sprintItems && Array.isArray(entity.sprintItems)) {
-      aggregate.items = entity.sprintItems;
-    }
+    // Fetch and populate sprint items
+    const items = await this.sprintItemsRepository.find({
+      where: { sprintId: entity.id },
+    });
+    aggregate.items = items as any;
+
+    return aggregate;
+  }
+
+  /**
+   * Reconstruct Sprint aggregate from entity (synchronous version)
+   * Used in contexts where async is not available
+   *
+   * @private
+   */
+  private reconstructAggregate(entity: Sprint): SprintAggregate {
+    // Create aggregate instance directly
+    const capacity = new SprintCapacity(entity.capacity);
+    const status = (entity.status as any) || 'PLANNED';
+
+    const aggregate = new SprintAggregate(
+      entity.id,
+      entity.tenantId,
+      entity.name,
+      capacity,
+      entity.startDate || new Date(),
+      entity.endDate || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+      status,
+      entity.goal,
+    );
+    aggregate.createdAt = entity.createdAt;
+    aggregate.updatedAt = entity.updatedAt;
 
     return aggregate;
   }
